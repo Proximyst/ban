@@ -73,8 +73,7 @@ public class BanPlugin {
 
   @Subscribe
   public void onProxyInitialisation(ProxyInitializeEvent event) {
-    commandManager = new VelocityCommandManager(getProxyServer(), this);
-
+    getLogger().info("Reading configuration file...");
     // Just to ensure the parents exist.
     //noinspection ResultOfMethodCallIgnored
     getDataDirectory().toFile().mkdirs();
@@ -98,7 +97,9 @@ public class BanPlugin {
       getLogger().error("Cannot read configuration", ex);
       return;
     }
+    getLogger().info("Read configuration!");
 
+    getLogger().info("Opening a pooled database...");
     DB.setGlobalDatabase(PooledDatabaseOptions.builder()
         .options(
             DatabaseOptions.builder()
@@ -114,11 +115,22 @@ public class BanPlugin {
         )
         .maxConnections(getConfiguration().getSql().getMaxConnections())
         .createHikariDatabase());
+    getLogger().info("Database prepared!");
+
+    getLogger().info("Initialising plugin essentials...");
+    commandManager = new VelocityCommandManager(getProxyServer(), this);
+    getLogger().info("Plugin essentials initialised!");
+
+    getLogger().info("Plugin has finished initialisation.");
   }
 
   @Subscribe
   public void onProxyShutdown(ProxyShutdownEvent event) {
+    getLogger().info("Closing database...");
     DB.close();
+    getLogger().info("Closed database!");
+
+    getLogger().info("Plugin disabled correctly.");
   }
 
   @NonNull
