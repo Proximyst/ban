@@ -9,7 +9,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 @ConfigSerializable
 public final class Configuration {
   @Setting(comment = "The SQL server settings.")
-  private SqlConfig sql;
+  private SqlConfig sql = new SqlConfig();
 
   @NonNull
   public SqlConfig getSql() {
