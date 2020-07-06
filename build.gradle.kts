@@ -38,6 +38,8 @@ dependencies {
     implementation("com.zaxxer:HikariCP:3.4.5") {
         exclude("org.slf4j")
     }
+
+    runtimeOnly("org.mariadb.jdbc:mariadb-java-client:2.6.1")
 }
 
 tasks {
@@ -49,7 +51,8 @@ tasks {
             "co.aikar.commands",
             "co.aikar.locale",
             "co.aikar.idb",
-            "com.zaxxer.hikari"
+            "com.zaxxer.hikari",
+            "org.mariadb.jdbc"
         )
         mergeServiceFiles()
     }

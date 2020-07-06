@@ -109,7 +109,7 @@ public class BanPlugin {
                     getConfiguration().getSql().getDatabase(),
                     getConfiguration().getSql().getHostname() + ":" + getConfiguration().getSql().getPort()
                 )
-                .useOptimizations(true)
+                .useOptimizations(false)
                 .logger(new Slf4jLoggerProxy(getLogger()))
                 .build()
         )
