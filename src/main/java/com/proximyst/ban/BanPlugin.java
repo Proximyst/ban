@@ -157,6 +157,7 @@ public class BanPlugin {
 
               try {
                 DB.executeUpdate(query);
+                DB.executeUpdate(SqlQueries.UPDATE_VERSION.getQuery(), mig.getVersion());
               } catch (SQLException ex) {
                 // Streams are kinda stupid...
                 ThrowableUtils.sneakyThrow(ex);
