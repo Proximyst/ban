@@ -13,11 +13,11 @@ import com.proximyst.ban.boilerplate.Slf4jLoggerProxy;
 import com.proximyst.ban.boilerplate.model.MigrationIndexEntry;
 import com.proximyst.ban.config.ConfigUtil;
 import com.proximyst.ban.config.Configuration;
-import com.proximyst.ban.data.SqlQueries;
+import com.proximyst.ban.data.IDataInterface;
+import com.proximyst.ban.data.MySqlInterface;
 import com.proximyst.ban.inject.CommandsModule;
 import com.proximyst.ban.inject.PluginModule;
 import com.proximyst.ban.utils.ResourceReader;
-import com.proximyst.ban.utils.ThrowableUtils;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
@@ -27,9 +27,7 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.sql.SQLException;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
@@ -66,6 +64,7 @@ public class BanPlugin {
   private VelocityCommandManager commandManager;
   private ConfigurationNode rawConfigurationNode;
   private Configuration configuration;
+  private IDataInterface dataInterface;
 
   @Inject
   public BanPlugin(
@@ -127,6 +126,7 @@ public class BanPlugin {
         )
         .maxConnections(getConfiguration().getSql().getMaxConnections())
         .createHikariDatabase());
+    dataInterface = getInjector().getInstance(MySqlInterface.class);
     getLogger().info("Database pool opened!");
 
     getLogger().info("Preparing database...");
@@ -138,32 +138,7 @@ public class BanPlugin {
             }.getType()
         );
     try {
-      // Ensure the table exists first.
-      SqlQueries.CREATE_VERSION_TABLE.forEachQuery(DB::executeUpdate);
-
-      int version = Optional.ofNullable(DB.getFirstRow(SqlQueries.SELECT_VERSION.getQuery()))
-          .map(row -> row.getInt("version"))
-          .orElse(0);
-      migrationIndexEntries.stream()
-          .filter(mig -> mig.getVersion() > version)
-          .sorted(Comparator.comparingInt(MigrationIndexEntry::getVersion))
-          .forEach(mig -> {
-            getLogger().info("Migrating database to version " + mig.getVersion() + "...");
-            String queries = ResourceReader.readResource("sql/migrations/" + mig.getPath());
-            for (String query : queries.split(";")) {
-              if (query.trim().isEmpty()) {
-                continue;
-              }
-
-              try {
-                DB.executeUpdate(query);
-                DB.executeUpdate(SqlQueries.UPDATE_VERSION.getQuery(), mig.getVersion());
-              } catch (SQLException ex) {
-                // Streams are kinda stupid...
-                ThrowableUtils.sneakyThrow(ex);
-              }
-            }
-          });
+      getDataInterface().applyMigrations(migrationIndexEntries);
     } catch (SQLException ex) {
       getLogger().error("Could not prepare database", ex);
       return;
@@ -219,5 +194,10 @@ public class BanPlugin {
   @NonNull
   public VelocityCommandManager getCommandManager() {
     return commandManager;
+  }
+
+  @NonNull
+  public IDataInterface getDataInterface() {
+    return dataInterface;
   }
 }
