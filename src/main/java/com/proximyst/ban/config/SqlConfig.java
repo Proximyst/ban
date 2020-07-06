@@ -24,9 +24,6 @@ public final class SqlConfig {
   @Setting(comment = "The database to use for the SQL server.")
   private String database = "ban";
 
-  @Setting(comment = "The table prefix to use for the SQL tables.")
-  private String tablePrefix = "ban_";
-
   @Setting(comment = "The max connections to have open in the pool.")
   private int maxConnections = 10;
 
@@ -54,11 +51,6 @@ public final class SqlConfig {
     return database;
   }
 
-  @NonNull
-  public String getTablePrefix() {
-    return tablePrefix;
-  }
-
   public int getMaxConnections() {
     return maxConnections;
   }
@@ -77,8 +69,7 @@ public final class SqlConfig {
         getHostname().equals(sqlConfig.getHostname()) &&
         getUsername().equals(sqlConfig.getUsername()) &&
         getPassword().equals(sqlConfig.getPassword()) &&
-        getDatabase().equals(sqlConfig.getDatabase()) &&
-        getTablePrefix().equals(sqlConfig.getTablePrefix());
+        getDatabase().equals(sqlConfig.getDatabase());
   }
 
   @Override
@@ -89,7 +80,6 @@ public final class SqlConfig {
         getUsername(),
         getPassword(),
         getDatabase(),
-        getTablePrefix(),
         getMaxConnections()
     );
   }
@@ -102,7 +92,6 @@ public final class SqlConfig {
         .add("username", username)
         .add("password", password)
         .add("database", database)
-        .add("tablePrefix", tablePrefix)
         .add("maxConnections", maxConnections)
         .toString();
   }

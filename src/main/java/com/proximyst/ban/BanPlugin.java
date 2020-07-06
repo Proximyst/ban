@@ -10,6 +10,7 @@ import com.google.inject.Injector;
 import com.proximyst.ban.boilerplate.Slf4jLoggerProxy;
 import com.proximyst.ban.config.ConfigUtil;
 import com.proximyst.ban.config.Configuration;
+import com.proximyst.ban.data.SqlQueries;
 import com.proximyst.ban.inject.CommandsModule;
 import com.proximyst.ban.inject.PluginModule;
 import com.velocitypowered.api.event.Subscribe;
@@ -20,6 +21,7 @@ import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.sql.SQLException;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
@@ -115,6 +117,15 @@ public class BanPlugin {
         )
         .maxConnections(getConfiguration().getSql().getMaxConnections())
         .createHikariDatabase());
+    getLogger().info("Database pool opened!");
+
+    getLogger().info("Preparing database...");
+    try {
+      DB.executeUpdate(SqlQueries.CREATE_TABLES.getQuery());
+    } catch (SQLException ex) {
+      getLogger().error("Could not prepare database", ex);
+      return;
+    }
     getLogger().info("Database prepared!");
 
     getLogger().info("Initialising plugin essentials...");
