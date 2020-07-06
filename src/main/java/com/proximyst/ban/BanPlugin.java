@@ -4,15 +4,20 @@ import co.aikar.commands.VelocityCommandManager;
 import co.aikar.idb.DB;
 import co.aikar.idb.DatabaseOptions;
 import co.aikar.idb.PooledDatabaseOptions;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.proximyst.ban.boilerplate.Slf4jLoggerProxy;
+import com.proximyst.ban.boilerplate.model.MigrationIndexEntry;
 import com.proximyst.ban.config.ConfigUtil;
 import com.proximyst.ban.config.Configuration;
 import com.proximyst.ban.data.SqlQueries;
 import com.proximyst.ban.inject.CommandsModule;
 import com.proximyst.ban.inject.PluginModule;
+import com.proximyst.ban.utils.ResourceReader;
+import com.proximyst.ban.utils.ThrowableUtils;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
@@ -22,6 +27,9 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.sql.SQLException;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
@@ -40,6 +48,8 @@ public class BanPlugin {
   public static final String PLUGIN_NAME = "ban";
   public static final String PLUGIN_VERSION = "0.1.0";
   public static final String PLUGIN_DESCRIPTION = "A simple punishment suite for Velocity.";
+
+  public static final Gson COMPACT_GSON = new Gson();
 
   @NonNull
   private final ProxyServer proxyServer;
@@ -120,8 +130,39 @@ public class BanPlugin {
     getLogger().info("Database pool opened!");
 
     getLogger().info("Preparing database...");
+    String migrationsIndexJson = ResourceReader.readResource("sql/migrations/migrations-index.json");
+    List<MigrationIndexEntry> migrationIndexEntries = COMPACT_GSON
+        .fromJson(
+            migrationsIndexJson,
+            new TypeToken<List<MigrationIndexEntry>>() {
+            }.getType()
+        );
     try {
-      DB.executeUpdate(SqlQueries.CREATE_TABLES.getQuery());
+      // Ensure the table exists first.
+      SqlQueries.CREATE_VERSION_TABLE.forEachQuery(DB::executeUpdate);
+
+      int version = Optional.ofNullable(DB.getFirstRow(SqlQueries.SELECT_VERSION.getQuery()))
+          .map(row -> row.getInt("version"))
+          .orElse(0);
+      migrationIndexEntries.stream()
+          .filter(mig -> mig.getVersion() > version)
+          .sorted(Comparator.comparingInt(MigrationIndexEntry::getVersion))
+          .forEach(mig -> {
+            getLogger().info("Migrating database to version " + mig.getVersion() + "...");
+            String queries = ResourceReader.readResource("sql/migrations/" + mig.getPath());
+            for (String query : queries.split(";")) {
+              if (query.trim().isEmpty()) {
+                continue;
+              }
+
+              try {
+                DB.executeUpdate(query);
+              } catch (SQLException ex) {
+                // Streams are kinda stupid...
+                ThrowableUtils.sneakyThrow(ex);
+              }
+            }
+          });
     } catch (SQLException ex) {
       getLogger().error("Could not prepare database", ex);
       return;
