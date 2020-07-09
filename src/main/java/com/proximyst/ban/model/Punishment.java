@@ -1,7 +1,9 @@
 package com.proximyst.ban.model;
 
+import co.aikar.idb.DbRow;
 import com.google.common.base.Preconditions;
 import java.util.Date;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -94,15 +96,39 @@ public final class Punishment {
       long duration,
       boolean silent
   ) {
-    this.punishmentType = punishmentType;
-    this.target = target;
-    this.punisher = punisher;
+    if (!lifted && liftedBy == null) {
+      throw new IllegalArgumentException("liftedBy must be null if lifted is false");
+    }
+
+    this.punishmentType = Objects.requireNonNull(punishmentType, "type must be specified");
+    this.target = Objects.requireNonNull(target, "target must be specified");
+    this.punisher = Objects.requireNonNull(punisher, "punisher must be specified");
     this.reason = reason;
     this.lifted = lifted;
     this.liftedBy = liftedBy;
-    this.time = time;
-    this.duration = duration;
+    this.time = time <= 0 ? System.currentTimeMillis() : time;
+    this.duration = Math.max(duration, 0);
     this.silent = silent;
+  }
+
+  @NonNull
+  public static Punishment fromRow(@NonNull DbRow row) {
+    return new PunishmentBuilder()
+        .type(
+            PunishmentType.getById(row.getInt("type").byteValue())
+                .orElseThrow(() -> new IllegalStateException(
+                    "punishment type id " + row.getInt("type") + " is unknown"
+                ))
+        )
+        .target(UUID.fromString(row.getString("target")))
+        .punisher(UUID.fromString(row.getString("punisher")))
+        .reason(row.getString("reason", null))
+        .lifted(row.getInt("lifted") != 0)
+        .liftedBy(Optional.ofNullable(row.getString("lifted_by")).map(UUID::fromString).orElse(null))
+        .time(row.getLong("time"))
+        .duration(row.getLong("duration"))
+        .silent(row.getInt("silent") != 0)
+        .build();
   }
 
   /**

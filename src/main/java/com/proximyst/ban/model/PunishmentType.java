@@ -1,5 +1,10 @@
 package com.proximyst.ban.model;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import org.checkerframework.checker.nullness.qual.NonNull;
+
 /**
  * A form of punishment against a player.
  * <p>
@@ -42,6 +47,11 @@ public enum PunishmentType {
   ;
 
   /**
+   * All {@link PunishmentType}s by their IDs.
+   */
+  private static final Map<Byte, PunishmentType> PUNISHMENT_TYPES_BY_ID = new HashMap<>();
+
+  /**
    * The ID of this {@link PunishmentType} in the database.
    */
   private final byte id;
@@ -76,5 +86,20 @@ public enum PunishmentType {
    */
   public boolean canBeLifted() {
     return canLift;
+  }
+
+  /**
+   * @param id The ID of the punishment type.
+   * @return An {@link Optional} possibly containing a {@link PunishmentType}.
+   */
+  @NonNull
+  public static Optional<PunishmentType> getById(byte id) {
+    return Optional.ofNullable(PUNISHMENT_TYPES_BY_ID.get(id));
+  }
+
+  static {
+    for (PunishmentType type : values()) {
+      PUNISHMENT_TYPES_BY_ID.put(type.getId(), type);
+    }
   }
 }

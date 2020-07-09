@@ -10,6 +10,7 @@ public enum SqlQueries {
   SELECT_VERSION("select-version"),
   CREATE_VERSION_TABLE("create-version-table"),
   UPDATE_VERSION("update-version"),
+  SELECT_PUNISHMENTS_BY_TARGET("select-punishments-by-target"),
   ;
 
   @NonNull

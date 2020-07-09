@@ -1,14 +1,19 @@
 package com.proximyst.ban.data;
 
 import co.aikar.idb.DB;
+import co.aikar.idb.DbRow;
 import com.google.inject.Inject;
 import com.proximyst.ban.boilerplate.model.MigrationIndexEntry;
+import com.proximyst.ban.model.Punishment;
 import com.proximyst.ban.utils.ResourceReader;
 import com.proximyst.ban.utils.ThrowableUtils;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.slf4j.Logger;
 
@@ -52,5 +57,15 @@ public class MySqlInterface implements IDataInterface {
             }
           }
         });
+  }
+
+  @Override
+  @NonNull
+  public List<Punishment> getPunishmentsForTarget(@NonNull UUID target) throws SQLException {
+    List<DbRow> results = DB.getResults(SqlQueries.SELECT_PUNISHMENTS_BY_TARGET.getQuery(), target.toString());
+    return results.stream()
+        .map(Punishment::fromRow)
+        .sorted(Comparator.comparingLong(Punishment::getTime))
+        .collect(Collectors.toCollection(ArrayList::new)); // toList has no mutability guarantee
   }
 }

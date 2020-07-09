@@ -15,7 +15,9 @@ import com.proximyst.ban.config.ConfigUtil;
 import com.proximyst.ban.config.Configuration;
 import com.proximyst.ban.data.IDataInterface;
 import com.proximyst.ban.data.MySqlInterface;
+import com.proximyst.ban.data.PunishmentManager;
 import com.proximyst.ban.inject.CommandsModule;
+import com.proximyst.ban.inject.DataModule;
 import com.proximyst.ban.inject.PluginModule;
 import com.proximyst.ban.utils.ResourceReader;
 import com.velocitypowered.api.event.Subscribe;
@@ -65,6 +67,7 @@ public class BanPlugin {
   private ConfigurationNode rawConfigurationNode;
   private Configuration configuration;
   private IDataInterface dataInterface;
+  private PunishmentManager punishmentManager;
 
   @Inject
   public BanPlugin(
@@ -78,7 +81,8 @@ public class BanPlugin {
 
     injector = Guice.createInjector(
         new PluginModule(this),
-        new CommandsModule(this)
+        new CommandsModule(this),
+        new DataModule(this)
     );
   }
 
@@ -146,6 +150,8 @@ public class BanPlugin {
     getLogger().info("Database prepared!");
 
     getLogger().info("Initialising plugin essentials...");
+    punishmentManager = getInjector().getInstance(PunishmentManager.class);
+
     commandManager = new VelocityCommandManager(getProxyServer(), this);
     getLogger().info("Plugin essentials initialised!");
 
@@ -199,5 +205,10 @@ public class BanPlugin {
   @NonNull
   public IDataInterface getDataInterface() {
     return dataInterface;
+  }
+
+  @NonNull
+  public PunishmentManager getPunishmentManager() {
+    return punishmentManager;
   }
 }

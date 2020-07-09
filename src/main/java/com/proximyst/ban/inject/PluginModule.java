@@ -3,7 +3,6 @@ package com.proximyst.ban.inject;
 import com.google.inject.AbstractModule;
 import com.proximyst.ban.BanPlugin;
 import com.proximyst.ban.config.Configuration;
-import com.proximyst.ban.data.IDataInterface;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
 import java.io.File;
@@ -28,6 +27,5 @@ public final class PluginModule extends AbstractModule {
     bind(File.class).annotatedWith(DataDirectory.class).toProvider(() -> main.getDataDirectory().toFile());
 
     bind(Configuration.class).toProvider(main::getConfiguration);
-    bind(IDataInterface.class).toProvider(main::getDataInterface);
   }
 }
