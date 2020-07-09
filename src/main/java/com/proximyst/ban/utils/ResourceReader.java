@@ -17,7 +17,6 @@ public final class ResourceReader {
    * Read a resource on the jar's classpath into a string.
    * <p>
    * Please note this is potentially a heavy I/O operation which should always be cached.
-   * </p>
    *
    * @param path The path on the classpath to read.
    * @return The read string.
