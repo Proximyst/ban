@@ -6,6 +6,7 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.proximyst.ban.model.Punishment;
 import com.proximyst.ban.model.PunishmentType;
 import com.proximyst.ban.utils.ThrowableUtils;
@@ -19,6 +20,7 @@ import java.util.concurrent.TimeUnit;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.slf4j.Logger;
 
+@Singleton
 public final class PunishmentManager {
   @NonNull
   private final IDataInterface dataInterface;

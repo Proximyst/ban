@@ -1,6 +1,5 @@
 package com.proximyst.ban;
 
-import co.aikar.commands.VelocityCommandManager;
 import co.aikar.idb.DB;
 import co.aikar.idb.DatabaseOptions;
 import co.aikar.idb.PooledDatabaseOptions;
@@ -11,6 +10,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.proximyst.ban.boilerplate.Slf4jLoggerProxy;
 import com.proximyst.ban.boilerplate.model.MigrationIndexEntry;
+import com.proximyst.ban.commands.BanCommand;
 import com.proximyst.ban.config.ConfigUtil;
 import com.proximyst.ban.config.Configuration;
 import com.proximyst.ban.data.IDataInterface;
@@ -63,7 +63,6 @@ public class BanPlugin {
   @NonNull
   private final Injector injector;
 
-  private VelocityCommandManager commandManager;
   private ConfigurationNode rawConfigurationNode;
   private Configuration configuration;
   private IDataInterface dataInterface;
@@ -151,9 +150,11 @@ public class BanPlugin {
 
     getLogger().info("Initialising plugin essentials...");
     punishmentManager = getInjector().getInstance(PunishmentManager.class);
-
-    commandManager = new VelocityCommandManager(getProxyServer(), this);
     getLogger().info("Plugin essentials initialised!");
+
+    getLogger().info("Registering commands...");
+    getProxyServer().getCommandManager().register("ban", getInjector().getInstance(BanCommand.class));
+    getLogger().info("Finished registering commands!");
 
     getLogger().info("Plugin has finished initialisation.");
   }
@@ -195,11 +196,6 @@ public class BanPlugin {
   @NonNull
   public ConfigurationNode getRawConfigurationNode() {
     return rawConfigurationNode;
-  }
-
-  @NonNull
-  public VelocityCommandManager getCommandManager() {
-    return commandManager;
   }
 
   @NonNull

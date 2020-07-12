@@ -33,7 +33,6 @@ dependencies {
     compileOnly("com.velocitypowered:velocity-api:1.1.0-SNAPSHOT")
     annotationProcessor("com.velocitypowered:velocity-api:1.1.0-SNAPSHOT")
 
-    implementation("co.aikar:acf-velocity:0.5.0-SNAPSHOT")
     implementation("co.aikar:idb-core:1.0.0-SNAPSHOT")
     implementation("com.zaxxer:HikariCP:3.4.5") {
         exclude("org.slf4j")

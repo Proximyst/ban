@@ -3,6 +3,7 @@ package com.proximyst.ban.data;
 import co.aikar.idb.DB;
 import co.aikar.idb.DbRow;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.proximyst.ban.boilerplate.model.MigrationIndexEntry;
 import com.proximyst.ban.model.Punishment;
 import com.proximyst.ban.utils.ResourceReader;
@@ -20,6 +21,7 @@ import org.slf4j.Logger;
 /**
  * A MySQL based interface to the data of this plugin.
  */
+@Singleton
 public class MySqlInterface implements IDataInterface {
   @NonNull
   private final Logger logger;
