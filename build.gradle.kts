@@ -21,6 +21,15 @@ repositories {
     }
 
     maven {
+        name = "sonatype"
+        url = uri("https://oss.sonatype.org/content/repositories/snapshots")
+
+        content {
+            includeGroup("net.kyori")
+        }
+    }
+
+    maven {
         name = "velocity"
         url = uri("https://repo.velocitypowered.com/snapshots/")
     }
@@ -38,6 +47,11 @@ dependencies {
         exclude("org.slf4j")
     }
 
+    implementation("net.kyori:adventure-text-minimessage:3.0.0-SNAPSHOT") {
+        // We get adventure through velocity-api
+        isTransitive = false
+    }
+
     runtimeOnly("org.mariadb.jdbc:mariadb-java-client:2.6.1")
 }
 
@@ -51,7 +65,8 @@ tasks {
             "co.aikar.locale",
             "co.aikar.idb",
             "com.zaxxer.hikari",
-            "org.mariadb.jdbc"
+            "org.mariadb.jdbc",
+            "net.kyori.adventure.text.minimessage"
         )
         mergeServiceFiles()
     }
