@@ -11,6 +11,12 @@ group = "com.proximyst.ban"
 version = "0.1.0"
 
 repositories {
+    mavenLocal {
+        content {
+            includeGroup("com.velocitypowered")
+        }
+    }
+
     maven {
         name = "aikar"
         url = uri("https://repo.aikar.co/content/groups/aikar/")

@@ -11,6 +11,7 @@ import com.google.inject.Injector;
 import com.proximyst.ban.boilerplate.Slf4jLoggerProxy;
 import com.proximyst.ban.boilerplate.model.MigrationIndexEntry;
 import com.proximyst.ban.commands.BanCommand;
+import com.proximyst.ban.commands.brigadier.BanCommandDispatcher;
 import com.proximyst.ban.config.ConfigUtil;
 import com.proximyst.ban.config.Configuration;
 import com.proximyst.ban.data.IDataInterface;
@@ -20,7 +21,6 @@ import com.proximyst.ban.data.MojangApiMojang;
 import com.proximyst.ban.data.MySqlInterface;
 import com.proximyst.ban.data.PunishmentManager;
 import com.proximyst.ban.event.subscriber.BannedPlayerJoinSubscriber;
-import com.proximyst.ban.inject.CommandsModule;
 import com.proximyst.ban.inject.DataModule;
 import com.proximyst.ban.inject.PluginModule;
 import com.proximyst.ban.utils.ResourceReader;
@@ -72,6 +72,7 @@ public class BanPlugin {
   private IDataInterface dataInterface;
   private PunishmentManager punishmentManager;
   private IMojangApi mojangApi;
+  private BanCommandDispatcher commandDispatcher;
 
   @Inject
   public BanPlugin(
@@ -85,7 +86,6 @@ public class BanPlugin {
 
     injector = Guice.createInjector(
         new PluginModule(this),
-        new CommandsModule(this),
         new DataModule(this)
     );
   }
@@ -162,15 +162,19 @@ public class BanPlugin {
     mojangApi = getConfiguration().useAshcon()
         ? new MojangApiAshcon()
         : new MojangApiMojang();
+    commandDispatcher = new BanCommandDispatcher(this);
     getLogger().info("Plugin essentials initialised!");
 
-    getLogger().info("Registering commands...");
-    getProxyServer().getCommandManager().register("ban", getInjector().getInstance(BanCommand.class));
-    getLogger().info("Finished registering commands!");
-
     getLogger().info("Registering subscribers...");
+    getProxyServer().getEventManager().register(this, getCommandDispatcher());
     getProxyServer().getEventManager().register(this, getInjector().getInstance(BannedPlayerJoinSubscriber.class));
     getLogger().info("Finished registering subscribers!");
+
+    getLogger().info("Registering commands...");
+    getInjector().getInstance(BanCommand.class).register();
+
+    getCommandDispatcher().registerVelocityProxyCommands();
+    getLogger().info("Finished registering commands!");
 
     getLogger().info("Plugin has finished initialisation.");
   }
@@ -227,5 +231,10 @@ public class BanPlugin {
   @NonNull
   public IMojangApi getMojangApi() {
     return mojangApi;
+  }
+
+  @NonNull
+  public BanCommandDispatcher getCommandDispatcher() {
+    return commandDispatcher;
   }
 }
