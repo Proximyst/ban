@@ -96,7 +96,7 @@ public final class Punishment {
       long duration,
       boolean silent
   ) {
-    if (!lifted && liftedBy == null) {
+    if (!lifted && liftedBy != null) {
       throw new IllegalArgumentException("liftedBy must be null if lifted is false");
     }
 

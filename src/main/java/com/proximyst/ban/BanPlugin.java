@@ -14,8 +14,12 @@ import com.proximyst.ban.commands.BanCommand;
 import com.proximyst.ban.config.ConfigUtil;
 import com.proximyst.ban.config.Configuration;
 import com.proximyst.ban.data.IDataInterface;
+import com.proximyst.ban.data.IMojangApi;
+import com.proximyst.ban.data.MojangApiAshcon;
+import com.proximyst.ban.data.MojangApiMojang;
 import com.proximyst.ban.data.MySqlInterface;
 import com.proximyst.ban.data.PunishmentManager;
+import com.proximyst.ban.event.subscriber.BannedPlayerJoinSubscriber;
 import com.proximyst.ban.inject.CommandsModule;
 import com.proximyst.ban.inject.DataModule;
 import com.proximyst.ban.inject.PluginModule;
@@ -67,6 +71,7 @@ public class BanPlugin {
   private Configuration configuration;
   private IDataInterface dataInterface;
   private PunishmentManager punishmentManager;
+  private IMojangApi mojangApi;
 
   @Inject
   public BanPlugin(
@@ -129,7 +134,7 @@ public class BanPlugin {
         )
         .maxConnections(getConfiguration().getSql().getMaxConnections())
         .createHikariDatabase());
-    dataInterface = getInjector().getInstance(MySqlInterface.class);
+    dataInterface = new MySqlInterface(getLogger());
     getLogger().info("Database pool opened!");
 
     getLogger().info("Preparing database...");
@@ -149,12 +154,23 @@ public class BanPlugin {
     getLogger().info("Database prepared!");
 
     getLogger().info("Initialising plugin essentials...");
-    punishmentManager = getInjector().getInstance(PunishmentManager.class);
+    punishmentManager = new PunishmentManager(
+        getDataInterface(),
+        getLogger(),
+        getProxyServer().getEventManager()
+    );
+    mojangApi = getConfiguration().useAshcon()
+        ? new MojangApiAshcon()
+        : new MojangApiMojang();
     getLogger().info("Plugin essentials initialised!");
 
     getLogger().info("Registering commands...");
     getProxyServer().getCommandManager().register("ban", getInjector().getInstance(BanCommand.class));
     getLogger().info("Finished registering commands!");
+
+    getLogger().info("Registering subscribers...");
+    getProxyServer().getEventManager().register(this, getInjector().getInstance(BannedPlayerJoinSubscriber.class));
+    getLogger().info("Finished registering subscribers!");
 
     getLogger().info("Plugin has finished initialisation.");
   }
@@ -206,5 +222,10 @@ public class BanPlugin {
   @NonNull
   public PunishmentManager getPunishmentManager() {
     return punishmentManager;
+  }
+
+  @NonNull
+  public IMojangApi getMojangApi() {
+    return mojangApi;
   }
 }

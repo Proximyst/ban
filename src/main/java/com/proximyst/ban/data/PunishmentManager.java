@@ -5,11 +5,12 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.proximyst.ban.event.event.PunishmentAddedEvent;
 import com.proximyst.ban.model.Punishment;
 import com.proximyst.ban.model.PunishmentType;
 import com.proximyst.ban.utils.ThrowableUtils;
+import com.velocitypowered.api.event.EventManager;
 import java.sql.SQLException;
 import java.util.Comparator;
 import java.util.List;
@@ -28,6 +29,9 @@ public final class PunishmentManager {
   @NonNull
   private final Logger logger;
 
+  @NonNull
+  private final EventManager eventManager;
+
   private final LoadingCache<UUID, List<Punishment>> punishmentCache = CacheBuilder.newBuilder()
       .expireAfterAccess(1, TimeUnit.MINUTES)
       .initialCapacity(512)
@@ -41,23 +45,31 @@ public final class PunishmentManager {
         }
       }));
 
-  @Inject
   public PunishmentManager(
       @NonNull IDataInterface dataInterface,
-      @NonNull Logger logger
+      @NonNull Logger logger,
+      @NonNull EventManager eventManager
   ) {
     this.dataInterface = dataInterface;
     this.logger = logger;
+    this.eventManager = eventManager;
   }
 
   public void addPunishment(@NonNull Punishment punishment) {
-    punishmentCache.asMap().compute(punishment.getTarget(), (uuid, list) -> {
-      if (list == null) {
-        return Lists.newArrayList(punishment);
-      } else {
-        list.add(punishment);
-        return list;
+    eventManager.fire(new PunishmentAddedEvent(punishment)).thenAcceptAsync(event -> {
+      if (!event.getResult().isAllowed()) {
+        logger.info("Punishment on {} by {} was denied.", punishment.getTarget(), punishment.getPunisher());
+        return;
       }
+
+      punishmentCache.asMap().compute(punishment.getTarget(), (uuid, list) -> {
+        if (list == null) {
+          return Lists.newArrayList(punishment);
+        } else {
+          list.add(punishment);
+          return list;
+        }
+      });
     });
   }
 

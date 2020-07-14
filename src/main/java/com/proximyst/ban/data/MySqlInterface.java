@@ -2,7 +2,6 @@ package com.proximyst.ban.data;
 
 import co.aikar.idb.DB;
 import co.aikar.idb.DbRow;
-import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.proximyst.ban.boilerplate.model.MigrationIndexEntry;
 import com.proximyst.ban.model.Punishment;
@@ -26,7 +25,6 @@ public class MySqlInterface implements IDataInterface {
   @NonNull
   private final Logger logger;
 
-  @Inject
   public MySqlInterface(@NonNull Logger logger) {
     this.logger = logger;
   }
