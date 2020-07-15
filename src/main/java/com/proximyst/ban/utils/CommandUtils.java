@@ -1,6 +1,7 @@
 package com.proximyst.ban.utils;
 
 import com.google.common.collect.ImmutableList;
+import com.proximyst.ban.commands.helper.argument.ArgumentReader;
 import com.proximyst.ban.model.Punishment;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
@@ -13,11 +14,37 @@ public final class CommandUtils {
     throw new IllegalAccessException(getClass().getSimpleName() + " cannot be instantiated.");
   }
 
-  public static ImmutableList<String> suggestPlayerNames(@NonNull ProxyServer server, @NonNull String[] arguments) {
-    return suggestPlayerNames(server, arguments.length == 0 ? "" : arguments[arguments.length - 1].toLowerCase());
+  public static ImmutableList<String> suggestPlayerNames(
+      @NonNull ProxyServer server,
+      @NonNull ArgumentReader arguments
+  ) {
+    return suggestPlayerNames(server, arguments, false);
   }
 
-  private static ImmutableList<String> suggestPlayerNames(@NonNull ProxyServer server, @NonNull String name) {
+  public static ImmutableList<String> suggestPlayerNames(
+      @NonNull ProxyServer server,
+      @NonNull ArgumentReader arguments,
+      boolean silentFlag
+  ) {
+    return suggestPlayerNames(
+        server,
+        arguments.tryPop().map(String::toLowerCase).orElse(""),
+        silentFlag
+    );
+  }
+
+  private static ImmutableList<String> suggestPlayerNames(
+      @NonNull ProxyServer server,
+      @NonNull String name,
+      boolean silentFlag
+  ) {
+    if (silentFlag && "-s".startsWith(name.toLowerCase())) {
+      return ImmutableList.<String>builder()
+          .add("-s")
+          .addAll(suggestPlayerNames(server, name, false))
+          .build();
+    }
+
     return server.getAllPlayers().stream()
         .map(Player::getUsername)
         .filter(it -> it.toLowerCase().startsWith(name))

@@ -7,6 +7,8 @@ public final class BanPermissions {
 
   private static final String BASE = "ban.";
   private static final String BASE_COMMANDS = BASE + "commands.";
+  private static final String BASE_SILENT = ".silent";
 
   public static final String COMMAND_BAN = BASE_COMMANDS + "ban";
+  public static final String COMMAND_BAN_SILENT = COMMAND_BAN + BASE_SILENT;
 }

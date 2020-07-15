@@ -1,71 +1,65 @@
 package com.proximyst.ban.commands;
 
 import com.google.inject.Inject;
-import com.mojang.brigadier.arguments.StringArgumentType;
-import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.proximyst.ban.BanPermissions;
 import com.proximyst.ban.BanPlugin;
-import com.proximyst.ban.commands.brigadier.PlayerArgumentType;
-import com.proximyst.ban.commands.brigadier.VelocityBrigadierUtils;
-import com.proximyst.ban.config.MessageConfig;
+import com.proximyst.ban.commands.helper.BaseCommand;
+import com.proximyst.ban.commands.helper.argument.ArgumentReader;
+import com.proximyst.ban.commands.helper.argument.FlagArgument;
+import com.proximyst.ban.commands.helper.argument.UuidArgument;
+import com.proximyst.ban.commands.helper.exception.IllegalCommandException;
+import com.proximyst.ban.commands.helper.exception.UsageException;
 import com.proximyst.ban.model.PunishmentBuilder;
 import com.proximyst.ban.model.PunishmentType;
 import com.proximyst.ban.utils.CommandUtils;
 import com.velocitypowered.api.command.CommandSource;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public final class BanCommand {
-  private final BanPlugin main;
-  private final MessageConfig messageConfig;
-
+public final class BanCommand extends BaseCommand {
   @Inject
-  public BanCommand(
-      @NonNull BanPlugin main,
-      @NonNull MessageConfig messageConfig
-  ) {
-    this.main = main;
-    this.messageConfig = messageConfig;
+  public BanCommand(@NonNull BanPlugin main) {
+    super("ban [-s] <target> [reason]", main);
   }
 
-  public void register() {
-    main.getCommandDispatcher().register(
-        VelocityBrigadierUtils.literal("ban")
-            .requires(src -> src.hasPermission(BanPermissions.COMMAND_BAN))
-            .then(VelocityBrigadierUtils.requiredArg("target", StringArgumentType.string())
-                .then(VelocityBrigadierUtils.requiredArg("reason", StringArgumentType.greedyString())
-                    .executes(this::execute))
-                .executes(this::execute)
-            )
-    );
-  }
+  @Override
+  protected void exec(@NonNull CommandSource source, @NonNull ArgumentReader args) throws IllegalCommandException {
+    if (args.isEmpty()) {
+      throw new UsageException();
+    }
 
-  private int execute(CommandContext<CommandSource> ctx) throws CommandSyntaxException {
-    UUID target = PlayerArgumentType.getPlayer(main.getMojangApi(), ctx, "target");
-    @Nullable String reason = VelocityBrigadierUtils
-        .getOptionalArgument(() -> StringArgumentType.getString(ctx, "reason"))
+    boolean silent = FlagArgument.getFlags(args).contains("s");
+    UUID target = UuidArgument.getUuid(getMain().getMojangApi(), args);
+    @Nullable String reason = Optional.of(String.join(" ", args.getRemaining()))
+        .filter(str -> !str.isEmpty())
         .orElse(null);
 
-    ctx.getSource().sendMessage(
-        MiniMessage.get().parse(
-            "<green>Banned <yellow><target></yellow>!",
-            "target", main.getMojangApi().getUsernameFromUuid(target).orElse(target.toString())
-        )
-    );
-
-    main.getPunishmentManager().addPunishment(
+    getMain().getPunishmentManager().addPunishment(
         new PunishmentBuilder()
             .type(PunishmentType.BAN)
-            .punisher(CommandUtils.getSourceUuid(ctx.getSource()))
+            .punisher(CommandUtils.getSourceUuid(source))
             .target(target)
 
+            .silent(silent)
             .reason(reason)
             .build()
     );
+  }
 
-    return 1;
+  @Override
+  protected List<String> suggest(@NonNull CommandSource source, @NonNull ArgumentReader args) {
+    return CommandUtils.suggestPlayerNames(getMain().getProxyServer(), args, true);
+  }
+
+  @Override
+  public boolean hasPermission(@NonNull CommandSource source, @NonNull ArgumentReader args) {
+    if (FlagArgument.getFlags(args).contains("s")) {
+      return source.hasPermission(BanPermissions.COMMAND_BAN_SILENT);
+    }
+
+    return source.hasPermission(BanPermissions.COMMAND_BAN);
   }
 }
