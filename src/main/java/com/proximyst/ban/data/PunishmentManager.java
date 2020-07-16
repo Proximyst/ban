@@ -14,6 +14,7 @@ import com.velocitypowered.api.event.EventManager;
 import java.sql.SQLException;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
@@ -37,6 +38,7 @@ public final class PunishmentManager {
       .initialCapacity(512)
       .maximumSize(512)
       .build(CacheLoader.from(uuid -> {
+        Objects.requireNonNull(uuid, "uuid must not be null");
         try {
           return getDataInterface().getPunishmentsForTarget(uuid);
         } catch (SQLException ex) {
@@ -70,6 +72,12 @@ public final class PunishmentManager {
           return list;
         }
       });
+
+      try {
+        getDataInterface().addPunishment(punishment);
+      } catch (SQLException ex) {
+        logger.error("Could not save punishment", ex);
+      }
     });
   }
 

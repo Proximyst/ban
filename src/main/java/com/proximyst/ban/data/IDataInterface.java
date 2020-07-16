@@ -11,8 +11,26 @@ import org.checkerframework.checker.nullness.qual.NonNull;
  * An interface to the data storage.
  */
 public interface IDataInterface {
+  /**
+   * Apply all migrations to the database.
+   *
+   * @param migrations The migrations available.
+   */
   void applyMigrations(@NonNull List<MigrationIndexEntry> migrations) throws SQLException;
 
+  /**
+   * Get all current punishments where the given {@link UUID} is the target.
+   *
+   * @param target The target of the punishments.
+   * @return The punishments of the target in a mutable list.
+   */
   @NonNull
   List<Punishment> getPunishmentsForTarget(@NonNull UUID target) throws SQLException;
+
+  /**
+   * Add a punishment to the database.
+   *
+   * @param punishment The punishment to add.
+   */
+  void addPunishment(@NonNull Punishment punishment) throws SQLException;
 }

@@ -11,6 +11,7 @@ public enum SqlQueries {
   CREATE_VERSION_TABLE("create-version-table"),
   UPDATE_VERSION("update-version"),
   SELECT_PUNISHMENTS_BY_TARGET("select-punishments-by-target"),
+  CREATE_PUNISHMENT("create-punishment"),
   ;
 
   @NonNull

@@ -12,20 +12,12 @@ public final class Configuration {
   @Setting(comment = "The SQL server settings.")
   private SqlConfig sql = new SqlConfig();
 
-  @Setting(comment = "The message settings.")
-  private MessageConfig messages = new MessageConfig();
-
   @Setting(comment = "Whether to use Ashcon instead of the official Mojang API.")
   private boolean useAshcon = true;
 
   @NonNull
   public SqlConfig getSql() {
     return sql;
-  }
-
-  @NonNull
-  public MessageConfig getMessages() {
-    return messages;
   }
 
   public boolean useAshcon() {
@@ -42,20 +34,18 @@ public final class Configuration {
     }
     Configuration that = (Configuration) o;
     return getSql().equals(that.getSql())
-        && getMessages().equals(that.getMessages())
         && useAshcon() == that.useAshcon();
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(getSql(), getMessages(), useAshcon());
+    return Objects.hash(getSql(), useAshcon());
   }
 
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
         .add("sql", getSql())
-        .add("messages", getMessages())
         .add("useAshcon", useAshcon())
         .toString();
   }

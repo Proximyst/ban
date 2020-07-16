@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -67,5 +68,21 @@ public class MySqlInterface implements IDataInterface {
         .map(Punishment::fromRow)
         .sorted(Comparator.comparingLong(Punishment::getTime))
         .collect(Collectors.toCollection(ArrayList::new)); // toList has no mutability guarantee
+  }
+
+  @Override
+  public void addPunishment(@NonNull Punishment punishment) throws SQLException {
+    DB.executeUpdate(
+        SqlQueries.CREATE_PUNISHMENT.getQuery(),
+        punishment.getPunishmentType().getId(),
+        punishment.getTarget().toString(),
+        punishment.getPunisher().toString(),
+        punishment.getReason(),
+        punishment.isLifted(),
+        punishment.getLiftedBy().map(Objects::toString).orElse(null),
+        punishment.getTime(),
+        punishment.getDuration(),
+        punishment.getReason()
+    );
   }
 }
