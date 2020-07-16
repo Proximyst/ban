@@ -32,7 +32,7 @@ public final class BanCommand extends BaseCommand {
     }
 
     boolean silent = FlagArgument.getFlags(args).contains("s");
-    UUID target = UuidArgument.getUuid(getMain().getMojangApi(), args);
+    UUID target = UuidArgument.getUuid(getMain().getMojangApi(), getMain().getProxyServer(), args);
     @Nullable String reason = Optional.of(String.join(" ", args.getRemaining()))
         .filter(str -> !str.isEmpty())
         .orElse(null);
