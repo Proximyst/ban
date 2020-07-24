@@ -339,7 +339,7 @@ public final class Punishment {
   /**
    * @return Whether this punishment still applies to the player.
    */
-  public boolean currentlyApplies() {
+  public boolean currentlyApplies(@NonNull BanPlugin main) {
     if (!getPunishmentType().canBeLifted()) {
       // The punishment cannot be lifted and therefore cannot apply past the event.
       return false;
@@ -358,6 +358,10 @@ public final class Punishment {
 
     lifted = true;
     liftedBy = null; // Expired, no-one lifted it.
+    main.getSchedulerExecutor().execute(() -> {
+      main.getLogger().info("Lifting punishment ID " + id + "; it has expired.");
+      main.getDataInterface().liftPunishment(this);
+    });
     return false;
   }
 

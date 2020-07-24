@@ -32,4 +32,11 @@ public interface IDataInterface {
    * @param punishment The punishment to add.
    */
   void addPunishment(@NonNull Punishment punishment);
+
+  /**
+   * Lift a punishment in the database.
+   *
+   * @param punishment The punishment to lift.
+   */
+  void liftPunishment(@NonNull Punishment punishment);
 }

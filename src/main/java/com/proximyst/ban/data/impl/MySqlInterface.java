@@ -100,4 +100,19 @@ public class MySqlInterface implements IDataInterface {
       );
     });
   }
+
+  @Override
+  public void liftPunishment(@NonNull Punishment punishment) {
+    // Stay boxed to avoid an allocation.
+    Long id = punishment.getId()
+        .orElseThrow(() -> new IllegalArgumentException("Punishment must be in DB before lifting"));
+    jdbi.useHandle(handle -> {
+      handle.execute(
+          SqlQueries.LIFT_PUNISHMENT.getQuery(),
+          punishment.isLifted(),
+          punishment.getLiftedBy(),
+          id
+      );
+    });
+  }
 }

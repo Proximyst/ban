@@ -99,7 +99,7 @@ public final class PunishmentManager {
     return getPunishments(target)
         .stream()
         .filter(punishment -> punishment.getPunishmentType() == PunishmentType.BAN
-            && punishment.currentlyApplies())
+            && punishment.currentlyApplies(main))
         .max(Comparator.comparingLong(Punishment::getTime));
   }
 
@@ -108,7 +108,7 @@ public final class PunishmentManager {
     return getPunishments(target)
         .stream()
         .filter(punishment -> punishment.getPunishmentType() == PunishmentType.MUTE
-            && punishment.currentlyApplies())
+            && punishment.currentlyApplies(main))
         .max(Comparator.comparingLong(Punishment::getTime));
   }
 
