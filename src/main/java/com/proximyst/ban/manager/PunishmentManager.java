@@ -1,4 +1,4 @@
-package com.proximyst.ban.data;
+package com.proximyst.ban.manager;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -6,12 +6,12 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.inject.Singleton;
+import com.proximyst.ban.data.IDataInterface;
 import com.proximyst.ban.event.event.PunishmentAddedEvent;
 import com.proximyst.ban.model.Punishment;
 import com.proximyst.ban.model.PunishmentType;
 import com.proximyst.ban.utils.ThrowableUtils;
 import com.velocitypowered.api.event.EventManager;
-import java.sql.SQLException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -39,12 +39,7 @@ public final class PunishmentManager {
       .maximumSize(512)
       .build(CacheLoader.from(uuid -> {
         Objects.requireNonNull(uuid, "uuid must not be null");
-        try {
-          return getDataInterface().getPunishmentsForTarget(uuid);
-        } catch (SQLException ex) {
-          ThrowableUtils.sneakyThrow(ex);
-          throw new RuntimeException();
-        }
+        return getDataInterface().getPunishmentsForTarget(uuid);
       }));
 
   public PunishmentManager(
@@ -75,7 +70,7 @@ public final class PunishmentManager {
 
       try {
         getDataInterface().addPunishment(punishment);
-      } catch (SQLException ex) {
+      } catch (Exception ex) {
         logger.error("Could not save punishment", ex);
       }
     });

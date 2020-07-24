@@ -48,7 +48,7 @@ dependencies {
     compileOnly("com.velocitypowered:velocity-api:1.1.0-SNAPSHOT")
     annotationProcessor("com.velocitypowered:velocity-api:1.1.0-SNAPSHOT")
 
-    implementation("co.aikar:idb-core:1.0.0-SNAPSHOT")
+    implementation("org.jdbi:jdbi3-core:3.14.1")
     implementation("com.zaxxer:HikariCP:3.4.5") {
         exclude("org.slf4j")
     }
@@ -58,7 +58,7 @@ dependencies {
         isTransitive = false
     }
 
-    runtimeOnly("org.mariadb.jdbc:mariadb-java-client:2.6.1")
+    implementation("org.mariadb.jdbc:mariadb-java-client:2.6.1")
 }
 
 tasks {
@@ -69,10 +69,10 @@ tasks {
         reloc(
             "co.aikar.commands",
             "co.aikar.locale",
-            "co.aikar.idb",
             "com.zaxxer.hikari",
             "org.mariadb.jdbc",
-            "net.kyori.adventure.text.minimessage"
+            "net.kyori.adventure.text.minimessage",
+            "org.jdbi"
         )
         mergeServiceFiles()
     }

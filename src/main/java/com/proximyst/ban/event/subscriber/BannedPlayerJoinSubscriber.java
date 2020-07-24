@@ -1,7 +1,7 @@
 package com.proximyst.ban.event.subscriber;
 
 import com.google.inject.Inject;
-import com.proximyst.ban.data.PunishmentManager;
+import com.proximyst.ban.manager.PunishmentManager;
 import com.proximyst.ban.model.Punishment;
 import com.velocitypowered.api.event.ResultedEvent.ComponentResult;
 import com.velocitypowered.api.event.Subscribe;

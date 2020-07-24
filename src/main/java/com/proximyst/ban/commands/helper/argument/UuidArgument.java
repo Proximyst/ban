@@ -2,8 +2,11 @@ package com.proximyst.ban.commands.helper.argument;
 
 import com.proximyst.ban.commands.helper.exception.IllegalCommandException;
 import com.proximyst.ban.data.IMojangApi;
+import com.proximyst.ban.model.BanUser;
+import com.proximyst.ban.utils.StringUtils;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -23,12 +26,20 @@ public final class UuidArgument {
   }
 
   @NonNull
+  public static Optional<BanUser> getBanUser(
+      @NonNull IMojangApi mojangApi,
+      @NonNull ProxyServer proxyServer,
+      @NonNull ArgumentReader arguments
+  ) throws IllegalCommandException {
+    return mojangApi.getUser(getUuid(mojangApi, proxyServer, arguments));
+  }
+
+  @NonNull
   public static UUID getUuid(
       @NonNull IMojangApi mojangApi,
       @NonNull ProxyServer proxyServer,
       @NonNull ArgumentReader arguments
-  )
-      throws IllegalCommandException {
+  ) throws IllegalCommandException {
     String string = arguments.tryPop().orElseThrow(EXPECTED_PLAYER);
 
     @Nullable Player onlinePlayer = proxyServer.getAllPlayers()
@@ -61,14 +72,8 @@ public final class UuidArgument {
     }
 
     if (string.length() == 32) {
-      // No dashes, add them first.
-      StringBuilder builder = new StringBuilder(string);
-      builder.insert(8, '-');
-      builder.insert(13, '-');
-      builder.insert(18, '-');
-      builder.insert(23, '-');
       try {
-        return UUID.fromString(builder.toString());
+        return UUID.fromString(StringUtils.rehyphenUuid(string));
       } catch (IllegalArgumentException ex) {
         throw INVALID_UUID.apply(string);
       }

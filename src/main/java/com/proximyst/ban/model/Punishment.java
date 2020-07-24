@@ -1,6 +1,5 @@
 package com.proximyst.ban.model;
 
-import co.aikar.idb.DbRow;
 import com.google.common.base.Preconditions;
 import java.util.Date;
 import java.util.Objects;
@@ -8,6 +7,7 @@ import java.util.Optional;
 import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jdbi.v3.core.result.RowView;
 
 /**
  * A punishment enacted on a player.
@@ -112,22 +112,22 @@ public final class Punishment {
   }
 
   @NonNull
-  public static Punishment fromRow(@NonNull DbRow row) {
+  public static Punishment fromRow(@NonNull RowView row) {
     return new PunishmentBuilder()
         .type(
-            PunishmentType.getById(row.getInt("type").byteValue())
+            PunishmentType.getById(row.getColumn("type", byte.class))
                 .orElseThrow(() -> new IllegalStateException(
-                    "punishment type id " + row.getInt("type") + " is unknown"
+                    "punishment type id " + row.getColumn("type", byte.class) + " is unknown"
                 ))
         )
-        .target(UUID.fromString(row.getString("target")))
-        .punisher(UUID.fromString(row.getString("punisher")))
-        .reason(row.getString("reason", null))
-        .lifted(row.getInt("lifted") != 0)
-        .liftedBy(Optional.ofNullable(row.getString("lifted_by")).map(UUID::fromString).orElse(null))
-        .time(row.getLong("time"))
-        .duration(row.getLong("duration"))
-        .silent(row.getInt("silent") != 0)
+        .target(row.getColumn("target", UUID.class))
+        .punisher(row.getColumn("punisher", UUID.class))
+        .reason(row.getColumn("reason", String.class))
+        .lifted(row.getColumn("lifted", boolean.class))
+        .liftedBy(row.getColumn("lifted_by", UUID.class))
+        .time(row.getColumn("time", long.class))
+        .duration(row.getColumn("duration", long.class))
+        .silent(row.getColumn("silent", boolean.class))
         .build();
   }
 

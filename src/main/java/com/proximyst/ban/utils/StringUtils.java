@@ -24,4 +24,19 @@ public final class StringUtils {
     }
     return builder.toString();
   }
+
+  @NonNull
+  public static String rehyphenUuid(@NonNull String string) {
+    if (string.length() == 32) {
+      // No dashes, add them first.
+      StringBuilder builder = new StringBuilder(string);
+      builder.insert(8, '-');
+      builder.insert(13, '-');
+      builder.insert(18, '-');
+      builder.insert(23, '-');
+      return builder.toString();
+    }
+
+    return string;
+  }
 }

@@ -9,11 +9,8 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 @SuppressWarnings("FieldMayBeFinal")
 @ConfigSerializable
 public final class SqlConfig {
-  @Setting(comment = "The address to connect to the SQL server at.")
-  private String hostname = "localhost";
-
-  @Setting(comment = "The port to connect to the SQL server at.")
-  private short port = 3306;
+  @Setting(comment = "The JDBC URI to connect to the SQL server with.")
+  private String jdbcUri = "jdbc:mysql://localhost:3306/ban";
 
   @Setting(comment = "The username for the SQL server.")
   private String username = "root";
@@ -21,19 +18,12 @@ public final class SqlConfig {
   @Setting(comment = "The password to use for the SQL server.")
   private String password = "";
 
-  @Setting(comment = "The database to use for the SQL server.")
-  private String database = "ban";
-
   @Setting(comment = "The max connections to have open in the pool.")
   private int maxConnections = 10;
 
   @NonNull
-  public String getHostname() {
-    return hostname;
-  }
-
-  public short getPort() {
-    return port;
+  public String getJdbcUri() {
+    return jdbcUri;
   }
 
   @NonNull
@@ -44,11 +34,6 @@ public final class SqlConfig {
   @NonNull
   public String getPassword() {
     return password;
-  }
-
-  @NonNull
-  public String getDatabase() {
-    return database;
   }
 
   public int getMaxConnections() {
@@ -64,22 +49,18 @@ public final class SqlConfig {
       return false;
     }
     SqlConfig sqlConfig = (SqlConfig) o;
-    return getPort() == sqlConfig.getPort() &&
-        getMaxConnections() == sqlConfig.getMaxConnections() &&
-        getHostname().equals(sqlConfig.getHostname()) &&
+    return getMaxConnections() == sqlConfig.getMaxConnections() &&
+        getJdbcUri().equals(sqlConfig.getJdbcUri()) &&
         getUsername().equals(sqlConfig.getUsername()) &&
-        getPassword().equals(sqlConfig.getPassword()) &&
-        getDatabase().equals(sqlConfig.getDatabase());
+        getPassword().equals(sqlConfig.getPassword());
   }
 
   @Override
   public int hashCode() {
     return Objects.hash(
-        getHostname(),
-        getPort(),
+        getJdbcUri(),
         getUsername(),
         getPassword(),
-        getDatabase(),
         getMaxConnections()
     );
   }
@@ -87,11 +68,9 @@ public final class SqlConfig {
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
-        .add("hostname", hostname)
-        .add("port", port)
+        .add("jdbcUri", jdbcUri)
         .add("username", username)
         .add("password", password)
-        .add("database", database)
         .add("maxConnections", maxConnections)
         .toString();
   }

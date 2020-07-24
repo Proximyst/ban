@@ -1,27 +1,22 @@
 package com.proximyst.ban;
 
-import co.aikar.idb.DB;
-import co.aikar.idb.DatabaseOptions;
-import co.aikar.idb.PooledDatabaseOptions;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.proximyst.ban.boilerplate.Slf4jLoggerProxy;
 import com.proximyst.ban.boilerplate.model.MigrationIndexEntry;
 import com.proximyst.ban.commands.BanCommand;
 import com.proximyst.ban.config.ConfigUtil;
 import com.proximyst.ban.config.Configuration;
 import com.proximyst.ban.data.IDataInterface;
 import com.proximyst.ban.data.IMojangApi;
-import com.proximyst.ban.data.MojangApiAshcon;
-import com.proximyst.ban.data.MojangApiMojang;
-import com.proximyst.ban.data.MySqlInterface;
-import com.proximyst.ban.data.PunishmentManager;
+import com.proximyst.ban.data.impl.MojangApiAshcon;
+import com.proximyst.ban.data.impl.MySqlInterface;
 import com.proximyst.ban.event.subscriber.BannedPlayerJoinSubscriber;
 import com.proximyst.ban.inject.DataModule;
 import com.proximyst.ban.inject.PluginModule;
+import com.proximyst.ban.manager.PunishmentManager;
 import com.proximyst.ban.utils.ResourceReader;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
@@ -29,14 +24,18 @@ import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
 import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.jdbi.v3.core.Jdbi;
 import org.slf4j.Logger;
 
 @Plugin(
@@ -71,6 +70,8 @@ public class BanPlugin {
   private IDataInterface dataInterface;
   private PunishmentManager punishmentManager;
   private IMojangApi mojangApi;
+  private HikariDataSource hikariDataSource;
+  private Jdbi jdbi;
 
   @Inject
   public BanPlugin(
@@ -90,7 +91,10 @@ public class BanPlugin {
 
   @Subscribe
   public void onProxyInitialisation(ProxyInitializeEvent event) {
-    getLogger().info("Reading configuration file...");
+    long start = System.currentTimeMillis();
+    TimeMeasurer tm = new TimeMeasurer(getLogger());
+
+    tm.start("Reading configuration file");
     // Just to ensure the parents exist.
     //noinspection ResultOfMethodCallIgnored
     getDataDirectory().toFile().mkdirs();
@@ -114,28 +118,25 @@ public class BanPlugin {
       getLogger().error("Cannot read configuration", ex);
       return;
     }
-    getLogger().info("Read configuration!");
 
-    getLogger().info("Opening a pooled database...");
-    DB.setGlobalDatabase(PooledDatabaseOptions.builder()
-        .options(
-            DatabaseOptions.builder()
-                .mysql(
-                    getConfiguration().getSql().getUsername(),
-                    getConfiguration().getSql().getPassword(),
-                    getConfiguration().getSql().getDatabase(),
-                    getConfiguration().getSql().getHostname() + ":" + getConfiguration().getSql().getPort()
-                )
-                .useOptimizations(false)
-                .logger(new Slf4jLoggerProxy(getLogger()))
-                .build()
-        )
-        .maxConnections(getConfiguration().getSql().getMaxConnections())
-        .createHikariDatabase());
-    dataInterface = new MySqlInterface(getLogger());
-    getLogger().info("Database pool opened!");
+    tm.start("Opening database pool");
+    try {
+      DriverManager.registerDriver(new org.mariadb.jdbc.Driver());
+    } catch (SQLException ex) {
+      getLogger().error("Could not register a SQL driver", ex);
+      return;
+    }
 
-    getLogger().info("Preparing database...");
+    HikariConfig hikariConfig = new HikariConfig();
+    hikariConfig.setJdbcUrl(getConfiguration().getSql().getJdbcUri());
+    hikariConfig.setUsername(getConfiguration().getSql().getUsername());
+    hikariConfig.setPassword(getConfiguration().getSql().getPassword());
+    hikariConfig.setMaximumPoolSize(getConfiguration().getSql().getMaxConnections());
+    hikariDataSource = new HikariDataSource(hikariConfig);
+    jdbi = Jdbi.create(hikariDataSource);
+    dataInterface = new MySqlInterface(getLogger(), getJdbi());
+
+    tm.start("Preparing database");
     String migrationsIndexJson = ResourceReader.readResource("sql/migrations/migrations-index.json");
     List<MigrationIndexEntry> migrationIndexEntries = COMPACT_GSON
         .fromJson(
@@ -145,41 +146,47 @@ public class BanPlugin {
         );
     try {
       getDataInterface().applyMigrations(migrationIndexEntries);
-    } catch (SQLException ex) {
+    } catch (Exception ex) {
       getLogger().error("Could not prepare database", ex);
       return;
     }
-    getLogger().info("Database prepared!");
 
-    getLogger().info("Initialising plugin essentials...");
+    tm.start("Initialising plugin essentials");
     punishmentManager = new PunishmentManager(
         getDataInterface(),
         getLogger(),
         getProxyServer().getEventManager()
     );
-    mojangApi = getConfiguration().useAshcon()
-        ? new MojangApiAshcon()
-        : new MojangApiMojang();
-    getLogger().info("Plugin essentials initialised!");
+    if (!getConfiguration().useAshcon()) {
+      getLogger().warn("Currently, only Ashcon API is supported. The plugin will still use Ashcon API.");
+    }
+    mojangApi = new MojangApiAshcon(); // TODO(Proximyst): Support official Mojang API
 
-    getLogger().info("Registering subscribers...");
+    tm.start("Registering subscribers");
     getProxyServer().getEventManager().register(this, getInjector().getInstance(BannedPlayerJoinSubscriber.class));
-    getLogger().info("Finished registering subscribers!");
 
-    getLogger().info("Registering commands...");
+    tm.start("Registering commands");
     getProxyServer().getCommandManager().register("ban", getInjector().getInstance(BanCommand.class));
-    getLogger().info("Finished registering commands!");
 
-    getLogger().info("Plugin has finished initialisation.");
+    tm.finish();
+    getLogger().info("Plugin has finished initialisation in {}ms.", System.currentTimeMillis() - start);
   }
 
   @Subscribe
   public void onProxyShutdown(ProxyShutdownEvent event) {
-    getLogger().info("Closing database...");
-    DB.close();
-    getLogger().info("Closed database!");
+    long start = System.currentTimeMillis();
+    TimeMeasurer tm = new TimeMeasurer(getLogger());
 
-    getLogger().info("Plugin disabled correctly.");
+    tm.start("Unregistering listeners");
+    getProxyServer().getEventManager().unregisterListeners(this);
+
+    tm.start("Closing database");
+    if (hikariDataSource != null) {
+      hikariDataSource.close();
+    }
+
+    tm.finish();
+    getLogger().info("Plugin disabled correctly in {}ms.", System.currentTimeMillis() - start);
   }
 
   @NonNull
@@ -225,5 +232,38 @@ public class BanPlugin {
   @NonNull
   public IMojangApi getMojangApi() {
     return mojangApi;
+  }
+
+  @NonNull
+  public Jdbi getJdbi() {
+    return jdbi;
+  }
+
+  private static class TimeMeasurer {
+    private final Logger logger;
+    private long start;
+    private String current;
+
+    public TimeMeasurer(Logger logger) {
+      this.logger = logger;
+    }
+
+    public void start(String stage) {
+      if (start != 0) {
+        finish();
+      }
+      start = System.currentTimeMillis();
+      current = stage;
+    }
+
+    public void finish() {
+      if (start == 0) {
+        return;
+      }
+
+      long duration = System.currentTimeMillis() - start;
+      start = 0;
+      logger.info("Finished stage ({}ms): {}", duration, current);
+    }
   }
 }

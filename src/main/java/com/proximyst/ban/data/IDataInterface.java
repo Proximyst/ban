@@ -2,7 +2,6 @@ package com.proximyst.ban.data;
 
 import com.proximyst.ban.boilerplate.model.MigrationIndexEntry;
 import com.proximyst.ban.model.Punishment;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -16,7 +15,7 @@ public interface IDataInterface {
    *
    * @param migrations The migrations available.
    */
-  void applyMigrations(@NonNull List<MigrationIndexEntry> migrations) throws SQLException;
+  void applyMigrations(@NonNull List<MigrationIndexEntry> migrations);
 
   /**
    * Get all current punishments where the given {@link UUID} is the target.
@@ -25,12 +24,12 @@ public interface IDataInterface {
    * @return The punishments of the target in a mutable list.
    */
   @NonNull
-  List<Punishment> getPunishmentsForTarget(@NonNull UUID target) throws SQLException;
+  List<Punishment> getPunishmentsForTarget(@NonNull UUID target);
 
   /**
    * Add a punishment to the database.
    *
    * @param punishment The punishment to add.
    */
-  void addPunishment(@NonNull Punishment punishment) throws SQLException;
+  void addPunishment(@NonNull Punishment punishment);
 }
