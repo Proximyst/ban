@@ -6,12 +6,12 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.inject.Singleton;
+import com.proximyst.ban.BanPlugin;
 import com.proximyst.ban.data.IDataInterface;
 import com.proximyst.ban.event.event.PunishmentAddedEvent;
 import com.proximyst.ban.model.Punishment;
 import com.proximyst.ban.model.PunishmentType;
 import com.proximyst.ban.utils.ThrowableUtils;
-import com.velocitypowered.api.event.EventManager;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -20,18 +20,11 @@ import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.slf4j.Logger;
 
 @Singleton
 public final class PunishmentManager {
   @NonNull
-  private final IDataInterface dataInterface;
-
-  @NonNull
-  private final Logger logger;
-
-  @NonNull
-  private final EventManager eventManager;
+  private final BanPlugin main;
 
   private final LoadingCache<UUID, List<Punishment>> punishmentCache = CacheBuilder.newBuilder()
       .expireAfterAccess(1, TimeUnit.MINUTES)
@@ -42,38 +35,44 @@ public final class PunishmentManager {
         return getDataInterface().getPunishmentsForTarget(uuid);
       }));
 
-  public PunishmentManager(
-      @NonNull IDataInterface dataInterface,
-      @NonNull Logger logger,
-      @NonNull EventManager eventManager
-  ) {
-    this.dataInterface = dataInterface;
-    this.logger = logger;
-    this.eventManager = eventManager;
+  public PunishmentManager(@NonNull BanPlugin main) {
+    this.main = main;
   }
 
   public void addPunishment(@NonNull Punishment punishment) {
-    eventManager.fire(new PunishmentAddedEvent(punishment)).thenAcceptAsync(event -> {
-      if (!event.getResult().isAllowed()) {
-        logger.info("Punishment on {} by {} was denied.", punishment.getTarget(), punishment.getPunisher());
-        return;
-      }
+    main.getProxyServer().getEventManager().fire(new PunishmentAddedEvent(punishment))
+        .thenAcceptAsync(event -> {
+          if (!event.getResult().isAllowed()) {
+            main.getLogger().info(
+                "Punishment on {} by {} was denied.",
+                punishment.getTarget(),
+                punishment.getPunisher()
+            );
+            return;
+          }
 
-      punishmentCache.asMap().compute(punishment.getTarget(), (uuid, list) -> {
-        if (list == null) {
-          return Lists.newArrayList(punishment);
-        } else {
-          list.add(punishment);
-          return list;
-        }
-      });
+          punishmentCache.asMap().compute(punishment.getTarget(), (uuid, list) -> {
+            if (list == null) {
+              return Lists.newArrayList(punishment);
+            } else {
+              list.add(punishment);
+              return list;
+            }
+          });
 
-      try {
-        getDataInterface().addPunishment(punishment);
-      } catch (Exception ex) {
-        logger.error("Could not save punishment", ex);
-      }
-    });
+          try {
+            getDataInterface().addPunishment(punishment);
+          } catch (Exception ex) {
+            main.getLogger().error("Could not save punishment", ex);
+          }
+
+          punishment.broadcast(main)
+              .thenAccept(success -> {
+                if (!success) {
+                  main.getLogger().info("Punishment was unsuccessful in broadcasting: " + punishment);
+                }
+              });
+        }, main.getSchedulerExecutor());
   }
 
   /**
@@ -115,6 +114,6 @@ public final class PunishmentManager {
 
   @NonNull
   private IDataInterface getDataInterface() {
-    return dataInterface;
+    return main.getDataInterface();
   }
 }

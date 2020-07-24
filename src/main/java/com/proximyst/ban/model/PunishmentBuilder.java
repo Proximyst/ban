@@ -5,6 +5,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class PunishmentBuilder {
+  private long id = -1;
   private PunishmentType punishmentType;
   private UUID target;
   private UUID punisher;
@@ -14,6 +15,11 @@ public final class PunishmentBuilder {
   private long time = System.currentTimeMillis();
   private long duration = 0;
   private boolean silent = false;
+
+  public PunishmentBuilder id(long id) {
+    this.id = id;
+    return this;
+  }
 
   public PunishmentBuilder type(@NonNull PunishmentType punishmentType) {
     this.punishmentType = punishmentType;
@@ -61,6 +67,6 @@ public final class PunishmentBuilder {
   }
 
   public Punishment build() {
-    return new Punishment(punishmentType, target, punisher, reason, lifted, liftedBy, time, duration, silent);
+    return new Punishment(id, punishmentType, target, punisher, reason, lifted, liftedBy, time, duration, silent);
   }
 }

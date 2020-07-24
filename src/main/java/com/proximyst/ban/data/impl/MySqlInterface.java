@@ -73,18 +73,31 @@ public class MySqlInterface implements IDataInterface {
   }
 
   @Override
-  public void addPunishment(@NonNull Punishment punishment) {
-    jdbi.useHandle(handle -> handle.execute(
-        SqlQueries.CREATE_PUNISHMENT.getQuery(),
-        punishment.getPunishmentType().getId(),
-        punishment.getTarget(),
-        punishment.getPunisher(),
-        punishment.getReason(),
-        punishment.isLifted(),
-        punishment.getLiftedBy(),
-        punishment.getTime(),
-        punishment.getDuration(),
-        punishment.isSilent()
-    ));
+  public void addPunishment(@NonNull final Punishment punishment) {
+    jdbi.useHandle(handle -> {
+      handle.execute(
+          SqlQueries.CREATE_PUNISHMENT.getQuery(),
+          punishment.getId().orElse(null),
+          punishment.getPunishmentType().getId(),
+          punishment.getTarget(),
+          punishment.getPunisher(),
+          punishment.getReason(),
+          punishment.isLifted(),
+          punishment.getLiftedBy(),
+          punishment.getTime(),
+          punishment.getDuration(),
+          punishment.isSilent()
+      );
+      if (punishment.getId().isPresent()) {
+        // We don't need to set the ID.
+        return;
+      }
+
+      punishment.setId(
+          handle.createQuery("SELECT LAST_INSERT_ID()")
+              .mapTo(long.class)
+              .one()
+      );
+    });
   }
 }

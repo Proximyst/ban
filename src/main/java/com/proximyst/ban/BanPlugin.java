@@ -5,6 +5,7 @@ import com.google.gson.reflect.TypeToken;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.proximyst.ban.boilerplate.VelocityBanSchedulerExecutor;
 import com.proximyst.ban.boilerplate.model.MigrationIndexEntry;
 import com.proximyst.ban.commands.BanCommand;
 import com.proximyst.ban.config.ConfigUtil;
@@ -65,6 +66,9 @@ public class BanPlugin {
   @NonNull
   private final Injector injector;
 
+  @NonNull
+  private final VelocityBanSchedulerExecutor schedulerExecutor;
+
   private ConfigurationNode rawConfigurationNode;
   private Configuration configuration;
   private IDataInterface dataInterface;
@@ -82,6 +86,7 @@ public class BanPlugin {
     this.proxyServer = proxyServer;
     this.logger = logger;
     this.dataDirectory = dataDirectory;
+    this.schedulerExecutor = new VelocityBanSchedulerExecutor(this);
 
     injector = Guice.createInjector(
         new PluginModule(this),
@@ -91,6 +96,13 @@ public class BanPlugin {
 
   @Subscribe
   public void onProxyInitialisation(ProxyInitializeEvent event) {
+    if (!getProxyServer().getConfiguration().isOnlineMode()) {
+      getLogger().error("This plugin cannot function on offline mode.");
+      getLogger().error("This plugin depends on Mojang's API and the presence of online mode players.");
+      getLogger().error("Please either enable online mode, or find a new punishments plugin.");
+      return;
+    }
+
     long start = System.currentTimeMillis();
     TimeMeasurer tm = new TimeMeasurer(getLogger());
 
@@ -152,15 +164,11 @@ public class BanPlugin {
     }
 
     tm.start("Initialising plugin essentials");
-    punishmentManager = new PunishmentManager(
-        getDataInterface(),
-        getLogger(),
-        getProxyServer().getEventManager()
-    );
     if (!getConfiguration().useAshcon()) {
       getLogger().warn("Currently, only Ashcon API is supported. The plugin will still use Ashcon API.");
     }
     mojangApi = new MojangApiAshcon(); // TODO(Proximyst): Support official Mojang API
+    punishmentManager = new PunishmentManager(this);
 
     tm.start("Registering subscribers");
     getProxyServer().getEventManager().register(this, getInjector().getInstance(BannedPlayerJoinSubscriber.class));
@@ -237,6 +245,11 @@ public class BanPlugin {
   @NonNull
   public Jdbi getJdbi() {
     return jdbi;
+  }
+
+  @NonNull
+  public VelocityBanSchedulerExecutor getSchedulerExecutor() {
+    return schedulerExecutor;
   }
 
   private static class TimeMeasurer {

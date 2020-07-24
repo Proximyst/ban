@@ -1,5 +1,6 @@
 package com.proximyst.ban.data;
 
+import com.proximyst.ban.BanPlugin;
 import com.proximyst.ban.model.BanUser;
 import com.proximyst.ban.model.UsernameHistory;
 import java.util.List;
@@ -48,4 +49,33 @@ public interface IMojangApi {
    * @return Data about the user, fully populated with known data.
    */
   @NonNull Optional<BanUser> getUser(@NonNull UUID uuid);
+
+  /**
+   * Get a populated {@link BanUser} for the user given.
+   *
+   * @param identifier Either the UUID of the user in string form (with or without hyphens), or their username.
+   * @return Data about the user, fully populated with known data.
+   */
+  default @NonNull CompletableFuture<Optional<BanUser>> getUserFuture(
+      @NonNull String identifier,
+      @NonNull BanPlugin main
+  ) {
+    final CompletableFuture<Optional<BanUser>> future = new CompletableFuture<>();
+    main.getProxyServer().getScheduler().buildTask(main, () -> future.complete(getUser(identifier)))
+        .schedule();
+    return future;
+  }
+
+  /**
+   * Get a populated {@link BanUser} from the user given.
+   *
+   * @param uuid The UUID of the user.
+   * @return Data about the user, fully populated with known data.
+   */
+  default @NonNull CompletableFuture<Optional<BanUser>> getUserFuture(@NonNull UUID uuid, @NonNull BanPlugin main) {
+    final CompletableFuture<Optional<BanUser>> future = new CompletableFuture<>();
+    main.getProxyServer().getScheduler().buildTask(main, () -> future.complete(getUser(uuid)))
+        .schedule();
+    return future;
+  }
 }

@@ -1,10 +1,28 @@
 package com.proximyst.ban.model;
 
+import static com.proximyst.ban.model.PunishmentType.NOTE;
+import static com.proximyst.ban.model.PunishmentType.getById;
+
 import com.google.common.base.Preconditions;
+import com.proximyst.ban.BanPermissions;
+import com.proximyst.ban.BanPlugin;
+import com.proximyst.ban.boilerplate.model.Pair;
+import com.proximyst.ban.boilerplate.model.Quadruple;
+import com.proximyst.ban.boilerplate.model.Quintuple;
+import com.proximyst.ban.config.MessagesConfig;
+import com.proximyst.ban.event.event.PunishmentPostBroadcastEvent;
+import com.proximyst.ban.event.event.PunishmentPreBroadcastEvent;
+import com.proximyst.ban.event.event.PunishmentPreBroadcastParseEvent;
+import com.proximyst.ban.utils.CommandUtils;
+import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.ProxyServer;
 import java.util.Date;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jdbi.v3.core.result.RowView;
@@ -18,6 +36,8 @@ public final class Punishment {
    */
   @NonNull
   public static UUID CONSOLE_UUID = new UUID(0, 0);
+
+  private long id = -1;
 
   /**
    * The type of this punishment.
@@ -96,10 +116,26 @@ public final class Punishment {
       long duration,
       boolean silent
   ) {
+    this(-1, punishmentType, target, punisher, reason, lifted, liftedBy, time, duration, silent);
+  }
+
+  public Punishment(
+      long id,
+      @NonNull PunishmentType punishmentType,
+      @NonNull UUID target,
+      @NonNull UUID punisher,
+      @Nullable String reason,
+      boolean lifted,
+      @Nullable UUID liftedBy,
+      long time,
+      long duration,
+      boolean silent
+  ) {
     if (!lifted && liftedBy != null) {
       throw new IllegalArgumentException("liftedBy must be null if lifted is false");
     }
 
+    this.id = id < 0 ? -1 : id;
     this.punishmentType = Objects.requireNonNull(punishmentType, "type must be specified");
     this.target = Objects.requireNonNull(target, "target must be specified");
     this.punisher = Objects.requireNonNull(punisher, "punisher must be specified");
@@ -114,8 +150,9 @@ public final class Punishment {
   @NonNull
   public static Punishment fromRow(@NonNull RowView row) {
     return new PunishmentBuilder()
+        .id(row.getColumn("id", long.class))
         .type(
-            PunishmentType.getById(row.getColumn("type", byte.class))
+            getById(row.getColumn("type", byte.class))
                 .orElseThrow(() -> new IllegalStateException(
                     "punishment type id " + row.getColumn("type", byte.class) + " is unknown"
                 ))
@@ -129,6 +166,25 @@ public final class Punishment {
         .duration(row.getColumn("duration", long.class))
         .silent(row.getColumn("silent", boolean.class))
         .build();
+  }
+
+  /**
+   * @return The ID of this punishment, or an empty optional if none is known.
+   */
+  public Optional<Long> getId() {
+    return id < 0 ? Optional.empty() : Optional.of(id);
+  }
+
+  /**
+   * @param id Set the ID of this punishment.
+   * @throws IllegalStateException If this punishment already has an ID.
+   */
+  public void setId(long id) {
+    if (getId().isPresent()) {
+      throw new IllegalStateException("Cannot set ID of punishment with a pre-existing ID");
+    }
+
+    this.id = id;
   }
 
   /**
@@ -157,6 +213,16 @@ public final class Punishment {
   @NonNull
   public UUID getPunisher() {
     return punisher;
+  }
+
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  @NonNull
+  public Optional<CommandSource> getPunisherAsSource(@NonNull ProxyServer proxyServer) {
+    if (getPunisher().equals(CONSOLE_UUID)) {
+      return Optional.of(proxyServer.getConsoleCommandSource());
+    }
+
+    return (Optional) proxyServer.getPlayer(getPunisher());
   }
 
   /**
@@ -293,5 +359,132 @@ public final class Punishment {
     lifted = true;
     liftedBy = null; // Expired, no-one lifted it.
     return false;
+  }
+
+  /**
+   * Broadcast the message to the entire proxy.
+   *
+   * @param main The main plugin instance.
+   * @return Whether the broadcast was successful.
+   */
+  @SuppressWarnings("OptionalAssignedToNull") // That's the point, dumbo.
+  @NonNull
+  public CompletableFuture<@NonNull Boolean> broadcast(@NonNull BanPlugin main) {
+    if (getPunishmentType() == NOTE) {
+      // We do not broadcast notes.
+      return CompletableFuture.completedFuture(true);
+    }
+
+    return main.getMojangApi().getUserFuture(getTarget(), main)
+        .thenCombine(
+            getPunisher().equals(CONSOLE_UUID)
+                ? CompletableFuture.completedFuture(null)
+                : main.getMojangApi().getUserFuture(getPunisher(), main),
+            (target, punisher) -> {
+              String targetName = target
+                  .map(BanUser::getUsername)
+                  .flatMap(LoadableData::getIfPresent)
+                  .orElseThrow(() -> new IllegalArgumentException("Target of punishment cannot be unknown"));
+              String punisherName = punisher == null
+                  ? CommandUtils.getSourceName(main.getProxyServer().getConsoleCommandSource())
+                  : punisher
+                      .map(BanUser::getUsername)
+                      .flatMap(LoadableData::getIfPresent)
+                      .orElseThrow(() -> new IllegalArgumentException("Punisher of punishment cannot be unknown"));
+
+              // Prepare for aids...
+              MessagesConfig cfg = main.getConfiguration().getMessages();
+              String message = null;
+              String permission = null;
+              if (getReason().isPresent()) {
+                switch (getPunishmentType()) {
+                  case BAN:
+                    message = cfg.getBroadcastBanReason();
+                    permission = isSilent() ? BanPermissions.NOTIFY_BAN_SILENT : BanPermissions.NOTIFY_BAN;
+                    break;
+                  case KICK:
+                    message = cfg.getBroadcastKickReason();
+                    permission = isSilent() ? BanPermissions.NOTIFY_KICK_SILENT : BanPermissions.NOTIFY_KICK;
+                    break;
+                  case MUTE:
+                    message = cfg.getBroadcastMuteReason();
+                    permission = isSilent() ? BanPermissions.NOTIFY_MUTE_SILENT : BanPermissions.NOTIFY_MUTE;
+                    break;
+                  case WARNING:
+                    message = cfg.getBroadcastWarnReason();
+                    permission = isSilent() ? BanPermissions.NOTIFY_WARN_SILENT : BanPermissions.NOTIFY_WARN;
+                    break;
+                }
+              } else {
+                switch (getPunishmentType()) {
+                  case BAN:
+                    message = cfg.getBroadcastBanReasonless();
+                    permission = isSilent() ? BanPermissions.NOTIFY_BAN_SILENT : BanPermissions.NOTIFY_BAN;
+                    break;
+                  case KICK:
+                    message = cfg.getBroadcastKickReasonless();
+                    permission = isSilent() ? BanPermissions.NOTIFY_KICK_SILENT : BanPermissions.NOTIFY_KICK;
+                    break;
+                  case MUTE:
+                    message = cfg.getBroadcastMuteReasonless();
+                    permission = isSilent() ? BanPermissions.NOTIFY_MUTE_SILENT : BanPermissions.NOTIFY_MUTE;
+                    break;
+                  case WARNING:
+                    message = cfg.getBroadcastWarnReasonless();
+                    permission = isSilent() ? BanPermissions.NOTIFY_WARN_SILENT : BanPermissions.NOTIFY_WARN;
+                    break;
+                }
+              }
+              if (message == null) {
+                throw new IllegalStateException("No message was found for punishment: " + Punishment.this);
+              }
+
+              return new Quadruple<>(
+                  targetName,
+                  punisherName,
+                  message,
+                  permission
+              );
+            })
+        .thenCompose(quad -> main.getProxyServer().getEventManager().fire(
+            new PunishmentPreBroadcastParseEvent(this, quad.getThird())
+        ).thenApply(e -> new Quintuple<>(quad.getFirst(), quad.getSecond(), quad.getThird(), quad.getFourth(), e)))
+        .thenCompose(quin -> main.getProxyServer().getEventManager().fire(
+            new PunishmentPreBroadcastEvent(
+                this,
+
+                MiniMessage.get()
+                    .parse(
+                        quin.getFifth().getMessageFormat(),
+
+                        "name", quin.getFirst(),
+
+                        "reason", getReason()
+                            .map(MiniMessage.get()::escapeTokens)
+                            .orElse("No reason specified"),
+
+                        "duration", isPermanent()
+                            ? main.getConfiguration().getMessages().getPermanently()
+                            : main.getConfiguration().getMessages().getDurationFormat()
+                                .replace("<duration>", "TODO"), // TODO(Proximyst)
+
+                        "punisher", quin.getSecond()
+                    )
+            )
+        ).thenApply(e -> new Pair<>(e.getMessage(), quin.getFourth())))
+        .thenApply(pair -> {
+          main.getProxyServer().getConsoleCommandSource().sendMessage(pair.getFirst());
+          for (Player player : main.getProxyServer().getAllPlayers()) {
+            if (!player.hasPermission(pair.getSecond())) {
+              continue;
+            }
+
+            player.sendMessage(pair.getFirst());
+          }
+          main.getProxyServer().getEventManager().fireAndForget(
+              new PunishmentPostBroadcastEvent(this, pair.getFirst())
+          );
+          return true;
+        });
   }
 }

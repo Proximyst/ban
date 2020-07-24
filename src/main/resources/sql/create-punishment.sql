@@ -1,5 +1,6 @@
 INSERT INTO `punishments`
-(`type`,
+(`id`,
+ `type`,
  `target`,
  `punisher`,
  `reason`,
@@ -8,4 +9,4 @@ INSERT INTO `punishments`
  `time`,
  `duration`,
  `silent`)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
