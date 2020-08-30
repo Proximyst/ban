@@ -11,12 +11,6 @@ group = "com.proximyst.ban"
 version = "0.1.0"
 
 repositories {
-    mavenLocal {
-        content {
-            includeGroup("com.velocitypowered")
-        }
-    }
-
     maven {
         name = "aikar"
         url = uri("https://repo.aikar.co/content/groups/aikar/")
@@ -36,6 +30,15 @@ repositories {
     }
 
     maven {
+        name = "sewer"
+        url = uri("https://dl.bintray.com/proximyst/sewer")
+
+        content {
+            includeGroup("com.proximyst")
+        }
+    }
+
+    maven {
         name = "velocity"
         url = uri("https://repo.velocitypowered.com/snapshots/")
     }
@@ -49,6 +52,7 @@ dependencies {
     annotationProcessor("com.velocitypowered:velocity-api:1.1.0-SNAPSHOT")
 
     implementation("org.jdbi:jdbi3-core:3.14.1")
+    implementation("org.mariadb.jdbc:mariadb-java-client:2.6.1")
     implementation("com.zaxxer:HikariCP:3.4.5") {
         exclude("org.slf4j")
     }
@@ -58,7 +62,7 @@ dependencies {
         isTransitive = false
     }
 
-    implementation("org.mariadb.jdbc:mariadb-java-client:2.6.1")
+    implementation("com.proximyst:sewer:0.2.0")
 }
 
 tasks {
@@ -72,7 +76,8 @@ tasks {
             "com.zaxxer.hikari",
             "org.mariadb.jdbc",
             "net.kyori.adventure.text.minimessage",
-            "org.jdbi"
+            "org.jdbi",
+            "com.proximyst.sewer"
         )
         mergeServiceFiles()
     }

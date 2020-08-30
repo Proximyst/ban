@@ -10,14 +10,15 @@ import com.proximyst.ban.BanPlugin;
 import com.proximyst.ban.data.IDataInterface;
 import com.proximyst.ban.event.event.PunishmentAddedEvent;
 import com.proximyst.ban.model.Punishment;
+import com.proximyst.ban.model.PunishmentBuilder;
 import com.proximyst.ban.model.PunishmentType;
-import com.proximyst.ban.utils.ThrowableUtils;
+import com.proximyst.sewer.SewerSystem;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
@@ -35,44 +36,41 @@ public final class PunishmentManager {
         return getDataInterface().getPunishmentsForTarget(uuid);
       }));
 
+  @NonNull
+  private final SewerSystem<@NonNull PunishmentBuilder, @NonNull Punishment> addPunishmentPipeline = SewerSystem
+      .builder("build", PunishmentBuilder::build, null,
+          punishment ->
+              getMain().getProxyServer().getEventManager().fire(new PunishmentAddedEvent(punishment))
+                  .join()
+                  .getResult()
+                  .isAllowed()
+      )
+      .pipe("push to sql", punishment -> {
+        getDataInterface().addPunishment(punishment);
+        return punishment;
+      })
+      .pipe("caching", punishment -> {
+        punishmentCache.asMap().compute(punishment.getTarget(), (uuid, list) -> {
+          if (list == null) {
+            return Lists.newArrayList(punishment);
+          } else {
+            list.add(punishment);
+            return list;
+          }
+        });
+        return punishment;
+      })
+      .build();
+
+  @NonNull
+  private final SewerSystem<@NonNull UUID, @NonNull ImmutableList<@NonNull Punishment>> retrievePunishmentsPipeline = SewerSystem
+      .<UUID, List<Punishment>>builder("fetch from cache", punishmentCache::get)
+      .<ImmutableList<Punishment>>pipe("immutablelist",
+          list -> list == null ? ImmutableList.of() : ImmutableList.copyOf(list))
+      .build();
+
   public PunishmentManager(@NonNull BanPlugin main) {
     this.main = main;
-  }
-
-  public void addPunishment(@NonNull Punishment punishment) {
-    main.getProxyServer().getEventManager().fire(new PunishmentAddedEvent(punishment))
-        .thenAcceptAsync(event -> {
-          if (!event.getResult().isAllowed()) {
-            main.getLogger().info(
-                "Punishment on {} by {} was denied.",
-                punishment.getTarget(),
-                punishment.getPunisher()
-            );
-            return;
-          }
-
-          punishmentCache.asMap().compute(punishment.getTarget(), (uuid, list) -> {
-            if (list == null) {
-              return Lists.newArrayList(punishment);
-            } else {
-              list.add(punishment);
-              return list;
-            }
-          });
-
-          try {
-            getDataInterface().addPunishment(punishment);
-          } catch (Exception ex) {
-            main.getLogger().error("Could not save punishment", ex);
-          }
-
-          punishment.broadcast(main)
-              .thenAccept(success -> {
-                if (!success) {
-                  main.getLogger().info("Punishment was unsuccessful in broadcasting: " + punishment);
-                }
-              });
-        }, main.getSchedulerExecutor());
   }
 
   /**
@@ -80,36 +78,52 @@ public final class PunishmentManager {
    * @return An immutable copy of the punishments of the player where order is not guaranteed.
    */
   @NonNull
-  public ImmutableList<Punishment> getPunishments(@NonNull UUID target) {
-    try {
-      List<Punishment> list = punishmentCache.get(target);
-      if (list != null) {
-        return ImmutableList.copyOf(list);
-      }
-    } catch (ExecutionException ex) {
-      ThrowableUtils.sneakyThrow(ex);
-      throw new RuntimeException();
-    }
+  public CompletableFuture<ImmutableList<Punishment>> getPunishments(@NonNull UUID target) {
+    return retrievePunishmentsPipeline.pumpAsync(target, getMain().getSchedulerExecutor())
+        .thenApply(result -> {
+          if (result.isExceptional()) {
+            return ImmutableList.of();
+          }
 
-    return ImmutableList.of();
+          return result.asSuccess().getResult();
+        });
   }
 
   @NonNull
-  public Optional<Punishment> getActiveBan(@NonNull UUID target) {
+  public CompletableFuture<Optional<Punishment>> getActiveBan(@NonNull UUID target) {
     return getPunishments(target)
-        .stream()
-        .filter(punishment -> punishment.getPunishmentType() == PunishmentType.BAN
-            && punishment.currentlyApplies(main))
-        .max(Comparator.comparingLong(Punishment::getTime));
+        .thenApply(list -> list.stream()
+            .filter(punishment -> punishment.getPunishmentType() == PunishmentType.BAN
+                && punishment.currentlyApplies(main))
+            .max(Comparator.comparingLong(Punishment::getTime))
+        );
   }
 
   @NonNull
-  public Optional<Punishment> getActiveMute(@NonNull UUID target) {
+  public CompletableFuture<Optional<Punishment>> getActiveMute(@NonNull UUID target) {
     return getPunishments(target)
-        .stream()
-        .filter(punishment -> punishment.getPunishmentType() == PunishmentType.MUTE
-            && punishment.currentlyApplies(main))
-        .max(Comparator.comparingLong(Punishment::getTime));
+        .thenApply(list -> list.stream()
+            .filter(punishment -> punishment.getPunishmentType() == PunishmentType.MUTE
+                && punishment.currentlyApplies(main))
+            .max(Comparator.comparingLong(Punishment::getTime))
+        );
+  }
+
+  @NonNull
+  public CompletableFuture<Optional<Punishment>> addPunishment(@NonNull PunishmentBuilder builder) {
+    return addPunishmentPipeline.pumpAsync(builder, getMain().getSchedulerExecutor())
+        .thenApply(result -> {
+          if (result.isExceptional()) {
+            return Optional.empty();
+          }
+
+          return Optional.of(result.asSuccess().getResult());
+        });
+  }
+
+  @NonNull
+  private BanPlugin getMain() {
+    return main;
   }
 
   @NonNull

@@ -45,7 +45,6 @@ public final class BanCommand extends BaseCommand {
 
             .silent(silent)
             .reason(reason)
-            .build()
     );
   }
 
