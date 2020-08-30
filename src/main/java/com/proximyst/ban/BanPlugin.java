@@ -5,6 +5,7 @@ import com.google.gson.reflect.TypeToken;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.proximyst.ban.boilerplate.VelocityBanSchedulerExecutor;
 import com.proximyst.ban.boilerplate.model.MigrationIndexEntry;
 import com.proximyst.ban.commands.BanCommand;
@@ -19,6 +20,7 @@ import com.proximyst.ban.inject.DataModule;
 import com.proximyst.ban.inject.PluginModule;
 import com.proximyst.ban.manager.PunishmentManager;
 import com.proximyst.ban.utils.ResourceReader;
+import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
@@ -174,7 +176,13 @@ public class BanPlugin {
     getProxyServer().getEventManager().register(this, getInjector().getInstance(BannedPlayerJoinSubscriber.class));
 
     tm.start("Registering commands");
-    getProxyServer().getCommandManager().register("ban", getInjector().getInstance(BanCommand.class));
+    getProxyServer().getCommandManager().register(
+        getProxyServer().getCommandManager().metaBuilder("ban")
+            .hint(LiteralArgumentBuilder.<CommandSource>literal("target")
+                .build())
+            .build(),
+        getInjector().getInstance(BanCommand.class)
+    );
 
     tm.finish();
     getLogger().info("Plugin has finished initialisation in {}ms.", System.currentTimeMillis() - start);
