@@ -37,7 +37,10 @@ public final class Punishment {
   @NonNull
   public static UUID CONSOLE_UUID = new UUID(0, 0);
 
-  private long id = -1;
+  /**
+   * The ID of the punishment in the database.
+   */
+  private long id;
 
   /**
    * The type of this punishment.
@@ -373,6 +376,7 @@ public final class Punishment {
    */
   @SuppressWarnings("OptionalAssignedToNull") // That's the point, dumbo.
   @NonNull
+  // TODO(Proximyst): Rewrite this... monstrosity...
   public CompletableFuture<@NonNull Boolean> broadcast(@NonNull BanPlugin main) {
     if (getPunishmentType() == NOTE) {
       // We do not broadcast notes.
