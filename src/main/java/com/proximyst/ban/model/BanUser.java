@@ -1,10 +1,18 @@
 package com.proximyst.ban.model;
 
 import com.proximyst.ban.data.IMojangApi;
+import java.util.Collections;
 import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public final class BanUser {
+  @NonNull
+  public static final BanUser CONSOLE = new BanUser(
+      Punishment.CONSOLE_UUID,
+      "CONSOLE",
+      new UsernameHistory(Punishment.CONSOLE_UUID, Collections.emptyList())
+  );
+
   @NonNull
   private final UUID uuid;
 
