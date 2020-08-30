@@ -18,11 +18,15 @@ import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import java.util.Date;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.time4j.ClockUnit;
+import net.time4j.PrettyTime;
+import net.time4j.format.TextWidth;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jdbi.v3.core.result.RowView;
@@ -474,7 +478,12 @@ public final class Punishment {
                         "duration", isPermanent()
                             ? main.getConfiguration().getMessages().getPermanently()
                             : main.getConfiguration().getMessages().getDurationFormat()
-                                .replace("<duration>", "TODO"), // TODO(Proximyst)
+                                .replace("<duration>", PrettyTime.of(Locale.getDefault())
+                                    .print(
+                                        this.getExpiration() - System.currentTimeMillis(),
+                                        ClockUnit.MILLIS,
+                                        TextWidth.SHORT
+                                    )),
 
                         "punisher", quin.getSecond()
                     )

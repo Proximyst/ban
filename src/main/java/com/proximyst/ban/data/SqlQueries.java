@@ -6,6 +6,7 @@ import java.sql.SQLException;
 import java.util.function.Consumer;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
+// TODO: Support more SQL dialects
 public enum SqlQueries {
   SELECT_VERSION("select-version"),
   CREATE_VERSION_TABLE("create-version-table"),
