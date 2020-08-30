@@ -2,5 +2,9 @@
   {
     "version": 1,
     "path": "0001-create-tables.sql"
+  },
+  {
+    "version": 2,
+    "path": "0002-use-binary-uuids.sql"
   }
 ]
