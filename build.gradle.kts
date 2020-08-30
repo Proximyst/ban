@@ -63,6 +63,10 @@ dependencies {
     }
 
     implementation("com.proximyst:sewer:0.2.0")
+
+    implementation("net.time4j:time4j-base:5.6")
+    implementation("net.time4j:time4j-sqlxml:5.6")
+    implementation("net.time4j:time4j-tzdata:5.0-2020a")
 }
 
 tasks {
@@ -77,7 +81,8 @@ tasks {
             "org.mariadb.jdbc",
             "net.kyori.adventure.text.minimessage",
             "org.jdbi",
-            "com.proximyst.sewer"
+            "com.proximyst.sewer",
+            "net.time4j"
         )
         mergeServiceFiles()
     }

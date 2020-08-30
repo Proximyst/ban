@@ -35,6 +35,7 @@ import java.nio.file.Path;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
+import net.time4j.tz.repo.TZDATA;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
@@ -167,6 +168,7 @@ public class BanPlugin {
     }
 
     tm.start("Initialising plugin essentials");
+    TZDATA.init();
     if (!getConfiguration().useAshcon()) {
       getLogger().warn("Currently, only Ashcon API is supported. The plugin will still use Ashcon API.");
     }
