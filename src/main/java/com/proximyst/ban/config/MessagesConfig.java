@@ -40,6 +40,12 @@ public class MessagesConfig {
   @Setting(comment = "The format for punishments with durations.")
   public String durationFormat = "for <duration>";
 
+  @Setting(comment = "Message shown to the player when they are muted without a reason.")
+  private String muteMessageReasonless = "<yellow>You have been muted by <gold><punisher></gold>";
+
+  @Setting(comment = "Message shown to the player when they are muted with a reason.")
+  private String muteMessageReason = "<yellow>You have been muted by <gold><punisher></gold> <gold><duration></gold> for:\n<gold><reason>";
+
   @Setting(comment = "Message shown to the player when they are kicked without a reason.")
   private String kickMessageReasonless = "<yellow>You have been kicked by <gold><punisher></gold>";
 
@@ -125,5 +131,15 @@ public class MessagesConfig {
   @NonNull
   public String getBanMessageReason() {
     return banMessageReason;
+  }
+
+  @NonNull
+  public String getMuteMessageReasonless() {
+    return muteMessageReasonless;
+  }
+
+  @NonNull
+  public String getMuteMessageReason() {
+    return muteMessageReason;
   }
 }

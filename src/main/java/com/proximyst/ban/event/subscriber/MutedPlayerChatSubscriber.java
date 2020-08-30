@@ -3,13 +3,12 @@ package com.proximyst.ban.event.subscriber;
 import com.google.inject.Inject;
 import com.proximyst.ban.config.MessagesConfig;
 import com.proximyst.ban.manager.PunishmentManager;
-import com.velocitypowered.api.event.ResultedEvent.ComponentResult;
 import com.velocitypowered.api.event.Subscribe;
-import com.velocitypowered.api.event.connection.LoginEvent;
+import com.velocitypowered.api.event.player.PlayerChatEvent;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
-public class BannedPlayerJoinSubscriber {
+public class MutedPlayerChatSubscriber {
   @NonNull
   private final PunishmentManager manager;
 
@@ -17,25 +16,26 @@ public class BannedPlayerJoinSubscriber {
   private final MessagesConfig messagesConfig;
 
   @Inject
-  public BannedPlayerJoinSubscriber(@NonNull PunishmentManager manager, @NonNull MessagesConfig messagesConfig) {
+  public MutedPlayerChatSubscriber(@NonNull PunishmentManager manager, @NonNull MessagesConfig messagesConfig) {
     this.manager = manager;
     this.messagesConfig = messagesConfig;
   }
 
   @Subscribe
-  public void onJoinServer(LoginEvent event) {
-    manager.getActiveBan(event.getPlayer().getUniqueId())
+  public void onChat(PlayerChatEvent event) {
+    manager.getActiveMute(event.getPlayer().getUniqueId())
         .join() // This *should* be fast, and only on one player's connection thread
-        .ifPresent(ban -> {
-          event.setResult(ComponentResult.denied(
+        .ifPresent(mute -> {
+          event.setResult(PlayerChatEvent.ChatResult.denied());
+          event.getPlayer().sendMessage(
               MiniMessage.get()
                   .parse(
-                      ban.getReason()
-                          .map($ -> messagesConfig.getBanMessageReason())
-                          .orElse(messagesConfig.getBanMessageReasonless())
+                      mute.getReason()
+                          .map($ -> messagesConfig.getMuteMessageReason())
+                          .orElse(messagesConfig.getMuteMessageReasonless())
                       // TODO: Placeholders
                   )
-          ));
+          );
         });
   }
 }
