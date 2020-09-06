@@ -15,6 +15,7 @@ import com.proximyst.ban.utils.CommandUtils;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.proxy.Player;
 import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -29,6 +30,17 @@ public final class BanCommand extends BaseCommand {
   public void register(@NonNull CommandManager commandManager) {
     RequiredArgumentBuilder<CommandSource, String> logic =
         argRequired("target", StringArgumentType.string())
+            .suggests((ctx, builder) -> {
+              String input = builder.getRemaining().toLowerCase();
+
+              for (Player player : getMain().getProxyServer().getAllPlayers()) {
+                if (player.getUsername().toLowerCase().startsWith(input)) {
+                  builder.suggest(player.getUsername(), () -> "target");
+                }
+              }
+
+              return builder.buildFuture();
+            })
             .then(
                 argRequired("reason", StringArgumentType.greedyString())
                     .executes(executeAsync(this::execute))

@@ -60,6 +60,10 @@ public final class MojangApiAshcon implements IMojangApi {
               }
 
               UUID uuid = UUID.fromString(identifier);
+              if (BanUser.CONSOLE.getUuid().equals(uuid)) {
+                return BanUser.CONSOLE;
+              }
+
               if (uuid.version() != 4) {
                 // Not online mode UUID.
                 throw new IllegalArgumentException("UUID \"" + identifier + "\" is not an online-mode UUID");

@@ -152,21 +152,21 @@ public final class Punishment {
   @NonNull
   public static Punishment fromRow(@NonNull RowView row) {
     return new PunishmentBuilder()
-        .id(row.getColumn("id", long.class))
+        .id(row.getColumn("id", Long.class))
         .type(
-            getById(row.getColumn("type", byte.class))
+            getById(row.getColumn("type", Byte.class))
                 .orElseThrow(() -> new IllegalStateException(
-                    "punishment type id " + row.getColumn("type", byte.class) + " is unknown"
+                    "punishment type id " + row.getColumn("type", Byte.class) + " is unknown"
                 ))
         )
         .target(row.getColumn("target", UUID.class))
         .punisher(row.getColumn("punisher", UUID.class))
         .reason(row.getColumn("reason", String.class))
-        .lifted(row.getColumn("lifted", boolean.class))
+        .lifted(row.getColumn("lifted", Boolean.class))
         .liftedBy(row.getColumn("lifted_by", UUID.class))
-        .time(row.getColumn("time", long.class))
-        .duration(row.getColumn("duration", long.class))
-        .silent(row.getColumn("silent", boolean.class))
+        .time(row.getColumn("time", Long.class))
+        .duration(row.getColumn("duration", Long.class))
+        .silent(row.getColumn("silent", Boolean.class))
         .build();
   }
 

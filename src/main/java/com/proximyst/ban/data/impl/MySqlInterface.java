@@ -64,7 +64,7 @@ public class MySqlInterface implements IDataInterface {
   public List<Punishment> getPunishmentsForTarget(@NonNull UUID target) {
     return jdbi.withHandle(handle ->
         handle.createQuery(SqlQueries.SELECT_PUNISHMENTS_BY_TARGET.getQuery())
-            .bind(1, target)
+            .bind(0, target)
             .map(Punishment::fromRow)
             .stream()
             .sorted(Comparator.comparingLong(Punishment::getTime))
