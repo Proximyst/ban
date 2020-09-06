@@ -13,6 +13,7 @@ import com.proximyst.ban.model.Punishment;
 import com.proximyst.ban.model.PunishmentBuilder;
 import com.proximyst.ban.model.PunishmentType;
 import com.proximyst.sewer.SewerSystem;
+import com.proximyst.sewer.piping.PipeResult;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -58,6 +59,10 @@ public final class PunishmentManager {
             return list;
           }
         });
+        return punishment;
+      })
+      .pipe("announce", punishment -> {
+        punishment.broadcast(getMain());
         return punishment;
       })
       .build();
@@ -110,15 +115,8 @@ public final class PunishmentManager {
   }
 
   @NonNull
-  public CompletableFuture<Optional<Punishment>> addPunishment(@NonNull PunishmentBuilder builder) {
-    return addPunishmentPipeline.pumpAsync(builder, getMain().getSchedulerExecutor())
-        .thenApply(result -> {
-          if (result.isExceptional()) {
-            return Optional.empty();
-          }
-
-          return Optional.of(result.asSuccess().getResult());
-        });
+  public CompletableFuture<PipeResult<Punishment>> addPunishment(@NonNull PunishmentBuilder builder) {
+    return addPunishmentPipeline.pumpAsync(builder, getMain().getSchedulerExecutor());
   }
 
   @NonNull

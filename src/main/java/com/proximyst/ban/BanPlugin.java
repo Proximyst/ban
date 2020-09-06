@@ -14,6 +14,7 @@ import com.proximyst.ban.data.IDataInterface;
 import com.proximyst.ban.data.IMojangApi;
 import com.proximyst.ban.data.impl.MojangApiAshcon;
 import com.proximyst.ban.data.impl.MySqlInterface;
+import com.proximyst.ban.data.jdbi.UuidJdbiFactory;
 import com.proximyst.ban.event.subscriber.BannedPlayerJoinSubscriber;
 import com.proximyst.ban.event.subscriber.MutedPlayerChatSubscriber;
 import com.proximyst.ban.inject.DataModule;
@@ -39,6 +40,8 @@ import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jdbi.v3.core.Jdbi;
+import org.jdbi.v3.core.statement.SqlLogger;
+import org.jdbi.v3.core.statement.StatementContext;
 import org.slf4j.Logger;
 
 @Plugin(
@@ -147,7 +150,14 @@ public class BanPlugin {
     hikariConfig.setPassword(getConfiguration().getSql().getPassword());
     hikariConfig.setMaximumPoolSize(getConfiguration().getSql().getMaxConnections());
     hikariDataSource = new HikariDataSource(hikariConfig);
-    jdbi = Jdbi.create(hikariDataSource);
+    jdbi = Jdbi.create(hikariDataSource)
+        .setSqlLogger(new SqlLogger() {
+          @Override
+          public void logException(StatementContext context, SQLException ex) {
+            getLogger().warn("Could not execute JDBI statement.", ex);
+          }
+        })
+        .registerArgument(new UuidJdbiFactory());
     dataInterface = new MySqlInterface(getLogger(), getJdbi());
 
     tm.start("Preparing database");
