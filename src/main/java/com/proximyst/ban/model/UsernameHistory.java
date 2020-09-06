@@ -1,21 +1,25 @@
 package com.proximyst.ban.model;
 
 import com.google.common.collect.ImmutableList;
-import com.proximyst.ban.data.IMojangApi;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.StringJoiner;
 import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public final class UsernameHistory extends LoadableData<ImmutableList<UsernameHistory.Entry>> {
+public final class UsernameHistory {
   @NonNull
   private final UUID uuid;
 
+  @NonNull
+  private final ImmutableList<Entry> entries;
+
   public UsernameHistory(@NonNull UUID uuid, @NonNull Iterable<? extends UsernameHistory.Entry> entries) {
-    super(ImmutableList.sortedCopyOf(
+    this.uuid = uuid;
+    this.entries = ImmutableList.sortedCopyOf(
         Comparator.comparingLong(
             entry -> entry
                 .getChangedAt()
@@ -23,30 +27,33 @@ public final class UsernameHistory extends LoadableData<ImmutableList<UsernameHi
                 .orElse(Long.MIN_VALUE) // Original is first in the list.
         ),
         entries
-    ));
-    this.uuid = uuid;
+    );
   }
 
-  public UsernameHistory(@NonNull UUID uuid, @NonNull IMojangApi mojangApi) {
-    super(mojangApi.getUsernameHistory(uuid)
-        .map(future ->
-            future
-                .thenApply(opt -> opt
-                    .map(entries -> ImmutableList.sortedCopyOf(
-                        Comparator.comparingLong(
-                            entry -> entry
-                                .getChangedAt()
-                                .map(Date::getTime)
-                                .orElse(Long.MIN_VALUE) // Original is first in the list.
-                        ),
-                        entries
-                    ))
-                    .orElse(ImmutableList.of())
-                )
-        )
-        .orElseThrow(() -> new IllegalArgumentException("unknown user \"" + uuid + "\""))
-    );
-    this.uuid = uuid;
+  @Override
+  public String toString() {
+    return new StringJoiner(", ", UsernameHistory.class.getSimpleName() + "[", "]")
+        .add("uuid=" + uuid)
+        .add("entries=" + entries)
+        .toString();
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    UsernameHistory that = (UsernameHistory) o;
+    return uuid.equals(that.uuid) &&
+        entries.equals(that.entries);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(uuid, entries);
   }
 
   public static class Entry {

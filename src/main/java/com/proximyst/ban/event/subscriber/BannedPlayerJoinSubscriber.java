@@ -4,12 +4,9 @@ import com.google.inject.Inject;
 import com.proximyst.ban.config.MessagesConfig;
 import com.proximyst.ban.data.IMojangApi;
 import com.proximyst.ban.manager.PunishmentManager;
-import com.proximyst.ban.model.BanUser;
-import com.proximyst.ban.model.LoadableData;
 import com.velocitypowered.api.event.ResultedEvent.ComponentResult;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.LoginEvent;
-import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.time4j.ClockUnit;
 import net.time4j.PrettyTime;
@@ -52,11 +49,9 @@ public class BannedPlayerJoinSubscriber {
                       "reason", ban.getReason().orElse(""),
                       "duration", PrettyTime.of(event.getPlayer().getPlayerSettings().getLocale())
                           .print(ban.getExpiration() - System.currentTimeMillis(), ClockUnit.MILLIS, TextWidth.SHORT),
-                      "punisher", mojangApi.getUser(ban.getPunisher())
-                          .map(BanUser::getUsername)
-                          .map(LoadableData::getAndLoad)
+                      "punisher", mojangApi.getUsername(ban.getPunisher()).getOrLoad()
                           // Still only on one player's connection thread, and they're not welcome anyways
-                          .flatMap(CompletableFuture::join)
+                          .join()
                           .orElse("Unknown")
                   )
           ));

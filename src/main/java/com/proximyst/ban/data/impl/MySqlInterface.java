@@ -33,7 +33,7 @@ public class MySqlInterface implements IDataInterface {
 
   @Override
   public void applyMigrations(@NonNull final List<MigrationIndexEntry> migrations) {
-    jdbi.useHandle(handle -> {
+    jdbi.useTransaction(handle -> {
       // Ensure the table exists first.
       SqlQueries.CREATE_VERSION_TABLE.forEachQuery(handle::execute);
 
@@ -53,8 +53,8 @@ public class MySqlInterface implements IDataInterface {
               }
 
               handle.execute(query);
-              handle.execute(SqlQueries.UPDATE_VERSION.getQuery(), mig.getVersion());
             }
+            handle.execute(SqlQueries.UPDATE_VERSION.getQuery(), mig.getVersion());
           });
     });
   }

@@ -2,7 +2,7 @@ package com.proximyst.ban.utils;
 
 import com.google.common.collect.ImmutableList;
 import com.proximyst.ban.commands.helper.argument.ArgumentReader;
-import com.proximyst.ban.model.Punishment;
+import com.proximyst.ban.model.BanUser;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
@@ -59,6 +59,6 @@ public final class CommandUtils {
 
   @NonNull
   public static UUID getSourceUuid(@NonNull CommandSource source) {
-    return source instanceof Player ? ((Player) source).getUniqueId() : Punishment.CONSOLE_UUID;
+    return source instanceof Player ? ((Player) source).getUniqueId() : BanUser.CONSOLE.getUuid();
   }
 }

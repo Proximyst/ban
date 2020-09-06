@@ -27,6 +27,7 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.time4j.ClockUnit;
 import net.time4j.PrettyTime;
 import net.time4j.format.TextWidth;
+import org.checkerframework.checker.index.qual.NonNegative;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jdbi.v3.core.result.RowView;
@@ -35,12 +36,6 @@ import org.jdbi.v3.core.result.RowView;
  * A punishment enacted on a player.
  */
 public final class Punishment {
-  /**
-   * The UUID used for the console in data storage.
-   */
-  @NonNull
-  public static UUID CONSOLE_UUID = new UUID(0, 0);
-
   /**
    * The ID of the punishment in the database.
    */
@@ -178,7 +173,8 @@ public final class Punishment {
   /**
    * @return The ID of this punishment, or an empty optional if none is known.
    */
-  public Optional<Long> getId() {
+  @NonNull
+  public Optional<@NonNegative Long> getId() {
     return id < 0 ? Optional.empty() : Optional.of(id);
   }
 
@@ -225,7 +221,7 @@ public final class Punishment {
   @SuppressWarnings({"unchecked", "rawtypes"})
   @NonNull
   public Optional<CommandSource> getPunisherAsSource(@NonNull ProxyServer proxyServer) {
-    if (getPunisher().equals(CONSOLE_UUID)) {
+    if (getPunisher().equals(BanUser.CONSOLE.getUuid())) {
       return Optional.of(proxyServer.getConsoleCommandSource());
     }
 
@@ -387,21 +383,20 @@ public final class Punishment {
       return CompletableFuture.completedFuture(true);
     }
 
-    return main.getMojangApi().getUserFuture(getTarget(), main)
+    return main.getMojangApi().getUser(getTarget())
+        .getOrLoad()
         .thenCombine(
-            getPunisher().equals(CONSOLE_UUID)
+            getPunisher().equals(BanUser.CONSOLE.getUuid())
                 ? CompletableFuture.completedFuture(null)
-                : main.getMojangApi().getUserFuture(getPunisher(), main),
+                : main.getMojangApi().getUser(getPunisher()).getOrLoad(),
             (target, punisher) -> {
               String targetName = target
                   .map(BanUser::getUsername)
-                  .flatMap(LoadableData::getIfPresent)
                   .orElseThrow(() -> new IllegalArgumentException("Target of punishment cannot be unknown"));
               String punisherName = punisher == null
                   ? CommandUtils.getSourceName(main.getProxyServer().getConsoleCommandSource())
                   : punisher
                       .map(BanUser::getUsername)
-                      .flatMap(LoadableData::getIfPresent)
                       .orElseThrow(() -> new IllegalArgumentException("Punisher of punishment cannot be unknown"));
 
               // Prepare for aids...

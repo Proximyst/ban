@@ -1,2 +1,2 @@
 ALTER TABLE `punishments`
-MODIFY `target`
+MODIFY `target` BINARY(36) NOT NULL;

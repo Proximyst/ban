@@ -1,49 +1,35 @@
 package com.proximyst.ban.model;
 
-import com.proximyst.ban.data.IMojangApi;
 import java.util.Collections;
 import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public final class BanUser {
+  /**
+   * The UUID used for the console in data storage.
+   */
+  @NonNull
+  private static UUID CONSOLE_UUID = new UUID(0, 0);
+
   @NonNull
   public static final BanUser CONSOLE = new BanUser(
-      Punishment.CONSOLE_UUID,
+      CONSOLE_UUID,
       "CONSOLE",
-      new UsernameHistory(Punishment.CONSOLE_UUID, Collections.emptyList())
+      new UsernameHistory(CONSOLE_UUID, Collections.emptyList())
   );
 
   @NonNull
   private final UUID uuid;
 
   @NonNull
-  private final LoadableData<String> username;
+  private final String username;
 
   @NonNull
   private final UsernameHistory usernameHistory;
 
-  public BanUser(@NonNull UUID uuid, @NonNull IMojangApi mojangApi) {
-    this.uuid = uuid;
-    this.username = new LoadableData<String>(
-        mojangApi
-            .getUsernameFromUuid(uuid)
-            .orElseThrow(() -> new IllegalArgumentException("unknown user \"" + uuid + "\""))
-            .thenApply(opt -> opt.orElse(null))
-    );
-    this.usernameHistory = new UsernameHistory(uuid, mojangApi);
-  }
-
-  public BanUser(@NonNull UUID uuid, @NonNull String username, @NonNull IMojangApi mojangApi) {
-    this(
-        uuid,
-        username,
-        new UsernameHistory(uuid, mojangApi)
-    );
-  }
-
   public BanUser(@NonNull UUID uuid, @NonNull String username, @NonNull UsernameHistory usernameHistory) {
     this.uuid = uuid;
-    this.username = new LoadableData<>(username);
+    this.username = username;
     this.usernameHistory = usernameHistory;
   }
 
@@ -53,7 +39,7 @@ public final class BanUser {
   }
 
   @NonNull
-  public LoadableData<String> getUsername() {
+  public String getUsername() {
     return username;
   }
 
