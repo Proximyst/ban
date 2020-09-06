@@ -1,4 +1,4 @@
-package com.proximyst.ban.commands.helper.argument;
+package com.proximyst.ban.commands.helper;
 
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;

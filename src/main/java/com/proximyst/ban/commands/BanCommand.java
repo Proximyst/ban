@@ -8,7 +8,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.proximyst.ban.BanPermissions;
 import com.proximyst.ban.BanPlugin;
 import com.proximyst.ban.commands.helper.BaseCommand;
-import com.proximyst.ban.commands.helper.argument.UserArgument;
+import com.proximyst.ban.commands.helper.UserArgument;
 import com.proximyst.ban.model.PunishmentBuilder;
 import com.proximyst.ban.model.PunishmentType;
 import com.proximyst.ban.utils.CommandUtils;
