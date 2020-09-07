@@ -49,12 +49,8 @@ public final class BanCommand extends BaseCommand {
     commandManager.register(new BrigadierCommand(
         literal("ban")
             .requires(src -> src.hasPermission(BanPermissions.COMMAND_BAN))
-            .then( // -s flag
-                literal("-s")
-                    .requires(src -> src.hasPermission(BanPermissions.COMMAND_BAN_SILENT))
-                    .then(logic)
-            )
-            .then(logic) // no -s flag
+            // TODO(Proximyst): Flags
+            .then(logic)
     ));
   }
 
