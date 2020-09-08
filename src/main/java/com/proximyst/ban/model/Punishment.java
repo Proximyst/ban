@@ -24,16 +24,10 @@ import org.jdbi.v3.core.result.RowView;
  */
 public final class Punishment {
   /**
-   * The ID of the punishment in the database.
-   */
-  private long id;
-
-  /**
    * The type of this punishment.
    */
   @NonNull
   private final PunishmentType punishmentType;
-
   /**
    * The target of this punishment.
    * <p>
@@ -41,7 +35,6 @@ public final class Punishment {
    */
   @NonNull
   private final UUID target;
-
   /**
    * The punisher of this punishment.
    * <p>
@@ -49,30 +42,6 @@ public final class Punishment {
    */
   @NonNull
   private final UUID punisher;
-
-  /**
-   * The reason for the punishment if one is specified.
-   * <p>
-   * This must be a maximum of {@code 255} bytes long.
-   */
-  @Nullable
-  private String reason;
-
-  /**
-   * Whether the punishment has been lifted.
-   * <p>
-   * May only be {@code true} if {@link PunishmentType#canBeLifted()} is {@code true}.
-   */
-  private boolean lifted;
-
-  /**
-   * By whom the punishment has been lifted if anyone.
-   * <p>
-   * This is {@code null} if the punishment has not been lifted or has simply expired.
-   */
-  @Nullable
-  private UUID liftedBy;
-
   /**
    * The time at which this punishment was created.
    * <p>
@@ -86,6 +55,32 @@ public final class Punishment {
    * If this is {@code 0}, the punishment is permanent.
    */
   private final long duration;
+
+  /**
+   * The ID of the punishment in the database.
+   */
+  private long id;
+
+  /**
+   * The reason for the punishment if one is specified.
+   * <p>
+   * This must be a maximum of {@code 255} bytes long.
+   */
+  @Nullable
+  private String reason;
+  /**
+   * Whether the punishment has been lifted.
+   * <p>
+   * May only be {@code true} if {@link PunishmentType#canBeLifted()} is {@code true}.
+   */
+  private boolean lifted;
+  /**
+   * By whom the punishment has been lifted if anyone.
+   * <p>
+   * This is {@code null} if the punishment has not been lifted or has simply expired.
+   */
+  @Nullable
+  private UUID liftedBy;
 
   public Punishment(
       @NonNull PunishmentType punishmentType,

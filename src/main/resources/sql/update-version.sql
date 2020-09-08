@@ -1,1 +1,2 @@
-UPDATE `meta_version` SET `version` = ?;
+UPDATE `meta_version`
+SET `version` = ?;

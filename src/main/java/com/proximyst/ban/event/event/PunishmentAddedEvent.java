@@ -22,14 +22,14 @@ public class PunishmentAddedEvent implements ResultedEvent<GenericResult> {
     return result;
   }
 
-  @NonNull
-  public Punishment getPunishment() {
-    return punishment;
-  }
-
   @Override
   public void setResult(@NonNull GenericResult result) {
     this.result = Objects.requireNonNull(result);
+  }
+
+  @NonNull
+  public Punishment getPunishment() {
+    return punishment;
   }
 
   public void setPunishment(@NonNull Punishment punishment) {

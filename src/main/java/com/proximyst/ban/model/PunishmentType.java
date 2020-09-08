@@ -51,11 +51,16 @@ public enum PunishmentType {
    */
   private static final Map<Byte, PunishmentType> PUNISHMENT_TYPES_BY_ID = new HashMap<>();
 
+  static {
+    for (PunishmentType type : values()) {
+      PUNISHMENT_TYPES_BY_ID.put(type.getId(), type);
+    }
+  }
+
   /**
    * The ID of this {@link PunishmentType} in the database.
    */
   private final byte id;
-
   /**
    * Whether this {@link PunishmentType} can be lifted.
    */
@@ -75,6 +80,15 @@ public enum PunishmentType {
   }
 
   /**
+   * @param id The ID of the punishment type.
+   * @return An {@link Optional} possibly containing a {@link PunishmentType}.
+   */
+  @NonNull
+  public static Optional<PunishmentType> getById(byte id) {
+    return Optional.ofNullable(PUNISHMENT_TYPES_BY_ID.get(id));
+  }
+
+  /**
    * @return The ID of this {@link PunishmentType} in the database.
    */
   public byte getId() {
@@ -86,20 +100,5 @@ public enum PunishmentType {
    */
   public boolean canBeLifted() {
     return canLift;
-  }
-
-  /**
-   * @param id The ID of the punishment type.
-   * @return An {@link Optional} possibly containing a {@link PunishmentType}.
-   */
-  @NonNull
-  public static Optional<PunishmentType> getById(byte id) {
-    return Optional.ofNullable(PUNISHMENT_TYPES_BY_ID.get(id));
-  }
-
-  static {
-    for (PunishmentType type : values()) {
-      PUNISHMENT_TYPES_BY_ID.put(type.getId(), type);
-    }
   }
 }

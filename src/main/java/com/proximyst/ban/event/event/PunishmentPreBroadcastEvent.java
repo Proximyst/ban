@@ -8,10 +8,10 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class PunishmentPreBroadcastEvent implements ResultedEvent<GenericResult> {
   @NonNull
-  private GenericResult result = GenericResult.allowed();
+  private final Punishment punishment;
 
   @NonNull
-  private final Punishment punishment;
+  private GenericResult result = GenericResult.allowed();
 
   @NonNull
   private Component message;

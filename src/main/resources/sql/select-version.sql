@@ -1,1 +1,2 @@
-SELECT `version` FROM `meta_version`;
+SELECT `version`
+FROM `meta_version`;
