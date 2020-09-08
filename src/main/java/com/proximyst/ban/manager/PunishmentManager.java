@@ -3,6 +3,7 @@ package com.proximyst.ban.manager;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.cache.RemovalListener;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.inject.Singleton;
@@ -29,9 +30,14 @@ public final class PunishmentManager {
   private final BanPlugin main;
 
   private final LoadingCache<UUID, List<Punishment>> punishmentCache = CacheBuilder.newBuilder()
-      .expireAfterAccess(1, TimeUnit.MINUTES)
+      .expireAfterAccess(10, TimeUnit.MINUTES)
       .initialCapacity(512)
-      .maximumSize(512)
+      .removalListener((RemovalListener<UUID, List<Punishment>>) notification -> {
+        // Recache punishments of online players.
+        if (getMain().getProxyServer().getPlayer(notification.getKey()).isPresent()) {
+          getPunishmentCache().put(notification.getKey(), notification.getValue());
+        }
+      })
       .build(CacheLoader.from(uuid -> {
         Objects.requireNonNull(uuid, "uuid must not be null");
         return getDataInterface().getPunishmentsForTarget(uuid);
@@ -127,5 +133,10 @@ public final class PunishmentManager {
   @NonNull
   private IDataInterface getDataInterface() {
     return main.getDataInterface();
+  }
+
+  @NonNull
+  private LoadingCache<UUID, List<Punishment>> getPunishmentCache() {
+    return punishmentCache;
   }
 }
