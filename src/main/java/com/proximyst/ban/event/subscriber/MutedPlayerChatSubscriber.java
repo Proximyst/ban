@@ -1,36 +1,33 @@
 package com.proximyst.ban.event.subscriber;
 
 import com.google.inject.Inject;
+import com.proximyst.ban.BanPlugin;
 import com.proximyst.ban.config.MessagesConfig;
-import com.proximyst.ban.data.IMojangApi;
 import com.proximyst.ban.manager.PunishmentManager;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.player.PlayerChatEvent;
-import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.time4j.ClockUnit;
-import net.time4j.PrettyTime;
-import net.time4j.format.TextWidth;
+import com.velocitypowered.api.event.player.PlayerChatEvent.ChatResult;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class MutedPlayerChatSubscriber {
+  @NonNull
+  private final BanPlugin main;
+
   @NonNull
   private final PunishmentManager manager;
 
   @NonNull
   private final MessagesConfig messagesConfig;
 
-  @NonNull
-  private final IMojangApi mojangApi;
-
   @Inject
   public MutedPlayerChatSubscriber(
+      @NonNull BanPlugin main,
       @NonNull PunishmentManager manager,
-      @NonNull MessagesConfig messagesConfig,
-      @NonNull IMojangApi mojangApi
+      @NonNull MessagesConfig messagesConfig
   ) {
+    this.main = main;
     this.manager = manager;
     this.messagesConfig = messagesConfig;
-    this.mojangApi = mojangApi;
   }
 
   @Subscribe
@@ -38,23 +35,13 @@ public class MutedPlayerChatSubscriber {
     manager.getActiveMute(event.getPlayer().getUniqueId())
         .join() // This *should* be fast, and only on one player's connection thread
         .ifPresent(mute -> {
-          event.setResult(PlayerChatEvent.ChatResult.denied());
-          event.getPlayer().sendMessage(
-              MiniMessage.get()
-                  .parse(
-                      mute.getReason()
-                          .map($ -> messagesConfig.getMuteMessageReason())
-                          .orElse(messagesConfig.getMuteMessageReasonless()),
-
-                      "reason", mute.getReason().orElse(""),
-                      "duration", PrettyTime.of(event.getPlayer().getPlayerSettings().getLocale())
-                          .print(mute.getExpiration() - System.currentTimeMillis(), ClockUnit.MILLIS, TextWidth.SHORT),
-                      "punisher", mojangApi.getUsername(mute.getPunisher()).getOrLoad()
-                          // Still only on one player's connection thread, and they're not welcome anyways
-                          .join()
-                          .orElse("Unknown")
-                  )
-          );
+          event.setResult(ChatResult.denied());
+          main.getMessageManager().formatMessageWith(
+              mute.getReason().isPresent()
+                  ? messagesConfig.muteMessageReason
+                  : messagesConfig.muteMessageReasonless,
+              mute
+          ).thenAccept(event.getPlayer()::sendMessage);
         });
   }
 }

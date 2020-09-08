@@ -19,6 +19,7 @@ import com.proximyst.ban.event.subscriber.BannedPlayerJoinSubscriber;
 import com.proximyst.ban.event.subscriber.MutedPlayerChatSubscriber;
 import com.proximyst.ban.inject.DataModule;
 import com.proximyst.ban.inject.PluginModule;
+import com.proximyst.ban.manager.MessageManager;
 import com.proximyst.ban.manager.PunishmentManager;
 import com.proximyst.ban.utils.ResourceReader;
 import com.velocitypowered.api.event.Subscribe;
@@ -78,6 +79,7 @@ public class BanPlugin {
   private Configuration configuration;
   private IDataInterface dataInterface;
   private PunishmentManager punishmentManager;
+  private MessageManager messageManager;
   private IMojangApi mojangApi;
   private HikariDataSource hikariDataSource;
   private Jdbi jdbi;
@@ -145,10 +147,10 @@ public class BanPlugin {
     }
 
     HikariConfig hikariConfig = new HikariConfig();
-    hikariConfig.setJdbcUrl(getConfiguration().getSql().getJdbcUri());
-    hikariConfig.setUsername(getConfiguration().getSql().getUsername());
-    hikariConfig.setPassword(getConfiguration().getSql().getPassword());
-    hikariConfig.setMaximumPoolSize(getConfiguration().getSql().getMaxConnections());
+    hikariConfig.setJdbcUrl(getConfiguration().getSql().jdbcUri);
+    hikariConfig.setUsername(getConfiguration().getSql().username);
+    hikariConfig.setPassword(getConfiguration().getSql().password);
+    hikariConfig.setMaximumPoolSize(getConfiguration().getSql().maxConnections);
     hikariDataSource = new HikariDataSource(hikariConfig);
     jdbi = Jdbi.create(hikariDataSource)
         .setSqlLogger(new SqlLogger() {
@@ -179,6 +181,7 @@ public class BanPlugin {
     TZDATA.init();
     mojangApi = new MojangApiAshcon(getSchedulerExecutor());
     punishmentManager = new PunishmentManager(this);
+    messageManager = new MessageManager(this, getConfiguration().getMessages());
 
     tm.start("Registering subscribers");
     getProxyServer().getEventManager().register(this, getInjector().getInstance(BannedPlayerJoinSubscriber.class));
@@ -246,6 +249,11 @@ public class BanPlugin {
   @NonNull
   public PunishmentManager getPunishmentManager() {
     return punishmentManager;
+  }
+
+  @NonNull
+  public MessageManager getMessageManager() {
+    return messageManager;
   }
 
   @NonNull

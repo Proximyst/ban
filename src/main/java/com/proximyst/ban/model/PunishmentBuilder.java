@@ -56,6 +56,10 @@ public final class PunishmentBuilder {
   }
 
   public PunishmentBuilder duration(long duration) {
+    if (duration == 0L) {
+      return this.duration(-1L);
+    }
+
     this.duration = duration;
     return this;
   }

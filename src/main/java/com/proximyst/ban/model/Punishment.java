@@ -1,32 +1,19 @@
 package com.proximyst.ban.model;
 
-import static com.proximyst.ban.model.PunishmentType.NOTE;
-import static com.proximyst.ban.model.PunishmentType.getById;
 
 import com.google.common.base.Preconditions;
-import com.proximyst.ban.BanPermissions;
 import com.proximyst.ban.BanPlugin;
-import com.proximyst.ban.boilerplate.model.Pair;
-import com.proximyst.ban.boilerplate.model.Quadruple;
-import com.proximyst.ban.boilerplate.model.Quintuple;
-import com.proximyst.ban.config.MessagesConfig;
 import com.proximyst.ban.event.event.PunishmentPostBroadcastEvent;
 import com.proximyst.ban.event.event.PunishmentPreBroadcastEvent;
-import com.proximyst.ban.event.event.PunishmentPreBroadcastParseEvent;
-import com.proximyst.ban.utils.CommandUtils;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import java.util.Date;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.time4j.ClockUnit;
-import net.time4j.PrettyTime;
-import net.time4j.format.TextWidth;
+import net.kyori.adventure.text.TextComponent;
 import org.checkerframework.checker.index.qual.NonNegative;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -144,7 +131,7 @@ public final class Punishment {
     return new PunishmentBuilder()
         .id(row.getColumn("id", Long.class))
         .type(
-            getById(row.getColumn("type", Byte.class))
+            PunishmentType.getById(row.getColumn("type", Byte.class))
                 .orElseThrow(() -> new IllegalStateException(
                     "punishment type id " + row.getColumn("type", Byte.class) + " is unknown"
                 ))
@@ -354,106 +341,34 @@ public final class Punishment {
    * @param main The main plugin instance.
    * @return Whether the broadcast was successful.
    */
-  @SuppressWarnings("OptionalAssignedToNull") // That's the point, dumbo.
   @NonNull
-  // TODO(Proximyst): Rewrite this... monstrosity...
   public CompletableFuture<@NonNull Boolean> broadcast(@NonNull BanPlugin main) {
-    if (getPunishmentType() == NOTE) {
+    if (getPunishmentType() == PunishmentType.NOTE) {
       // We do not broadcast notes.
       return CompletableFuture.completedFuture(true);
     }
 
-    return main.getMojangApi().getUser(getTarget())
-        .getOrLoad()
-        .thenCombine(
-            getPunisher().equals(BanUser.CONSOLE.getUuid())
-                ? CompletableFuture.completedFuture(null)
-                : main.getMojangApi().getUser(getPunisher()).getOrLoad(),
-            (target, punisher) -> {
-              String targetName = target
-                  .map(BanUser::getUsername)
-                  .orElseThrow(() -> new IllegalArgumentException("Target of punishment cannot be unknown"));
-              String punisherName = punisher == null
-                  ? CommandUtils.getSourceName(main.getProxyServer().getConsoleCommandSource())
-                  : punisher
-                      .map(BanUser::getUsername)
-                      .orElseThrow(() -> new IllegalArgumentException("Punisher of punishment cannot be unknown"));
+    return main.getMessageManager().banNotification(Punishment.this)
+        .thenApply(opt -> opt.orElse(TextComponent.empty()))
+        .thenCompose(notification -> main.getProxyServer().getEventManager().fire(
+            new PunishmentPreBroadcastEvent(Punishment.this, notification)
+        ))
+        .thenApply(event -> {
+          if (!event.getResult().isAllowed()) {
+            return false;
+          }
 
-              // Prepare for aids...
-              MessagesConfig cfg = main.getConfiguration().getMessages();
-              String message = null;
-              String permission = null;
-              switch (getPunishmentType()) {
-                case BAN:
-                  message = getReason().isPresent() ? cfg.getBroadcastBanReason() : cfg.getBroadcastBanReasonless();
-                  permission = BanPermissions.NOTIFY_BAN;
-                  break;
-                case KICK:
-                  message = getReason().isPresent() ? cfg.getKickMessageReason() : cfg.getBroadcastKickReasonless();
-                  permission = BanPermissions.NOTIFY_KICK;
-                  break;
-                case MUTE:
-                  message = getReason().isPresent() ? cfg.getMuteMessageReason() : cfg.getMuteMessageReasonless();
-                  permission = BanPermissions.NOTIFY_MUTE;
-                  break;
-                case WARNING:
-                  message = getReason().isPresent() ? cfg.getBroadcastWarnReason() : cfg.getBroadcastWarnReasonless();
-                  permission = BanPermissions.NOTIFY_WARN;
-                  break;
-              }
-              if (message == null) {
-                throw new IllegalStateException("No message was found for punishment: " + Punishment.this);
-              }
-
-              return new Quadruple<>(
-                  targetName,
-                  punisherName,
-                  message,
-                  permission
-              );
-            })
-        .thenCompose(quad -> main.getProxyServer().getEventManager().fire(
-            new PunishmentPreBroadcastParseEvent(this, quad.getThird())
-        ).thenApply(e -> new Quintuple<>(quad.getFirst(), quad.getSecond(), quad.getThird(), quad.getFourth(), e)))
-        .thenCompose(quin -> main.getProxyServer().getEventManager().fire(
-            new PunishmentPreBroadcastEvent(
-                this,
-
-                MiniMessage.get()
-                    .parse(
-                        quin.getFifth().getMessageFormat(),
-
-                        "name", quin.getFirst(),
-
-                        "reason", getReason()
-                            .map(MiniMessage.get()::escapeTokens)
-                            .orElse("No reason specified"),
-
-                        "duration", isPermanent()
-                            ? main.getConfiguration().getMessages().getPermanently()
-                            : main.getConfiguration().getMessages().getDurationFormat()
-                                .replace("<duration>", PrettyTime.of(Locale.getDefault())
-                                    .print(
-                                        this.getExpiration() - System.currentTimeMillis(),
-                                        ClockUnit.MILLIS,
-                                        TextWidth.SHORT
-                                    )),
-
-                        "punisher", quin.getSecond()
-                    )
-            )
-        ).thenApply(e -> new Pair<>(e.getMessage(), quin.getFourth())))
-        .thenApply(pair -> {
-          main.getProxyServer().getConsoleCommandSource().sendMessage(pair.getFirst());
+          main.getProxyServer().getConsoleCommandSource().sendMessage(event.getMessage());
+          String permission = main.getMessageManager().getNotificationPermissionOf(getPunishmentType()).orElse(null);
           for (Player player : main.getProxyServer().getAllPlayers()) {
-            if (!player.hasPermission(pair.getSecond())) {
+            if (permission != null && !player.hasPermission(permission)) {
               continue;
             }
 
-            player.sendMessage(pair.getFirst());
+            player.sendMessage(event.getMessage());
           }
           main.getProxyServer().getEventManager().fireAndForget(
-              new PunishmentPostBroadcastEvent(this, pair.getFirst())
+              new PunishmentPostBroadcastEvent(this, event.getMessage())
           );
           return true;
         });
