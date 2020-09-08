@@ -14,7 +14,6 @@ public final class PunishmentBuilder {
   private @Nullable UUID liftedBy = null;
   private long time = System.currentTimeMillis();
   private long duration = 0;
-  private boolean silent = false;
 
   public PunishmentBuilder id(long id) {
     this.id = id;
@@ -61,12 +60,7 @@ public final class PunishmentBuilder {
     return this;
   }
 
-  public PunishmentBuilder silent(boolean silent) {
-    this.silent = silent;
-    return this;
-  }
-
   public Punishment build() {
-    return new Punishment(id, punishmentType, target, punisher, reason, lifted, liftedBy, time, duration, silent);
+    return new Punishment(id, punishmentType, target, punisher, reason, lifted, liftedBy, time, duration);
   }
 }

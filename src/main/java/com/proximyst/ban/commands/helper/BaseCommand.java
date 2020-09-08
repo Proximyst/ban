@@ -8,10 +8,10 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.proximyst.ban.BanPlugin;
 import com.proximyst.ban.utils.ThrowingConsumer;
+import com.proximyst.ban.utils.ThrowingSupplier;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.command.CommandSource;
 import java.util.Optional;
-import java.util.function.Supplier;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -27,9 +27,10 @@ public abstract class BaseCommand {
   public abstract void register(@NonNull CommandManager commandManager);
 
   @NonNull
-  protected <T> Optional<T> getOptionalArgument(Supplier<T> supplier) {
+  protected <T> Optional<T> getOptionalArgument(@NonNull ThrowingSupplier<T, CommandSyntaxException> supplier)
+      throws CommandSyntaxException {
     try {
-      return Optional.ofNullable(supplier.get());
+      return Optional.of(supplier.get());
     } catch (IllegalArgumentException ignored) {
       // No such argument defined.
       return Optional.empty();

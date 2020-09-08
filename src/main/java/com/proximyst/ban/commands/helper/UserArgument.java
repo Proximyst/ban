@@ -3,9 +3,12 @@ package com.proximyst.ban.commands.helper;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
+import com.mojang.brigadier.suggestion.SuggestionProvider;
+import com.proximyst.ban.BanPlugin;
 import com.proximyst.ban.data.IMojangApi;
 import com.proximyst.ban.model.BanUser;
 import com.proximyst.ban.utils.StringUtils;
+import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import java.util.Optional;
@@ -15,11 +18,11 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class UserArgument {
   private static final SimpleCommandExceptionType EXPECTED_PLAYER
-      = new SimpleCommandExceptionType(() -> "Expected player name/UUID");
+      = new SimpleCommandExceptionType(() -> "Expected player name/UUID.");
   private static final DynamicCommandExceptionType INVALID_UUID
-      = new DynamicCommandExceptionType(found -> () -> "Invalid UUID '" + found + "'");
+      = new DynamicCommandExceptionType(found -> () -> "Invalid UUID '" + found + "'.");
   private static final DynamicCommandExceptionType INVALID_USERNAME
-      = new DynamicCommandExceptionType(found -> () -> "Invalid player name '" + found + "'");
+      = new DynamicCommandExceptionType(found -> () -> "Invalid player name '" + found + "'.");
 
   private UserArgument() throws IllegalAccessException {
     throw new IllegalAccessException(getClass().getSimpleName() + " cannot be instantiated.");
@@ -88,5 +91,20 @@ public final class UserArgument {
     }
 
     return uuid;
+  }
+
+  @NonNull
+  public static SuggestionProvider<CommandSource> createSuggestions(@NonNull BanPlugin main) {
+    return (ctx, builder) -> {
+      String input = builder.getRemaining().toLowerCase();
+
+      for (Player player : main.getProxyServer().getAllPlayers()) {
+        if (player.getUsername().toLowerCase().startsWith(input)) {
+          builder.suggest(player.getUsername(), () -> "target");
+        }
+      }
+
+      return builder.buildFuture();
+    };
   }
 }

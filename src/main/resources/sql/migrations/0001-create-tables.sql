@@ -12,7 +12,6 @@ CREATE TABLE `punishments`
     `time`      BIGINT UNSIGNED  NOT NULL,
     -- 0 for permanent:
     `duration`  BIGINT UNSIGNED  NOT NULL,
-    `silent`    BOOLEAN          NOT NULL DEFAULT FALSE,
 
     PRIMARY KEY (`id`),
     INDEX (`target`),

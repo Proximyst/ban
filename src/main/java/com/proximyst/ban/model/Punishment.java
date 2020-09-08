@@ -100,13 +100,6 @@ public final class Punishment {
    */
   private final long duration;
 
-  /**
-   * Whether the punishment is a silent one.
-   * <p>
-   * If {@code true}, this is not shown to players in their own histories, but is to staff members.
-   */
-  private final boolean silent;
-
   public Punishment(
       @NonNull PunishmentType punishmentType,
       @NonNull UUID target,
@@ -115,10 +108,9 @@ public final class Punishment {
       boolean lifted,
       @Nullable UUID liftedBy,
       long time,
-      long duration,
-      boolean silent
+      long duration
   ) {
-    this(-1, punishmentType, target, punisher, reason, lifted, liftedBy, time, duration, silent);
+    this(-1, punishmentType, target, punisher, reason, lifted, liftedBy, time, duration);
   }
 
   public Punishment(
@@ -130,8 +122,7 @@ public final class Punishment {
       boolean lifted,
       @Nullable UUID liftedBy,
       long time,
-      long duration,
-      boolean silent
+      long duration
   ) {
     if (!lifted && liftedBy != null) {
       throw new IllegalArgumentException("liftedBy must be null if lifted is false");
@@ -146,7 +137,6 @@ public final class Punishment {
     this.liftedBy = liftedBy;
     this.time = time <= 0 ? System.currentTimeMillis() : time;
     this.duration = Math.max(duration, 0);
-    this.silent = silent;
   }
 
   @NonNull
@@ -166,7 +156,6 @@ public final class Punishment {
         .liftedBy(row.getColumn("lifted_by", UUID.class))
         .time(row.getColumn("time", Long.class))
         .duration(row.getColumn("duration", Long.class))
-        .silent(row.getColumn("silent", Boolean.class))
         .build();
   }
 
@@ -331,15 +320,6 @@ public final class Punishment {
   }
 
   /**
-   * @return Whether the punishment is a silent one.
-   * <p>
-   * If {@code true}, this is not shown to players in their own histories, but is to staff members.
-   */
-  public boolean isSilent() {
-    return silent;
-  }
-
-  /**
    * @return Whether this punishment still applies to the player.
    */
   public boolean currentlyApplies(@NonNull BanPlugin main) {
@@ -403,44 +383,23 @@ public final class Punishment {
               MessagesConfig cfg = main.getConfiguration().getMessages();
               String message = null;
               String permission = null;
-              if (getReason().isPresent()) {
-                switch (getPunishmentType()) {
-                  case BAN:
-                    message = cfg.getBroadcastBanReason();
-                    permission = isSilent() ? BanPermissions.NOTIFY_BAN_SILENT : BanPermissions.NOTIFY_BAN;
-                    break;
-                  case KICK:
-                    message = cfg.getBroadcastKickReason();
-                    permission = isSilent() ? BanPermissions.NOTIFY_KICK_SILENT : BanPermissions.NOTIFY_KICK;
-                    break;
-                  case MUTE:
-                    message = cfg.getBroadcastMuteReason();
-                    permission = isSilent() ? BanPermissions.NOTIFY_MUTE_SILENT : BanPermissions.NOTIFY_MUTE;
-                    break;
-                  case WARNING:
-                    message = cfg.getBroadcastWarnReason();
-                    permission = isSilent() ? BanPermissions.NOTIFY_WARN_SILENT : BanPermissions.NOTIFY_WARN;
-                    break;
-                }
-              } else {
-                switch (getPunishmentType()) {
-                  case BAN:
-                    message = cfg.getBroadcastBanReasonless();
-                    permission = isSilent() ? BanPermissions.NOTIFY_BAN_SILENT : BanPermissions.NOTIFY_BAN;
-                    break;
-                  case KICK:
-                    message = cfg.getBroadcastKickReasonless();
-                    permission = isSilent() ? BanPermissions.NOTIFY_KICK_SILENT : BanPermissions.NOTIFY_KICK;
-                    break;
-                  case MUTE:
-                    message = cfg.getBroadcastMuteReasonless();
-                    permission = isSilent() ? BanPermissions.NOTIFY_MUTE_SILENT : BanPermissions.NOTIFY_MUTE;
-                    break;
-                  case WARNING:
-                    message = cfg.getBroadcastWarnReasonless();
-                    permission = isSilent() ? BanPermissions.NOTIFY_WARN_SILENT : BanPermissions.NOTIFY_WARN;
-                    break;
-                }
+              switch (getPunishmentType()) {
+                case BAN:
+                  message = getReason().isPresent() ? cfg.getBroadcastBanReason() : cfg.getBroadcastBanReasonless();
+                  permission = BanPermissions.NOTIFY_BAN;
+                  break;
+                case KICK:
+                  message = getReason().isPresent() ? cfg.getKickMessageReason() : cfg.getBroadcastKickReasonless();
+                  permission = BanPermissions.NOTIFY_KICK;
+                  break;
+                case MUTE:
+                  message = getReason().isPresent() ? cfg.getMuteMessageReason() : cfg.getMuteMessageReasonless();
+                  permission = BanPermissions.NOTIFY_MUTE;
+                  break;
+                case WARNING:
+                  message = getReason().isPresent() ? cfg.getBroadcastWarnReason() : cfg.getBroadcastWarnReasonless();
+                  permission = BanPermissions.NOTIFY_WARN;
+                  break;
               }
               if (message == null) {
                 throw new IllegalStateException("No message was found for punishment: " + Punishment.this);

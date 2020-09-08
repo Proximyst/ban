@@ -85,8 +85,7 @@ public class MySqlInterface implements IDataInterface {
           punishment.isLifted(),
           punishment.getLiftedBy(),
           punishment.getTime(),
-          punishment.getDuration(),
-          punishment.isSilent()
+          punishment.getDuration()
       );
       if (punishment.getId().isPresent()) {
         // We don't need to set the ID.

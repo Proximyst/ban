@@ -7,6 +7,5 @@ INSERT INTO `punishments`
  `lifted`,
  `lifted_by`,
  `time`,
- `duration`,
- `silent`)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+ `duration`)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
