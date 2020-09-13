@@ -45,14 +45,12 @@ public final class BanCommand extends BaseCommand {
         getMain().getUserManager(),
         getMain().getProxyServer(),
         StringArgumentType.getString(ctx, "target")
-    ).thenAccept(target -> {
-      getMain().getPunishmentManager().addPunishment(
-          new PunishmentBuilder()
-              .type(PunishmentType.BAN)
-              .punisher(CommandUtils.getSourceUuid(ctx.getSource()))
-              .target(target)
-              .reason(reason)
-      );
-    });
+    ).thenComposeAsync(target -> getMain().getPunishmentManager().addPunishment(
+        new PunishmentBuilder()
+            .type(PunishmentType.BAN)
+            .punisher(CommandUtils.getSourceUuid(ctx.getSource()))
+            .target(target)
+            .reason(reason)
+    ), getMain().getSchedulerExecutor());
   }
 }
