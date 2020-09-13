@@ -1,8 +1,10 @@
 package com.proximyst.ban.data;
 
 import com.proximyst.ban.boilerplate.model.MigrationIndexEntry;
+import com.proximyst.ban.model.BanUser;
 import com.proximyst.ban.model.Punishment;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
@@ -39,4 +41,12 @@ public interface IDataInterface {
    * @param punishment The punishment to lift.
    */
   void liftPunishment(@NonNull Punishment punishment);
+
+  @NonNull
+  Optional<@NonNull BanUser> getUser(@NonNull UUID uuid);
+
+  @NonNull
+  Optional<@NonNull BanUser> getUser(@NonNull String username);
+
+  void saveUser(@NonNull BanUser user);
 }

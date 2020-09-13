@@ -1,6 +1,7 @@
 package com.proximyst.ban.model;
 
 import com.google.common.collect.ImmutableList;
+import java.sql.Timestamp;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Objects;
@@ -9,13 +10,14 @@ import java.util.StringJoiner;
 import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jdbi.v3.core.result.RowView;
 
 public final class UsernameHistory {
   @NonNull
   private final UUID uuid;
 
   @NonNull
-  private final ImmutableList<Entry> entries;
+  private final ImmutableList<@NonNull Entry> entries;
 
   public UsernameHistory(@NonNull UUID uuid, @NonNull Iterable<? extends UsernameHistory.Entry> entries) {
     this.uuid = uuid;
@@ -28,6 +30,11 @@ public final class UsernameHistory {
         ),
         entries
     );
+  }
+
+  @NonNull
+  public ImmutableList<@NonNull Entry> getEntries() {
+    return entries;
   }
 
   @Override
@@ -66,6 +73,18 @@ public final class UsernameHistory {
     public Entry(@NonNull String username, @Nullable Date changedAt) {
       this.username = username;
       this.changedAt = changedAt;
+    }
+
+    @NonNull
+    public static Entry fromRow(@NonNull RowView view) {
+      return new Entry(
+          view.getColumn("username", String.class),
+          Optional.ofNullable(view.getColumn("timestamp", Timestamp.class))
+              .map(stamp -> {
+                return Date.from(stamp.toInstant());
+              })
+              .orElse(null)
+      );
     }
 
     @NonNull

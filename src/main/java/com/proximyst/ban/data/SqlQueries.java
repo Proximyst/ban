@@ -14,6 +14,11 @@ public enum SqlQueries {
   SELECT_PUNISHMENTS_BY_TARGET("select-punishments-by-target"),
   CREATE_PUNISHMENT("create-punishment"),
   LIFT_PUNISHMENT("lift-punishment"),
+  SELECT_USER_BY_UUID("select-user-by-uuid"),
+  SELECT_USER_BY_USERNAME("select-user-by-username"),
+  SELECT_USERNAME_HISTORY_BY_UUID("select-username-history-by-uuid"),
+  SAVE_USER("save-user"),
+  SAVE_USER_NAME("save-user-name"),
   ;
 
   @NonNull

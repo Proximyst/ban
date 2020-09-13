@@ -9,7 +9,7 @@ public final class BanUser {
    * The UUID used for the console in data storage.
    */
   @NonNull
-  private static UUID CONSOLE_UUID = new UUID(0, 0);
+  private static final UUID CONSOLE_UUID = new UUID(0, 0);
 
   @NonNull
   public static final BanUser CONSOLE = new BanUser(

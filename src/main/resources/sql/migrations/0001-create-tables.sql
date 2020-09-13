@@ -17,3 +17,23 @@ CREATE TABLE `punishments`
     INDEX (`target`),
     INDEX (`punisher`)
 );
+
+CREATE TABLE `users`
+(
+    `uuid`      CHAR(36)    NOT NULL,
+    `username`  VARCHAR(24) NOT NULL,
+    `timestamp` TIMESTAMP   NOT NULL DEFAULT NOW(),
+
+    PRIMARY KEY (`uuid`),
+    UNIQUE INDEX (`username`)
+);
+
+CREATE TABLE `usernames`
+(
+    `uuid`      CHAR(36)    NOT NULL,
+    `username`  VARCHAR(24) NOT NULL,
+    `timestamp` TIMESTAMP,
+
+    PRIMARY KEY (`uuid`, `username`, `timestamp`),
+    INDEX (`uuid`)
+);
