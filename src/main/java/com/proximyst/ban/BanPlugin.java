@@ -21,6 +21,7 @@ import com.proximyst.ban.inject.DataModule;
 import com.proximyst.ban.inject.PluginModule;
 import com.proximyst.ban.manager.MessageManager;
 import com.proximyst.ban.manager.PunishmentManager;
+import com.proximyst.ban.manager.UserManager;
 import com.proximyst.ban.utils.ResourceReader;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
@@ -80,6 +81,7 @@ public class BanPlugin {
   private IDataInterface dataInterface;
   private PunishmentManager punishmentManager;
   private MessageManager messageManager;
+  private UserManager userManager;
   private IMojangApi mojangApi;
   private HikariDataSource hikariDataSource;
   private Jdbi jdbi;
@@ -182,6 +184,7 @@ public class BanPlugin {
     mojangApi = new MojangApiAshcon(getSchedulerExecutor());
     punishmentManager = new PunishmentManager(this);
     messageManager = new MessageManager(this, getConfiguration().getMessages());
+    userManager = new UserManager(this);
 
     tm.start("Registering subscribers");
     getProxyServer().getEventManager().register(this, getInjector().getInstance(BannedPlayerJoinSubscriber.class));
@@ -254,6 +257,11 @@ public class BanPlugin {
   @NonNull
   public MessageManager getMessageManager() {
     return messageManager;
+  }
+
+  @NonNull
+  public UserManager getUserManager() {
+    return userManager;
   }
 
   @NonNull

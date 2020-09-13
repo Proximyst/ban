@@ -51,27 +51,24 @@ public abstract class BaseCommand {
   }
 
   @NonNull
-  protected Command<CommandSource> executeAsync(
+  protected Command<CommandSource> execute(
       @NonNull ThrowingConsumer<CommandContext<CommandSource>, Exception> block
   ) {
     return ctx -> {
-      getMain().getProxyServer().getScheduler().buildTask(
-          getMain(),
-          () -> {
-            try {
-              block.accept(ctx);
-            } catch (CommandSyntaxException ex) {
-              ctx.getSource().sendMessage(TextComponent.of(ex.getMessage(), NamedTextColor.RED));
-            } catch (Exception ex) {
-              getMain().getLogger().warn("Could not execute command.", ex);
-              ctx.getSource().sendMessage(TextComponent.of(
-                  "An internal command execution error occurred. Please contact an administrator.",
-                  NamedTextColor.RED
-              ));
-            }
-          }
-      ).schedule();
-      return 1;
+      try {
+        block.accept(ctx);
+        return 0;
+      } catch (CommandSyntaxException ex) {
+        ctx.getSource().sendMessage(TextComponent.of(ex.getMessage(), NamedTextColor.RED));
+        return -1;
+      } catch (Exception ex) {
+        getMain().getLogger().warn("Could not execute command.", ex);
+        ctx.getSource().sendMessage(TextComponent.of(
+            "An internal command execution error occurred. Please contact an administrator.",
+            NamedTextColor.RED
+        ));
+        return -1;
+      }
     };
   }
 

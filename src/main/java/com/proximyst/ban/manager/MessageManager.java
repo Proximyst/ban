@@ -92,13 +92,12 @@ public final class MessageManager {
       @NonNull String message,
       @NonNull Punishment punishment
   ) {
-    return main.getMojangApi().getUser(punishment.getTarget())
-        .getOrLoad()
+    return main.getUserManager().getUser(punishment.getTarget())
         .thenApply(opt ->
             opt.orElseThrow(() -> new IllegalArgumentException("Target of punishment cannot be unknown."))
         )
         .thenCombine(
-            main.getMojangApi().getUser(punishment.getPunisher()).getOrLoad(),
+            main.getUserManager().getUser(punishment.getPunisher()),
             (target, $punisher) -> {
               BanUser punisher = $punisher.orElseThrow(
                   () -> new IllegalArgumentException("Punisher of punishment cannot be unknown.")

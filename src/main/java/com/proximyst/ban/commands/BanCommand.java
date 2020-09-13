@@ -14,7 +14,6 @@ import com.proximyst.ban.utils.CommandUtils;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.command.CommandSource;
-import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -32,28 +31,28 @@ public final class BanCommand extends BaseCommand {
             .then(argRequired("target", StringArgumentType.string())
                 .suggests(UserArgument.createSuggestions(getMain()))
                 .then(argRequired("reason", StringArgumentType.greedyString())
-                    .executes(executeAsync(this::execute)))
-                .executes(executeAsync(this::execute)))
+                    .executes(execute(this::execute)))
+                .executes(execute(this::execute)))
     ));
   }
 
   private void execute(@NonNull CommandContext<CommandSource> ctx) throws CommandSyntaxException {
-    UUID target = UserArgument.getUuid(
-        getMain().getMojangApi(),
-        getMain().getProxyServer(),
-        StringArgumentType.getString(ctx, "target")
-    );
     @Nullable String reason = getOptionalArgument(() -> StringArgumentType.getString(ctx, "reason"))
         .map(String::trim)
         .filter(str -> !str.isEmpty())
         .orElse(null);
-
-    getMain().getPunishmentManager().addPunishment(
-        new PunishmentBuilder()
-            .type(PunishmentType.BAN)
-            .punisher(CommandUtils.getSourceUuid(ctx.getSource()))
-            .target(target)
-            .reason(reason)
-    );
+    UserArgument.getUuid(
+        getMain().getUserManager(),
+        getMain().getProxyServer(),
+        StringArgumentType.getString(ctx, "target")
+    ).thenAccept(target -> {
+      getMain().getPunishmentManager().addPunishment(
+          new PunishmentBuilder()
+              .type(PunishmentType.BAN)
+              .punisher(CommandUtils.getSourceUuid(ctx.getSource()))
+              .target(target)
+              .reason(reason)
+      );
+    });
   }
 }

@@ -5,14 +5,14 @@ import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.proximyst.ban.BanPlugin;
-import com.proximyst.ban.data.IMojangApi;
-import com.proximyst.ban.model.BanUser;
+import com.proximyst.ban.manager.UserManager;
 import com.proximyst.ban.utils.StringUtils;
+import com.proximyst.ban.utils.ThrowableUtils;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
-import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -29,22 +29,8 @@ public final class UserArgument {
   }
 
   @NonNull
-  public static Optional<BanUser> getUser(
-      @NonNull IMojangApi mojangApi,
-      @NonNull ProxyServer proxyServer,
-      @NonNull String input
-  ) throws CommandSyntaxException {
-    try {
-      return mojangApi.getUser(getUuid(mojangApi, proxyServer, input))
-          .getOrLoad().join();
-    } catch (IllegalArgumentException ex) {
-      throw new SimpleCommandExceptionType(ex::getMessage).create();
-    }
-  }
-
-  @NonNull
-  public static UUID getUuid(
-      @NonNull IMojangApi mojangApi,
+  public static CompletableFuture<UUID> getUuid(
+      @NonNull UserManager userManager,
       @NonNull ProxyServer proxyServer,
       @NonNull String input
   ) throws CommandSyntaxException {
@@ -54,7 +40,7 @@ public final class UserArgument {
         .findAny()
         .orElse(null);
     if (onlinePlayer != null) {
-      return onlinePlayer.getUniqueId();
+      return CompletableFuture.completedFuture(onlinePlayer.getUniqueId());
     }
 
     if (input.length() < 3) {
@@ -71,7 +57,7 @@ public final class UserArgument {
 
     if (input.length() == 36) {
       try {
-        return UUID.fromString(input);
+        return CompletableFuture.completedFuture(UUID.fromString(input));
       } catch (IllegalArgumentException ex) {
         throw INVALID_UUID.create(input);
       }
@@ -79,18 +65,23 @@ public final class UserArgument {
 
     if (input.length() == 32) {
       try {
-        return UUID.fromString(StringUtils.rehyphenUuid(input));
+        return CompletableFuture.completedFuture(UUID.fromString(StringUtils.rehyphenUuid(input)));
       } catch (IllegalArgumentException ex) {
         throw INVALID_UUID.create(input);
       }
     }
 
-    UUID uuid = mojangApi.getUuid(input).getOrLoad().join().orElse(null);
-    if (uuid == null) {
-      throw INVALID_USERNAME.create(input);
-    }
-
-    return uuid;
+    return userManager.getUser(input)
+        .thenApply(res -> {
+          try {
+            return res
+                .orElseThrow(() -> INVALID_USERNAME.create(input))
+                .getUuid();
+          } catch (CommandSyntaxException ex) {
+            ThrowableUtils.sneakyThrow(ex);
+            throw new RuntimeException();
+          }
+        });
   }
 
   @NonNull
