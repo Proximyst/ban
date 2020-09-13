@@ -57,7 +57,7 @@ public abstract class BaseCommand {
     return ctx -> {
       try {
         block.accept(ctx);
-        return 0;
+        return 1;
       } catch (CommandSyntaxException ex) {
         ctx.getSource().sendMessage(TextComponent.of(ex.getMessage(), NamedTextColor.RED));
         return -1;
