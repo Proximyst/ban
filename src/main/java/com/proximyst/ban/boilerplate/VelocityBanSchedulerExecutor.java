@@ -4,6 +4,9 @@ import com.proximyst.ban.BanPlugin;
 import java.util.concurrent.Executor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
+/**
+ * A {@link Executor} that just defers to the Velocity scheduler using the plugin instance.
+ */
 public final class VelocityBanSchedulerExecutor implements Executor {
   @NonNull
   private final BanPlugin main;
