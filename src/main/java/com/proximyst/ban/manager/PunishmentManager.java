@@ -14,6 +14,7 @@ import com.proximyst.ban.model.Punishment;
 import com.proximyst.ban.model.PunishmentBuilder;
 import com.proximyst.ban.model.PunishmentType;
 import com.proximyst.sewer.SewerSystem;
+import com.proximyst.sewer.piping.ImmediatePipeHandler;
 import com.proximyst.sewer.piping.PipeResult;
 import java.util.Comparator;
 import java.util.List;
@@ -45,18 +46,18 @@ public final class PunishmentManager {
 
   @NonNull
   private final SewerSystem<@NonNull PunishmentBuilder, @NonNull Punishment> addPunishmentPipeline = SewerSystem
-      .builder("build", PunishmentBuilder::build, null,
+      .builder("build", ImmediatePipeHandler.of(PunishmentBuilder::build), null,
           punishment ->
               getMain().getProxyServer().getEventManager().fire(new PunishmentAddedEvent(punishment))
                   .join()
                   .getResult()
                   .isAllowed()
       )
-      .pipe("push to sql", punishment -> {
+      .pipe("push to sql", ImmediatePipeHandler.of(punishment -> {
         getDataInterface().addPunishment(punishment);
         return punishment;
-      })
-      .pipe("caching", punishment -> {
+      }))
+      .pipe("caching", ImmediatePipeHandler.of(punishment -> {
         punishmentCache.asMap().compute(punishment.getTarget(), (uuid, list) -> {
           if (list == null) {
             return Lists.newArrayList(punishment);
@@ -66,18 +67,18 @@ public final class PunishmentManager {
           }
         });
         return punishment;
-      })
-      .pipe("announce", punishment -> {
+      }))
+      .pipe("announce", ImmediatePipeHandler.of(punishment -> {
         punishment.broadcast(getMain());
         return punishment;
-      })
+      }))
       .build();
 
   @NonNull
   private final SewerSystem<@NonNull UUID, @NonNull ImmutableList<@NonNull Punishment>> retrievePunishmentsPipeline = SewerSystem
-      .<UUID, List<Punishment>>builder("fetch from cache", punishmentCache::get)
+      .<UUID, List<Punishment>>builder("fetch from cache", ImmediatePipeHandler.of(punishmentCache::get))
       .<ImmutableList<Punishment>>pipe("immutablelist",
-          list -> list == null ? ImmutableList.of() : ImmutableList.copyOf(list))
+          ImmediatePipeHandler.of(list -> list == null ? ImmutableList.of() : ImmutableList.copyOf(list)))
       .build();
 
   public PunishmentManager(@NonNull BanPlugin main) {
@@ -90,7 +91,7 @@ public final class PunishmentManager {
    */
   @NonNull
   public CompletableFuture<ImmutableList<Punishment>> getPunishments(@NonNull UUID target) {
-    return retrievePunishmentsPipeline.pumpAsync(target, getMain().getSchedulerExecutor())
+    return retrievePunishmentsPipeline.pump(target, getMain().getSchedulerExecutor())
         .thenApply(result -> {
           if (result.isExceptional()) {
             return ImmutableList.of();
@@ -122,7 +123,7 @@ public final class PunishmentManager {
 
   @NonNull
   public CompletableFuture<PipeResult<Punishment>> addPunishment(@NonNull PunishmentBuilder builder) {
-    return addPunishmentPipeline.pumpAsync(builder, getMain().getSchedulerExecutor());
+    return addPunishmentPipeline.pump(builder, getMain().getSchedulerExecutor());
   }
 
   @NonNull

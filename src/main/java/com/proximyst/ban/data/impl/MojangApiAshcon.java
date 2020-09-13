@@ -11,6 +11,7 @@ import com.proximyst.ban.utils.HttpUtils;
 import com.proximyst.ban.utils.StringUtils;
 import com.proximyst.sewer.SewerSystem;
 import com.proximyst.sewer.loadable.Loadable;
+import com.proximyst.sewer.piping.ImmediatePipeHandler;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -43,7 +44,7 @@ public final class MojangApiAshcon implements IMojangApi {
   private final SewerSystem<String, BanUser> userLoader = SewerSystem
       .<String, BanUser>builder(
           "parse identifier",
-          identifier -> {
+          ImmediatePipeHandler.of(identifier -> {
             if (identifier.length() < 3) {
               // Too short to be a username.
               throw new IllegalArgumentException("Username \"" + identifier + "\" is too short.");
@@ -95,21 +96,21 @@ public final class MojangApiAshcon implements IMojangApi {
             usernameUuidCache.put(user.getUsername(), user.getUuid());
 
             return user;
-          }
+          })
       )
       .build();
 
   @NonNull
   private final SewerSystem<BanUser, UUID> uuidFromUser = SewerSystem
-      .builder("get uuid", BanUser::getUuid).build();
+      .builder("get uuid", ImmediatePipeHandler.of(BanUser::getUuid)).build();
 
   @NonNull
   private final SewerSystem<BanUser, String> usernameFromUser = SewerSystem
-      .builder("get username", BanUser::getUsername).build();
+      .builder("get username", ImmediatePipeHandler.of(BanUser::getUsername)).build();
 
   @NonNull
   private final SewerSystem<BanUser, UsernameHistory> usernameHistoryFromUser = SewerSystem
-      .builder("get username history", BanUser::getUsernameHistory).build();
+      .builder("get username history", ImmediatePipeHandler.of(BanUser::getUsernameHistory)).build();
 
   public MojangApiAshcon(
       @NonNull Executor velocityExecutor

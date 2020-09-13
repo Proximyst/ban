@@ -62,7 +62,7 @@ dependencies {
         isTransitive = false
     }
 
-    implementation("com.proximyst:sewer:0.4.0")
+    implementation("com.proximyst:sewer:0.5.0")
 
     implementation("net.time4j:time4j-base:5.6")
     implementation("net.time4j:time4j-sqlxml:5.6")

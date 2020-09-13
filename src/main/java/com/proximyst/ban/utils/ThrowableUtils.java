@@ -10,13 +10,13 @@ public final class ThrowableUtils {
    *
    * @param throwable The throwable to rethrow.
    */
+  @SuppressWarnings("RedundantTypeArguments")
   public static void sneakyThrow(Throwable throwable) {
-    //noinspection RedundantTypeArguments
     throw ThrowableUtils.<RuntimeException>superSneaky(throwable);
   }
 
+  @SuppressWarnings("unchecked")
   private static <T extends Throwable> T superSneaky(Throwable throwable) throws T {
-    //noinspection unchecked
     throw (T) throwable;
   }
 }
