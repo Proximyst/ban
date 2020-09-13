@@ -20,6 +20,10 @@ public final class UserManager {
   @SuppressWarnings("DuplicatedCode")
   @NonNull
   public CompletableFuture<@NonNull Optional<@NonNull BanUser>> getUser(@NonNull UUID uuid) {
+    if (uuid == BanUser.CONSOLE.getUuid()) {
+      return CompletableFuture.completedFuture(Optional.of(BanUser.CONSOLE));
+    }
+
     CompletableFuture<Optional<@NonNull BanUser>> future = CompletableFuture
         .supplyAsync(() -> main.getDataInterface().getUser(uuid), main.getSchedulerExecutor());
     return future.thenCompose(user -> {
