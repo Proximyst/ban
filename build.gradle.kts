@@ -12,15 +12,6 @@ version = "0.1.0"
 
 repositories {
     maven {
-        name = "aikar"
-        url = uri("https://repo.aikar.co/content/groups/aikar/")
-
-        content {
-            includeGroup("co.aikar")
-        }
-    }
-
-    maven {
         name = "sonatype"
         url = uri("https://oss.sonatype.org/content/repositories/snapshots")
 
