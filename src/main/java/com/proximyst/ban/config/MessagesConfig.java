@@ -6,17 +6,17 @@ import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
 @SuppressWarnings("FieldMayBeFinal")
 @ConfigSerializable
 public class MessagesConfig {
-  @Setting(comment = "A player has been banned without reason.")
+  @Setting(comment = "A player has been banned without a reason.")
   public String broadcastBanReasonless = "<yellow><gold><name></gold> has been banned <gold><duration></gold>.";
 
   @Setting(comment = "A player has been banned with a reason.")
-  public String broadcastBanReason = "<yellow><gold><name></gold> has been banned <gold><duration></gold> for: <gold><reason>";
+  public String broadcastBanReason = "<yellow><gold><name></gold> has been banned <gold><duration></gold>for: <gold><reason>";
 
   @Setting(comment = "A player has been muted without reason.")
   public String broadcastMuteReasonless = "<yellow><gold><name></gold> has been muted <gold><duration></gold>.";
 
   @Setting(comment = "A player has been muted with a reason.")
-  public String broadcastMuteReason = "<yellow><gold><name></gold> has been muted <gold><duration></gold> for: <gold><reason>";
+  public String broadcastMuteReason = "<yellow><gold><name></gold> has been muted <gold><duration></gold>for: <gold><reason>";
 
   @Setting(comment = "A player has been kicked without reason.")
   public String broadcastKickReasonless = "<yellow><gold><name></gold> has been kicked.";
@@ -34,23 +34,23 @@ public class MessagesConfig {
   public String permanently = "permanently";
 
   @Setting(comment = "The format for punishments with durations.")
-  public String durationFormat = "for <duration>";
+  public String durationFormat = " for <duration>";
 
   @Setting(comment = "Message shown to the player when they are muted without a reason.")
-  public String muteMessageReasonless = "<yellow>You have been muted by <gold><punisher></gold>";
+  public String muteMessageReasonless = "<yellow>You have been muted by <gold><punisher></gold>.";
 
   @Setting(comment = "Message shown to the player when they are muted with a reason.")
-  public String muteMessageReason = "<yellow>You have been muted by <gold><punisher></gold> <gold><duration></gold> for:\n<gold><reason>";
+  public String muteMessageReason = "<yellow>You have been muted by <gold><punisher></gold> <gold><duration></gold>for:\n<gold><reason>";
 
   @Setting(comment = "Message shown to the player when they are kicked without a reason.")
-  public String kickMessageReasonless = "<yellow>You have been kicked by <gold><punisher></gold>";
+  public String kickMessageReasonless = "<yellow>You have been kicked by <gold><punisher></gold>.";
 
   @Setting(comment = "Message shown to the player when they are kicked with a reason.")
   public String kickMessageReason = "<yellow>You have been kicked by <gold><punisher></gold> for:\n<gold><reason>";
 
   @Setting(comment = "Message shown to the player when they are banned without a reason.")
-  public String banMessageReasonless = "<yellow>You have been banned by <gold><punisher></gold> <gold><duration>";
+  public String banMessageReasonless = "<yellow>You have been banned by <gold><punisher></gold> <gold><duration>.";
 
   @Setting(comment = "Message shown to the player when they are banned with a reason.")
-  public String banMessageReason = "<yellow>You have been banned by <gold><punisher></gold> <gold><duration></gold> for:\n<gold><reason>";
+  public String banMessageReason = "<yellow>You have been banned by <gold><punisher></gold> <gold><duration></gold>for:\n<gold><reason>";
 }
