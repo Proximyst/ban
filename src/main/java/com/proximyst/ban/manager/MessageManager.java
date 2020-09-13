@@ -7,15 +7,12 @@ import com.proximyst.ban.config.MessagesConfig;
 import com.proximyst.ban.model.BanUser;
 import com.proximyst.ban.model.Punishment;
 import com.proximyst.ban.model.PunishmentType;
-import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.time4j.ClockUnit;
-import net.time4j.PrettyTime;
-import net.time4j.format.TextWidth;
+import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 @Singleton
@@ -119,11 +116,11 @@ public final class MessageManager {
                       "duration", punishment.isPermanent()
                           ? cfg.permanently
                           : cfg.durationFormat
-                              .replace("<duration>", PrettyTime.of(Locale.getDefault())
-                                  .print(
+                              .replace("<duration>",
+                                  DurationFormatUtils.formatDurationWords(
                                       punishment.getExpiration() - System.currentTimeMillis(),
-                                      ClockUnit.MILLIS,
-                                      TextWidth.SHORT
+                                      false,
+                                      false
                                   ))
                   );
             }

@@ -51,7 +51,9 @@ dependencies {
     compileOnly("com.velocitypowered:velocity-api:1.1.0-SNAPSHOT")
     annotationProcessor("com.velocitypowered:velocity-api:1.1.0-SNAPSHOT")
 
-    implementation("org.jdbi:jdbi3-core:3.14.1")
+    implementation("org.jdbi:jdbi3-core:3.14.1") {
+        exclude("org.slf4j")
+    }
     implementation("org.mariadb.jdbc:mariadb-java-client:2.6.1")
     implementation("com.zaxxer:HikariCP:3.4.5") {
         exclude("org.slf4j")
@@ -64,13 +66,15 @@ dependencies {
 
     implementation("com.proximyst:sewer:0.5.0")
 
-    implementation("net.time4j:time4j-base:5.6")
-    implementation("net.time4j:time4j-sqlxml:5.6")
-    implementation("net.time4j:time4j-tzdata:5.0-2020a")
+    implementation("org.apache.commons:commons-lang3:3.11")
 }
 
 tasks {
     withType<ShadowJar> {
+        dependencies {
+            exclude(dependency("org.checkerframework:checker-qual"))
+        }
+
         fun reloc(vararg dependencies: String) =
             dependencies.forEach { relocate(it, "com.proximyst.ban.dependencies.$it") }
 
@@ -82,9 +86,13 @@ tasks {
             "net.kyori.adventure.text.minimessage",
             "org.jdbi",
             "com.proximyst.sewer",
-            "net.time4j"
+            "org.apache.commons.lang3",
+            "com.github.benmanes.caffeine",
+            "org.antlr",
+            "io.leangen.geantyref"
         )
         mergeServiceFiles()
+        minimize()
     }
 }
 

@@ -53,6 +53,26 @@ public final class PunishmentManager {
                   .getResult()
                   .isAllowed()
       )
+      .pipe("announce", ImmediatePipeHandler.of(punishment -> {
+        punishment.broadcast(getMain());
+        return punishment;
+      }))
+      .pipe("apply to online player", ImmediatePipeHandler.of(punishment -> {
+        if (punishment.getPunishmentType() == PunishmentType.KICK
+            || punishment.getPunishmentType() == PunishmentType.BAN) {
+          getMain().getProxyServer().getPlayer(punishment.getTarget())
+              .ifPresent(player -> getMain().getMessageManager().formatMessageWith(
+                  punishment.getPunishmentType() == PunishmentType.KICK
+                      ? (punishment.getReason().map($ -> getMain().getConfiguration().getMessages().kickMessageReason)
+                      .orElse(getMain().getConfiguration().getMessages().kickMessageReasonless))
+                      : (punishment.getReason().map($ -> getMain().getConfiguration().getMessages().banMessageReason)
+                          .orElse(getMain().getConfiguration().getMessages().banMessageReasonless)),
+                  punishment
+              ).thenAccept(player::disconnect));
+        }
+
+        return punishment;
+      }))
       .pipe("push to sql", ImmediatePipeHandler.of(punishment -> {
         getDataInterface().addPunishment(punishment);
         return punishment;
@@ -66,10 +86,6 @@ public final class PunishmentManager {
             return list;
           }
         });
-        return punishment;
-      }))
-      .pipe("announce", ImmediatePipeHandler.of(punishment -> {
-        punishment.broadcast(getMain());
         return punishment;
       }))
       .build();

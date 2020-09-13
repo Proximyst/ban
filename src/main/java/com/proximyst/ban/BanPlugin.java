@@ -36,7 +36,6 @@ import java.nio.file.Path;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
-import net.time4j.tz.repo.TZDATA;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
@@ -180,7 +179,6 @@ public class BanPlugin {
     }
 
     tm.start("Initialising plugin essentials");
-    TZDATA.init();
     mojangApi = new MojangApiAshcon(getSchedulerExecutor());
     punishmentManager = new PunishmentManager(this);
     messageManager = new MessageManager(this, getConfiguration().getMessages());
