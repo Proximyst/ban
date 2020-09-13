@@ -83,7 +83,6 @@ tasks {
             "io.leangen.geantyref"
         )
         mergeServiceFiles()
-        minimize()
     }
 }
 

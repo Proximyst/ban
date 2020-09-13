@@ -8,6 +8,7 @@ import com.google.inject.Injector;
 import com.proximyst.ban.boilerplate.VelocityBanSchedulerExecutor;
 import com.proximyst.ban.boilerplate.model.MigrationIndexEntry;
 import com.proximyst.ban.commands.BanCommand;
+import com.proximyst.ban.commands.UnbanCommand;
 import com.proximyst.ban.config.ConfigUtil;
 import com.proximyst.ban.config.Configuration;
 import com.proximyst.ban.data.IDataInterface;
@@ -190,6 +191,7 @@ public class BanPlugin {
 
     tm.start("Registering commands");
     getInjector().getInstance(BanCommand.class).register(getProxyServer().getCommandManager());
+    getInjector().getInstance(UnbanCommand.class).register(getProxyServer().getCommandManager());
 
     tm.finish();
     getLogger().info("Plugin has finished initialisation in {}ms.", System.currentTimeMillis() - start);

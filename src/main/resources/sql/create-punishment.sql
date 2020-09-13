@@ -1,4 +1,4 @@
-INSERT INTO `punishments`
+REPLACE INTO `punishments`
 (`id`,
  `type`,
  `target`,

@@ -28,6 +28,7 @@ public final class Punishment {
    */
   @NonNull
   private final PunishmentType punishmentType;
+
   /**
    * The target of this punishment.
    * <p>
@@ -35,6 +36,7 @@ public final class Punishment {
    */
   @NonNull
   private final UUID target;
+
   /**
    * The punisher of this punishment.
    * <p>
@@ -42,6 +44,7 @@ public final class Punishment {
    */
   @NonNull
   private final UUID punisher;
+
   /**
    * The time at which this punishment was created.
    * <p>
@@ -68,12 +71,14 @@ public final class Punishment {
    */
   @Nullable
   private String reason;
+
   /**
    * Whether the punishment has been lifted.
    * <p>
    * May only be {@code true} if {@link PunishmentType#canBeLifted()} is {@code true}.
    */
   private boolean lifted;
+
   /**
    * By whom the punishment has been lifted if anyone.
    * <p>
@@ -268,6 +273,16 @@ public final class Punishment {
   @NonNull
   public Optional<UUID> getLiftedBy() {
     return Optional.ofNullable(liftedBy);
+  }
+
+  /**
+   * Sets the user who lifted the punishment.
+   *
+   * @param liftedBy The user who lifted this punishment.
+   */
+  public void setLiftedBy(@NonNull UUID liftedBy) {
+    this.lifted = true;
+    this.liftedBy = liftedBy;
   }
 
   /**
