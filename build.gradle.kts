@@ -57,7 +57,7 @@ dependencies {
         exclude("org.slf4j")
     }
 
-    implementation("net.kyori:adventure-text-minimessage:3.0.0-SNAPSHOT") {
+    implementation("net.kyori:adventure-text-minimessage:4.0.0-SNAPSHOT") {
         // We get adventure through velocity-api
         isTransitive = false
     }
