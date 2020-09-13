@@ -181,6 +181,10 @@ public class MySqlInterface implements IDataInterface {
 
   @Override
   public void saveUser(@NonNull BanUser user) {
+    if (user == BanUser.CONSOLE) {
+      return;
+    }
+
     jdbi.useTransaction(handle -> {
       handle.execute(
           SqlQueries.SAVE_USER.getQuery(),
