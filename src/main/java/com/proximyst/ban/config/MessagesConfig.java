@@ -6,11 +6,17 @@ import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
 @SuppressWarnings("FieldMayBeFinal")
 @ConfigSerializable
 public class MessagesConfig {
+  @Setting(comment = "The target player has no active ban.")
+  public String errorNoBan = "<red><gold><name></gold> has no active bans.";
+
   @Setting(comment = "A player has been banned without a reason.")
   public String broadcastBanReasonless = "<yellow><gold><name></gold> has been banned <gold><duration></gold>.";
 
   @Setting(comment = "A player has been banned with a reason.")
   public String broadcastBanReason = "<yellow><gold><name></gold> has been banned <gold><duration></gold>for: <gold><reason>";
+
+  @Setting(comment = "A player has been unbanned.")
+  public String broadcastUnban = "<yellow><gold><name></gold> has been unbanned by <gold><punisher></gold>.";
 
   @Setting(comment = "A player has been muted without reason.")
   public String broadcastMuteReasonless = "<yellow><gold><name></gold> has been muted <gold><duration></gold>.";

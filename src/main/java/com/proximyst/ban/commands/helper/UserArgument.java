@@ -6,7 +6,7 @@ import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.proximyst.ban.BanPlugin;
 import com.proximyst.ban.manager.UserManager;
-import com.proximyst.ban.utils.StringUtils;
+import com.proximyst.ban.model.BanUser;
 import com.proximyst.ban.utils.ThrowableUtils;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
@@ -29,7 +29,7 @@ public final class UserArgument {
   }
 
   @NonNull
-  public static CompletableFuture<UUID> getUuid(
+  public static CompletableFuture<@NonNull UUID> getUuid(
       @NonNull UserManager userManager,
       @NonNull ProxyServer proxyServer,
       @NonNull String input
@@ -43,6 +43,16 @@ public final class UserArgument {
       return CompletableFuture.completedFuture(onlinePlayer.getUniqueId());
     }
 
+    return getUser(userManager, proxyServer, input)
+        .thenApply(BanUser::getUuid);
+  }
+
+  @NonNull
+  public static CompletableFuture<@NonNull BanUser> getUser(
+      @NonNull UserManager userManager,
+      @NonNull ProxyServer proxyServer,
+      @NonNull String input
+  ) throws CommandSyntaxException {
     if (input.length() < 3) {
       // Too short for a player name.
       throw EXPECTED_PLAYER.create();
@@ -53,19 +63,11 @@ public final class UserArgument {
         // Neither UUID without dashes nor with dashes.
         throw EXPECTED_PLAYER.create();
       }
-    }
 
-    if (input.length() == 36) {
       try {
-        return CompletableFuture.completedFuture(UUID.fromString(input));
-      } catch (IllegalArgumentException ex) {
-        throw INVALID_UUID.create(input);
-      }
-    }
-
-    if (input.length() == 32) {
-      try {
-        return CompletableFuture.completedFuture(UUID.fromString(StringUtils.rehyphenUuid(input)));
+        // We only want to make sure the UUID is valid here.
+        //noinspection ResultOfMethodCallIgnored
+        UUID.fromString(input);
       } catch (IllegalArgumentException ex) {
         throw INVALID_UUID.create(input);
       }
@@ -74,9 +76,7 @@ public final class UserArgument {
     return userManager.getUser(input)
         .thenApply(res -> {
           try {
-            return res
-                .orElseThrow(() -> INVALID_USERNAME.create(input))
-                .getUuid();
+            return res.orElseThrow(() -> INVALID_USERNAME.create(input));
           } catch (CommandSyntaxException ex) {
             ThrowableUtils.sneakyThrow(ex);
             throw new RuntimeException();
