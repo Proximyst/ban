@@ -1,10 +1,11 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import java.util.Calendar
 
 plugins {
     java
     `java-library`
     id("com.github.johnrengelman.shadow") version "6.0.0"
-    // TODO: Licence plugin
+    id("com.github.hierynomus.license") version "0.15.0"
 }
 
 group = "com.proximyst.ban"
@@ -89,4 +90,12 @@ tasks {
 configure<JavaPluginConvention> {
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = sourceCompatibility
+}
+
+license {
+    header = rootProject.file("LICENCE-HEADER")
+    ext["year"] = Calendar.getInstance().get(Calendar.YEAR)
+    include("**/*.java")
+
+    mapping("java", "DOUBLESLASH_STYLE")
 }
