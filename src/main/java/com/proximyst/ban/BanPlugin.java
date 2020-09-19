@@ -17,6 +17,7 @@ import com.proximyst.ban.data.impl.MojangApiAshcon;
 import com.proximyst.ban.data.impl.MySqlInterface;
 import com.proximyst.ban.data.jdbi.UuidJdbiFactory;
 import com.proximyst.ban.event.subscriber.BannedPlayerJoinSubscriber;
+import com.proximyst.ban.event.subscriber.CacheUpdatePlayerJoinSubscriber;
 import com.proximyst.ban.event.subscriber.MutedPlayerChatSubscriber;
 import com.proximyst.ban.inject.DataModule;
 import com.proximyst.ban.inject.PluginModule;
@@ -188,6 +189,7 @@ public class BanPlugin {
     tm.start("Registering subscribers");
     getProxyServer().getEventManager().register(this, getInjector().getInstance(BannedPlayerJoinSubscriber.class));
     getProxyServer().getEventManager().register(this, getInjector().getInstance(MutedPlayerChatSubscriber.class));
+    getProxyServer().getEventManager().register(this, getInjector().getInstance(CacheUpdatePlayerJoinSubscriber.class));
 
     tm.start("Registering commands");
     getInjector().getInstance(BanCommand.class).register(getProxyServer().getCommandManager());

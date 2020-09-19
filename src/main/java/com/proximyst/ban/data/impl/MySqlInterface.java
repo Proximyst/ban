@@ -180,6 +180,19 @@ public class MySqlInterface implements IDataInterface {
   }
 
   @Override
+  @NonNull
+  public Optional<@NonNull Long> getUserCacheDate(@NonNull UUID uuid) {
+    return jdbi.withHandle(handle ->
+        handle.createQuery(SqlQueries.SELECT_USER_BY_UUID.getQuery())
+            .bind(0, uuid)
+            .setMaxRows(1)
+            .map((RowView rowView) -> rowView.getColumn("timestamp", Timestamp.class))
+            .findOne()
+            .map(Timestamp::getTime)
+    );
+  }
+
+  @Override
   public void saveUser(@NonNull BanUser user) {
     if (user == BanUser.CONSOLE) {
       return;

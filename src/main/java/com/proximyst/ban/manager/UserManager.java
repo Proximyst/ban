@@ -6,6 +6,7 @@ import com.proximyst.ban.model.BanUser;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 @Singleton
@@ -27,6 +28,7 @@ public final class UserManager {
     CompletableFuture<Optional<@NonNull BanUser>> future = CompletableFuture
         .supplyAsync(() -> main.getDataInterface().getUser(uuid), main.getSchedulerExecutor());
     return future.thenCompose(user -> {
+      user.map(BanUser::getUuid).ifPresent(this::scheduleUpdateIfNecessary);
       if (!user.isPresent()) {
         return main.getMojangApi().getUser(uuid).getOrLoad()
             .thenApply(optionalUser -> {
@@ -49,6 +51,7 @@ public final class UserManager {
     CompletableFuture<Optional<@NonNull BanUser>> future = CompletableFuture
         .supplyAsync(() -> main.getDataInterface().getUser(name), main.getSchedulerExecutor());
     return future.thenCompose(user -> {
+      user.map(BanUser::getUuid).ifPresent(this::scheduleUpdateIfNecessary);
       if (!user.isPresent()) {
         return main.getMojangApi().getUser(name).getOrLoad()
             .thenApply(optionalUser -> {
@@ -63,5 +66,29 @@ public final class UserManager {
 
       return future;
     });
+  }
+
+  public void scheduleUpdateIfNecessary(@NonNull UUID uuid) {
+    main.getProxyServer().getScheduler()
+        .buildTask(main, () -> {
+          long lastUpdate = main.getDataInterface().getUserCacheDate(uuid).orElse(0L);
+          if (lastUpdate + TimeUnit.DAYS.toMillis(1) <= System.currentTimeMillis()) {
+            updateUser(uuid);
+          }
+        })
+        .schedule();
+  }
+
+  @NonNull
+  public CompletableFuture<@NonNull Optional<@NonNull BanUser>> updateUser(@NonNull UUID identifier) {
+    return main.getMojangApi().getUser(identifier).getOrLoad()
+        .thenApply(optionalUser -> {
+          optionalUser.ifPresent(fetchedUser -> {
+            main.getProxyServer().getScheduler()
+                .buildTask(main, () -> main.getDataInterface().saveUser(fetchedUser))
+                .schedule();
+          });
+          return optionalUser;
+        });
   }
 }

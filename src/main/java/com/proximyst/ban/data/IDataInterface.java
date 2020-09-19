@@ -48,5 +48,8 @@ public interface IDataInterface {
   @NonNull
   Optional<@NonNull BanUser> getUser(@NonNull String username);
 
+  @NonNull
+  Optional<@NonNull Long> getUserCacheDate(@NonNull UUID uuid);
+
   void saveUser(@NonNull BanUser user);
 }
