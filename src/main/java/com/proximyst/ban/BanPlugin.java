@@ -38,6 +38,7 @@ import java.nio.file.Path;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
@@ -294,7 +295,8 @@ public class BanPlugin {
       if (start != 0) {
         finish();
       }
-      start = System.currentTimeMillis();
+
+      start = System.nanoTime();
       current = stage;
     }
 
@@ -303,9 +305,9 @@ public class BanPlugin {
         return;
       }
 
-      long duration = System.currentTimeMillis() - start;
+      long duration = System.nanoTime() - start;
       start = 0;
-      logger.info("Finished stage ({}ms): {}", duration, current);
+      logger.info("Finished stage ({}ms): {}", TimeUnit.NANOSECONDS.toMillis(duration), current);
     }
   }
 }
