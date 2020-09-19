@@ -13,7 +13,7 @@ public final class CommandUtils {
 
   @NonNull
   public static String getSourceName(@NonNull CommandSource source) {
-    return source instanceof Player ? ((Player) source).getUsername() : "CONSOLE";
+    return source instanceof Player ? ((Player) source).getUsername() : BanUser.CONSOLE.getUsername();
   }
 
   @NonNull
