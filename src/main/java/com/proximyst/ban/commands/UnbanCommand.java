@@ -51,8 +51,8 @@ public final class UnbanCommand extends BaseCommand {
         ctx.getSource().sendMessage(MiniMessage.get().parse(
             getMain().getConfiguration().messages.errors.noBan,
 
-            "name", user.getUsername(),
-            "uuid", user.getUuid().toString()
+            "targetName", user.getUsername(),
+            "targetUuid", user.getUuid().toString()
         ));
         return;
       }
