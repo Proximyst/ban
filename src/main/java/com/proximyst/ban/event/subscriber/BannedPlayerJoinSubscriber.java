@@ -38,8 +38,8 @@ public class BannedPlayerJoinSubscriber {
           event.setResult(ComponentResult.denied(
               main.getMessageManager().formatMessageWith(
                   ban.getReason().isPresent()
-                      ? messagesConfig.banMessageReason
-                      : messagesConfig.banMessageReasonless,
+                      ? messagesConfig.applications.banReason
+                      : messagesConfig.applications.banReasonless,
                   ban
               )
                   // We're about to deny them access; the time it takes to fetch the data doesn't matter.

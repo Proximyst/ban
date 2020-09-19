@@ -38,8 +38,8 @@ public class MutedPlayerChatSubscriber {
           event.setResult(ChatResult.denied());
           main.getMessageManager().formatMessageWith(
               mute.getReason().isPresent()
-                  ? messagesConfig.muteMessageReason
-                  : messagesConfig.muteMessageReasonless,
+                  ? messagesConfig.applications.muteReason
+                  : messagesConfig.applications.muteReasonless,
               mute
           ).thenAccept(event.getPlayer()::sendMessage);
         });

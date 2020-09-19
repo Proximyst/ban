@@ -8,19 +8,9 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 @ConfigSerializable
 @NonNull
 public final class Configuration {
-  @Setting(comment = "The SQL server settings.")
-  private SqlConfig sql = new SqlConfig();
+  @Setting
+  public SqlConfig sql = new SqlConfig();
 
   @Setting
-  private MessagesConfig messages = new MessagesConfig();
-
-  @NonNull
-  public SqlConfig getSql() {
-    return sql;
-  }
-
-  @NonNull
-  public MessagesConfig getMessages() {
-    return messages;
-  }
+  public MessagesConfig messages = new MessagesConfig();
 }

@@ -29,7 +29,7 @@ public final class PluginModule extends AbstractModule {
     bind(File.class).annotatedWith(DataDirectory.class).toProvider(() -> main.getDataDirectory().toFile());
 
     bind(Configuration.class).toProvider(main::getConfiguration);
-    bind(SqlConfig.class).toProvider(() -> main.getConfiguration().getSql());
-    bind(MessagesConfig.class).toProvider(() -> main.getConfiguration().getMessages());
+    bind(SqlConfig.class).toProvider(() -> main.getConfiguration().sql);
+    bind(MessagesConfig.class).toProvider(() -> main.getConfiguration().messages);
   }
 }

@@ -7,6 +7,7 @@ import com.proximyst.ban.config.MessagesConfig;
 import com.proximyst.ban.model.BanUser;
 import com.proximyst.ban.model.Punishment;
 import com.proximyst.ban.model.PunishmentType;
+import java.text.SimpleDateFormat;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.text.Component;
@@ -55,16 +56,16 @@ public final class MessageManager {
     String message = null;
     switch (punishment.getPunishmentType()) {
       case BAN:
-        message = punishment.getReason().isPresent() ? cfg.broadcastBanReason : cfg.broadcastBanReasonless;
+        message = punishment.getReason().isPresent() ? cfg.broadcasts.banReason : cfg.broadcasts.banReasonless;
         break;
       case KICK:
-        message = punishment.getReason().isPresent() ? cfg.broadcastKickReason : cfg.broadcastKickReasonless;
+        message = punishment.getReason().isPresent() ? cfg.broadcasts.kickReason : cfg.broadcasts.kickReasonless;
         break;
       case MUTE:
-        message = punishment.getReason().isPresent() ? cfg.broadcastMuteReason : cfg.broadcastMuteReasonless;
+        message = punishment.getReason().isPresent() ? cfg.broadcasts.muteReason : cfg.broadcasts.muteReasonless;
         break;
       case WARNING:
-        message = punishment.getReason().isPresent() ? cfg.broadcastWarnReason : cfg.broadcastWarnReasonless;
+        message = punishment.getReason().isPresent() ? cfg.broadcasts.warnReason : cfg.broadcasts.warnReasonless;
         break;
 
       case NOTE:
@@ -103,19 +104,21 @@ public final class MessageManager {
                   .parse(
                       message,
 
-                      "name", target.getUsername(),
-                      "uuid", target.getUuid().toString(),
+                      "targetName", target.getUsername(),
+                      "targetUuid", target.getUuid().toString(),
 
-                      "punisher", punisher.getUsername(),
+                      "punisherName", punisher.getUsername(),
                       "punisherUuid", punisher.getUuid().toString(),
 
+                      "punishmentId", punishment.getId().orElse(-1L).toString(),
+                      "punishmentDate", SimpleDateFormat.getDateInstance().format(punishment.getDate()),
                       "reason", punishment.getReason()
                           .map(MiniMessage.get()::escapeTokens)
                           .orElse("No reason specified"),
 
                       "duration", punishment.isPermanent()
-                          ? cfg.permanently
-                          : cfg.durationFormat
+                          ? cfg.formatting.permanently
+                          : cfg.formatting.durationFormat
                               .replace("<duration>",
                                   DurationFormatUtils.formatDurationWords(
                                       punishment.getExpiration() - System.currentTimeMillis(),

@@ -63,10 +63,10 @@ public final class PunishmentManager {
           getMain().getProxyServer().getPlayer(punishment.getTarget())
               .ifPresent(player -> getMain().getMessageManager().formatMessageWith(
                   punishment.getPunishmentType() == PunishmentType.KICK
-                      ? (punishment.getReason().map($ -> getMain().getConfiguration().getMessages().kickMessageReason)
-                      .orElse(getMain().getConfiguration().getMessages().kickMessageReasonless))
-                      : (punishment.getReason().map($ -> getMain().getConfiguration().getMessages().banMessageReason)
-                          .orElse(getMain().getConfiguration().getMessages().banMessageReasonless)),
+                      ? (punishment.getReason().map($ -> getMain().getConfiguration().messages.applications.kickReason)
+                      .orElse(getMain().getConfiguration().messages.applications.kickReasonless))
+                      : (punishment.getReason().map($ -> getMain().getConfiguration().messages.applications.banReason)
+                          .orElse(getMain().getConfiguration().messages.applications.banReasonless)),
                   punishment
               ).thenAccept(player::disconnect));
         }

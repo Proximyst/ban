@@ -149,10 +149,10 @@ public class BanPlugin {
     }
 
     HikariConfig hikariConfig = new HikariConfig();
-    hikariConfig.setJdbcUrl(getConfiguration().getSql().jdbcUri);
-    hikariConfig.setUsername(getConfiguration().getSql().username);
-    hikariConfig.setPassword(getConfiguration().getSql().password);
-    hikariConfig.setMaximumPoolSize(getConfiguration().getSql().maxConnections);
+    hikariConfig.setJdbcUrl(getConfiguration().sql.jdbcUri);
+    hikariConfig.setUsername(getConfiguration().sql.username);
+    hikariConfig.setPassword(getConfiguration().sql.password);
+    hikariConfig.setMaximumPoolSize(getConfiguration().sql.maxConnections);
     hikariDataSource = new HikariDataSource(hikariConfig);
     jdbi = Jdbi.create(hikariDataSource)
         .setSqlLogger(new SqlLogger() {
@@ -182,7 +182,7 @@ public class BanPlugin {
     tm.start("Initialising plugin essentials");
     mojangApi = new MojangApiAshcon(getSchedulerExecutor());
     punishmentManager = new PunishmentManager(this);
-    messageManager = new MessageManager(this, getConfiguration().getMessages());
+    messageManager = new MessageManager(this, getConfiguration().messages);
     userManager = new UserManager(this);
 
     tm.start("Registering subscribers");

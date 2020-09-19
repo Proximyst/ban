@@ -49,7 +49,7 @@ public final class UnbanCommand extends BaseCommand {
       Punishment punishment = pair.getSecond().orElse(null);
       if (punishment == null) {
         ctx.getSource().sendMessage(MiniMessage.get().parse(
-            getMain().getConfiguration().getMessages().errorNoBan,
+            getMain().getConfiguration().messages.errors.noBan,
 
             "name", user.getUsername(),
             "uuid", user.getUuid().toString()
