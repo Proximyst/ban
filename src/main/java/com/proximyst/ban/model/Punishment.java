@@ -358,7 +358,7 @@ public final class Punishment {
       return CompletableFuture.completedFuture(true);
     }
 
-    return main.getMessageManager().banNotification(Punishment.this)
+    return main.getMessageManager().notificationMessage(Punishment.this)
         .thenApply(opt -> opt.orElse(TextComponent.empty()))
         .thenCompose(notification -> main.getProxyServer().getEventManager().fire(
             new PunishmentPreBroadcastEvent(Punishment.this, notification)

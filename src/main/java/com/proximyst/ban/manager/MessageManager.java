@@ -52,20 +52,32 @@ public final class MessageManager {
   }
 
   @NonNull
-  public CompletableFuture<@NonNull Optional<@NonNull Component>> banNotification(@NonNull Punishment punishment) {
+  public CompletableFuture<@NonNull Optional<@NonNull Component>> notificationMessage(@NonNull Punishment punishment) {
     String message = null;
     switch (punishment.getPunishmentType()) {
       case BAN:
-        message = punishment.getReason().isPresent() ? cfg.broadcasts.banReason : cfg.broadcasts.banReasonless;
+        if (punishment.isLifted()) {
+          message = cfg.broadcasts.unban;
+        } else {
+          message = punishment.getReason().isPresent() ? cfg.broadcasts.banReason : cfg.broadcasts.banReasonless;
+        }
         break;
       case KICK:
+        // No #isLifted; a kick cannot be lifted.
         message = punishment.getReason().isPresent() ? cfg.broadcasts.kickReason : cfg.broadcasts.kickReasonless;
         break;
       case MUTE:
-        message = punishment.getReason().isPresent() ? cfg.broadcasts.muteReason : cfg.broadcasts.muteReasonless;
+        if (punishment.isLifted()) {
+          message = cfg.broadcasts.unmute;
+        } else {
+          message = punishment.getReason().isPresent() ? cfg.broadcasts.muteReason : cfg.broadcasts.muteReasonless;
+        }
         break;
       case WARNING:
-        message = punishment.getReason().isPresent() ? cfg.broadcasts.warnReason : cfg.broadcasts.warnReasonless;
+        // It shouldn't actually get here, but let's make sure it doesn't go farther at the very least.
+        if (!punishment.isLifted()) {
+          message = punishment.getReason().isPresent() ? cfg.broadcasts.warnReason : cfg.broadcasts.warnReasonless;
+        }
         break;
 
       case NOTE:
@@ -83,6 +95,16 @@ public final class MessageManager {
 
     return formatMessageWith(message, punishment)
         .thenApply(Optional::of);
+  }
+
+  @NonNull
+  public Component errorNoBan(@NonNull BanUser user) {
+    return MiniMessage.get().parse(
+        cfg.errors.noBan,
+
+        "targetName", user.getUsername(),
+        "targetUuid", user.getUuid().toString()
+    );
   }
 
   @NonNull

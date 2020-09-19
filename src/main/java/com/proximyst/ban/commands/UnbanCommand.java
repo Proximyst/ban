@@ -15,7 +15,6 @@ import com.proximyst.ban.utils.CommandUtils;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.command.CommandSource;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public final class UnbanCommand extends BaseCommand {
@@ -48,17 +47,12 @@ public final class UnbanCommand extends BaseCommand {
       BanUser user = pair.getFirst();
       Punishment punishment = pair.getSecond().orElse(null);
       if (punishment == null) {
-        ctx.getSource().sendMessage(MiniMessage.get().parse(
-            getMain().getConfiguration().messages.errors.noBan,
-
-            "targetName", user.getUsername(),
-            "targetUuid", user.getUuid().toString()
-        ));
+        ctx.getSource().sendMessage(getMain().getMessageManager().errorNoBan(user));
         return;
       }
 
-      // TODO(Proximyst): Broadcast unban
       punishment.setLiftedBy(CommandUtils.getSourceUuid(ctx.getSource()));
+      punishment.broadcast(getMain());
       getMain().getSchedulerExecutor().execute(() -> getMain().getDataInterface().addPunishment(punishment));
     });
   }

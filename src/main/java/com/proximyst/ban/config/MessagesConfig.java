@@ -45,6 +45,9 @@ public class MessagesConfig {
     @Setting(comment = "A player has been muted with a reason.")
     public String muteReason = "<yellow><gold><targetName></gold> has been muted<gold><duration></gold> for: <gold><reason>";
 
+    @Setting(comment = "A player has been unmuted.")
+    public String unmute = "<yellow><gold><targetName></gold> has been unmuted by <gold><punisherName></gold>.";
+
     @Setting(comment = "A player has been kicked without reason.")
     public String kickReasonless = "<yellow><gold><targetName></gold> has been kicked.";
 
