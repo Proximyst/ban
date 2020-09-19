@@ -34,7 +34,7 @@ public class MessagesConfig {
     public String banReasonless = "<yellow><gold><targetName></gold> has been banned<gold><duration></gold>.";
 
     @Setting(comment = "A player has been banned with a reason.")
-    public String banReason = "<yellow><gold><targetName></gold> has been banned<gold><duration></gold> for:<gold><reason>";
+    public String banReason = "<yellow><gold><targetName></gold> has been banned<gold><duration></gold> for: <gold><reason>";
 
     @Setting(comment = "A player has been unbanned.")
     public String unban = "<yellow><gold><targetName></gold> has been unbanned by <gold><punisherName></gold>.";
