@@ -84,7 +84,7 @@ public class MessagesConfig {
   @NonNull
   public static class Formatting {
     @Setting(comment = "The word used in the duration for when someone has been permanently punished.")
-    public String permanently = "permanently";
+    public String permanently = " permanently";
 
     @Setting(comment = "The format for punishments with durations.")
     public String durationFormat = " for <duration>";
