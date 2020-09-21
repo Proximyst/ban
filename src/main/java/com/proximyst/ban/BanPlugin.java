@@ -74,8 +74,8 @@ import org.slf4j.Logger;
     authors = "Proximyst"
 )
 public class BanPlugin {
-  public static final String PLUGIN_ID = "ban";
-  public static final String PLUGIN_NAME = "ban";
+  public static final String PLUGIN_ID = "banstret";
+  public static final String PLUGIN_NAME = "banstret";
   public static final String PLUGIN_VERSION = "0.1.0";
   public static final String PLUGIN_DESCRIPTION = "A simple punishment suite for Velocity.";
 
