@@ -77,7 +77,7 @@ public class BanPlugin {
   public static final String PLUGIN_ID = "banstret";
   public static final String PLUGIN_NAME = "banstret";
   public static final String PLUGIN_VERSION = "0.1.0";
-  public static final String PLUGIN_DESCRIPTION = "A simple punishment suite for Velocity.";
+  public static final String PLUGIN_DESCRIPTION = "A simple punishment suite for Velocitymonstret.";
 
   public static final Gson COMPACT_GSON = new Gson();
 
