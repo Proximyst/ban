@@ -19,12 +19,10 @@
 package com.proximyst.ban;
 
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.proximyst.ban.boilerplate.VelocityBanSchedulerExecutor;
-import com.proximyst.ban.boilerplate.model.MigrationIndexEntry;
 import com.proximyst.ban.commands.BanCommand;
 import com.proximyst.ban.commands.UnbanCommand;
 import com.proximyst.ban.config.ConfigUtil;
@@ -42,7 +40,6 @@ import com.proximyst.ban.inject.PluginModule;
 import com.proximyst.ban.manager.MessageManager;
 import com.proximyst.ban.manager.PunishmentManager;
 import com.proximyst.ban.manager.UserManager;
-import com.proximyst.ban.utils.ResourceReader;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
@@ -55,7 +52,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
@@ -185,15 +181,8 @@ public class BanPlugin {
     dataInterface = new MySqlInterface(getLogger(), getJdbi());
 
     tm.start("Preparing database");
-    String migrationsIndexJson = ResourceReader.readResource("sql/migrations/migrations-index.json");
-    List<MigrationIndexEntry> migrationIndexEntries = COMPACT_GSON
-        .fromJson(
-            migrationsIndexJson,
-            new TypeToken<List<MigrationIndexEntry>>() {
-            }.getType()
-        );
     try {
-      getDataInterface().applyMigrations(migrationIndexEntries);
+      getDataInterface().applyMigrations();
     } catch (Exception ex) {
       getLogger().error("Could not prepare database", ex);
       return;

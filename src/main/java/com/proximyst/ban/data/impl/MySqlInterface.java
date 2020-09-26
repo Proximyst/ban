@@ -18,22 +18,26 @@
 
 package com.proximyst.ban.data.impl;
 
+import com.google.gson.reflect.TypeToken;
 import com.google.inject.Singleton;
+import com.proximyst.ban.BanPlugin;
 import com.proximyst.ban.boilerplate.model.MigrationIndexEntry;
 import com.proximyst.ban.boilerplate.model.Pair;
 import com.proximyst.ban.data.IDataInterface;
-import com.proximyst.ban.data.SqlQueries;
 import com.proximyst.ban.model.BanUser;
 import com.proximyst.ban.model.Punishment;
 import com.proximyst.ban.model.UsernameHistory;
 import com.proximyst.ban.model.UsernameHistory.Entry;
 import com.proximyst.ban.utils.ResourceReader;
+import com.proximyst.ban.utils.ThrowableUtils;
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jdbi.v3.core.Jdbi;
@@ -46,6 +50,9 @@ import org.slf4j.Logger;
 @Singleton
 public class MySqlInterface implements IDataInterface {
   @NonNull
+  private static final String PATH = "sql/mysql/";
+
+  @NonNull
   private final Logger logger;
 
   @NonNull
@@ -57,7 +64,15 @@ public class MySqlInterface implements IDataInterface {
   }
 
   @Override
-  public void applyMigrations(@NonNull final List<MigrationIndexEntry> migrations) {
+  public void applyMigrations() {
+    String migrationsIndexJson = ResourceReader.readResource(PATH + "migrations/migrations-index.json");
+    List<MigrationIndexEntry> migrations = BanPlugin.COMPACT_GSON
+        .fromJson(
+            migrationsIndexJson,
+            new TypeToken<List<MigrationIndexEntry>>() {
+            }.getType()
+        );
+
     jdbi.useTransaction(handle -> {
       // Ensure the table exists first.
       SqlQueries.CREATE_VERSION_TABLE.forEachQuery(handle::execute);
@@ -71,7 +86,7 @@ public class MySqlInterface implements IDataInterface {
           .sorted(Comparator.comparingInt(MigrationIndexEntry::getVersion))
           .forEach(mig -> {
             logger.info("Migrating database to version " + mig.getVersion() + "...");
-            String queries = ResourceReader.readResource("sql/migrations/" + mig.getPath());
+            String queries = ResourceReader.readResource(PATH + "migrations/" + mig.getPath());
             for (String query : queries.split(";")) {
               if (query.trim().isEmpty()) {
                 continue;
@@ -234,5 +249,76 @@ public class MySqlInterface implements IDataInterface {
 
       handle.commit();
     });
+  }
+
+  public enum SqlQueries {
+    SELECT_VERSION("select-version"),
+    CREATE_VERSION_TABLE("create-version-table"),
+    UPDATE_VERSION("update-version"),
+    SELECT_PUNISHMENTS_BY_TARGET("select-punishments-by-target"),
+    CREATE_PUNISHMENT("create-punishment"),
+    LIFT_PUNISHMENT("lift-punishment"),
+    SELECT_USER_BY_UUID("select-user-by-uuid"),
+    SELECT_USER_BY_USERNAME("select-user-by-username"),
+    SELECT_USERNAME_HISTORY_BY_UUID("select-username-history-by-uuid"),
+    SAVE_USER("save-user"),
+    SAVE_USER_NAME("save-user-name"),
+    ;
+
+    @NonNull
+    private final String query;
+
+    SqlQueries(@NonNull String name) {
+      this.query = ResourceReader.readResource(PATH + name + ".sql");
+    }
+
+    /**
+     * Get the SQL query this wraps.
+     *
+     * @return The query for this enumeration.
+     */
+    @NonNull
+    public String getQuery() {
+      return query;
+    }
+
+    /**
+     * Get the SQL queries this wraps, split by {@code ;}.
+     *
+     * @return The queries for this enumeration.
+     */
+    @NonNull
+    public String[] getQueries() {
+      return getQuery().split(";");
+    }
+
+    /**
+     * Apply a {@link SqlConsumer} to each query gotten from {@link #getQueries()}.
+     *
+     * @param consumer The {@link SqlConsumer} to apply to each query.
+     */
+    public void forEachQuery(SqlConsumer consumer) {
+      for (String query : getQueries()) {
+        if (query.trim().isEmpty()) {
+          continue;
+        }
+
+        consumer.accept(query);
+      }
+    }
+
+    @FunctionalInterface
+    public interface SqlConsumer extends Consumer<String> {
+      @Override
+      default void accept(String s) {
+        try {
+          apply(s);
+        } catch (SQLException ex) {
+          ThrowableUtils.sneakyThrow(ex);
+        }
+      }
+
+      void apply(String query) throws SQLException;
+    }
   }
 }

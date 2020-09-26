@@ -18,7 +18,6 @@
 
 package com.proximyst.ban.data;
 
-import com.proximyst.ban.boilerplate.model.MigrationIndexEntry;
 import com.proximyst.ban.model.BanUser;
 import com.proximyst.ban.model.Punishment;
 import java.util.List;
@@ -32,10 +31,8 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 public interface IDataInterface {
   /**
    * Apply all migrations to the database.
-   *
-   * @param migrations The migrations available.
    */
-  void applyMigrations(@NonNull List<MigrationIndexEntry> migrations);
+  void applyMigrations();
 
   /**
    * Get all current punishments where the given {@link UUID} is the target.
