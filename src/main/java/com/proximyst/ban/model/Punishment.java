@@ -371,8 +371,7 @@ public final class Punishment {
    */
   @NonNull
   public CompletableFuture<@NonNull Boolean> broadcast(@NonNull BanPlugin main) {
-    if (getPunishmentType() == PunishmentType.NOTE) {
-      // We do not broadcast notes.
+    if (!getPunishmentType().isAnnouncable()) {
       return CompletableFuture.completedFuture(true);
     }
 

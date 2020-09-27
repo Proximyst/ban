@@ -74,8 +74,8 @@ public final class PunishmentManager {
         return punishment;
       }))
       .pipe("apply to online player", ImmediatePipeHandler.of(punishment -> {
-        if (punishment.getPunishmentType() == PunishmentType.KICK
-            || punishment.getPunishmentType() == PunishmentType.BAN) {
+        if (punishment.getPunishmentType().isApplicable()) {
+          // TODO(Proximyst): Make this.. not ugly.
           getMain().getProxyServer().getPlayer(punishment.getTarget())
               .ifPresent(player -> getMain().getMessageManager().formatMessageWith(
                   punishment.getPunishmentType() == PunishmentType.KICK
@@ -165,7 +165,7 @@ public final class PunishmentManager {
 
   @NonNull
   private IDataInterface getDataInterface() {
-    return main.getDataInterface();
+    return getMain().getDataInterface();
   }
 
   @NonNull

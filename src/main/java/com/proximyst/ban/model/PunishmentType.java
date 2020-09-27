@@ -33,35 +33,35 @@ public enum PunishmentType {
   /**
    * A warning on the player.
    */
-  WARNING(0, false),
+  WARNING(0, false, true, false),
 
   /**
    * A mute on the player.
    * <p>
    * This means the player cannot communicate with other players.
    */
-  MUTE(1),
+  MUTE(1, true, false),
 
   /**
    * A kick on the player.
    * <p>
    * This means the player was forcefully disconnected once.
    */
-  KICK(2, false),
+  KICK(2, false, true, true),
 
   /**
    * A ban on the player.
    * <p>
    * This means the player was forcefully removed from the server for a period of time.
    */
-  BAN(3),
+  BAN(3, true, true),
 
   /**
    * A note on the player.
    * <p>
    * This is not visible to the player in any way and is only used for the history.
    */
-  NOTE(4, false),
+  NOTE(4, false, false, false),
   ;
 
   /**
@@ -79,22 +79,35 @@ public enum PunishmentType {
    * The ID of this {@link PunishmentType} in the database.
    */
   private final byte id;
+
   /**
    * Whether this {@link PunishmentType} can be lifted.
    */
   private final boolean canLift;
 
-  PunishmentType(byte id, boolean canLift) {
+  /**
+   * Whether this {@link PunishmentType} can be announced.
+   */
+  private final boolean isAnnouncable;
+
+  /**
+   * Whether this {@link PunishmentType} can be applied to online players once placed.
+   */
+  private final boolean isApplicable;
+
+  PunishmentType(byte id, boolean canLift, boolean isAnnouncable, boolean isApplicable) {
     this.id = id;
     this.canLift = canLift;
+    this.isAnnouncable = isAnnouncable;
+    this.isApplicable = isApplicable;
   }
 
-  PunishmentType(int id) {
-    this(id, true);
+  PunishmentType(int id, boolean isAnnouncable, boolean isApplicable) {
+    this(id, true, isAnnouncable, isApplicable);
   }
 
-  PunishmentType(int id, boolean canLift) {
-    this((byte) id, canLift);
+  PunishmentType(int id, boolean canLift, boolean isAnnouncable, boolean isApplicable) {
+    this((byte) id, canLift, isAnnouncable, isApplicable);
   }
 
   /**
@@ -118,5 +131,19 @@ public enum PunishmentType {
    */
   public boolean canBeLifted() {
     return canLift;
+  }
+
+  /**
+   * @return Whether this {@link PunishmentType} can be announced.
+   */
+  public boolean isAnnouncable() {
+    return isAnnouncable;
+  }
+
+  /**
+   * @return Whether this {@link PunishmentType} can be applied to online players once placed.
+   */
+  public boolean isApplicable() {
+    return isApplicable;
   }
 }
