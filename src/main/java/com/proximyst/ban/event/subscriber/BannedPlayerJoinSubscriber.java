@@ -39,9 +39,9 @@ public class BannedPlayerJoinSubscriber {
 
   @Inject
   public BannedPlayerJoinSubscriber(
-      @NonNull BanPlugin main,
-      @NonNull PunishmentManager manager,
-      @NonNull MessagesConfig messagesConfig
+      @NonNull final BanPlugin main,
+      @NonNull final PunishmentManager manager,
+      @NonNull final MessagesConfig messagesConfig
   ) {
     this.main = main;
     this.manager = manager;
@@ -49,15 +49,15 @@ public class BannedPlayerJoinSubscriber {
   }
 
   @Subscribe
-  public void onJoinServer(LoginEvent event) {
-    manager.getActiveBan(event.getPlayer().getUniqueId())
+  public void onJoinServer(@NonNull final LoginEvent event) {
+    this.manager.getActiveBan(event.getPlayer().getUniqueId())
         .join() // This *should* be fast, and only on one player's connection thread
         .ifPresent(ban -> {
           event.setResult(ComponentResult.denied(
-              main.getMessageManager().formatMessageWith(
+              this.main.getMessageManager().formatMessageWith(
                   ban.getReason().isPresent()
-                      ? messagesConfig.applications.banReason
-                      : messagesConfig.applications.banReasonless,
+                      ? this.messagesConfig.applications.banReason
+                      : this.messagesConfig.applications.banReasonless,
                   ban
               )
                   // We're about to deny them access; the time it takes to fetch the data doesn't matter.

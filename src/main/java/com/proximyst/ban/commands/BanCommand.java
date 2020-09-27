@@ -37,25 +37,25 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class BanCommand extends BaseCommand {
   @Inject
-  public BanCommand(@NonNull BanPlugin main) {
+  public BanCommand(@NonNull final BanPlugin main) {
     super(main);
   }
 
   @Override
-  public void register(@NonNull CommandManager commandManager) {
+  public void register(@NonNull final CommandManager commandManager) {
     commandManager.register(new BrigadierCommand(
         literal("ban")
             .requires(src -> src.hasPermission(BanPermissions.COMMAND_BAN))
             .then(argRequired("target", StringArgumentType.string())
                 .suggests(UserArgument.createSuggestions(getMain()))
                 .then(argRequired("reason", StringArgumentType.greedyString())
-                    .executes(execute(this::execute)))
-                .executes(execute(this::execute)))
+                    .executes(this.execute(this::execute)))
+                .executes(this.execute(this::execute)))
     ));
   }
 
-  private void execute(@NonNull CommandContext<CommandSource> ctx) throws CommandSyntaxException {
-    @Nullable String reason = getOptionalArgument(() -> StringArgumentType.getString(ctx, "reason"))
+  private void execute(@NonNull final CommandContext<CommandSource> ctx) throws CommandSyntaxException {
+    @Nullable final String reason = getOptionalArgument(() -> StringArgumentType.getString(ctx, "reason"))
         .map(String::trim)
         .filter(str -> !str.isEmpty())
         .orElse(null);
