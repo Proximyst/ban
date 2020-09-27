@@ -56,7 +56,7 @@ dependencies {
         isTransitive = false
     }
 
-    implementation("com.proximyst:sewer:0.5.0")
+    implementation("com.proximyst:sewer:0.6.0")
 
     implementation("org.apache.commons:commons-lang3:3.11")
 }
@@ -85,6 +85,8 @@ tasks {
         )
         mergeServiceFiles()
     }
+
+    named("build").get().dependsOn(withType<ShadowJar>())
 }
 
 configure<JavaPluginConvention> {

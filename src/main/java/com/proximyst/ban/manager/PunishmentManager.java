@@ -67,9 +67,7 @@ public final class PunishmentManager {
       .builder("build", ImmediatePipeHandler.of(PunishmentBuilder::build), null,
           punishment ->
               getMain().getProxyServer().getEventManager().fire(new PunishmentAddedEvent(punishment))
-                  .join()
-                  .getResult()
-                  .isAllowed()
+                  .thenApply(event -> event.getResult().isAllowed())
       )
       .pipe("announce", ImmediatePipeHandler.of(punishment -> {
         punishment.broadcast(getMain());
