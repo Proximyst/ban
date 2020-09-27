@@ -30,13 +30,13 @@ public class CacheUpdatePlayerJoinSubscriber {
 
   @Inject
   public CacheUpdatePlayerJoinSubscriber(
-      @NonNull UserManager userManager
+      @NonNull final UserManager userManager
   ) {
     this.userManager = userManager;
   }
 
   @Subscribe
-  public void onJoinServer(LoginEvent event) {
-    userManager.updateUser(event.getPlayer().getUniqueId());
+  public void onJoinServer(@NonNull final LoginEvent event) {
+    this.userManager.updateUser(event.getPlayer().getUniqueId());
   }
 }

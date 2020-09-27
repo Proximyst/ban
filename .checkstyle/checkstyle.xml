@@ -37,7 +37,7 @@
   <!-- https://checkstyle.org/config_filters.html#SuppressionFilter -->
   <module name="SuppressionFilter">
     <property name="file" value="${basedir}/suppressions.xml"
-      default=".checkstyle/suppressions.xml" />
+      default=".checkstyle/suppressions.xml"/>
     <property name="optional" value="true"/>
   </module>
 
@@ -51,11 +51,11 @@
   </module>
   <module name="NewlineAtEndOfFile"/>
 
-  <module name="SuppressWarningsFilter" />
+  <module name="SuppressWarningsFilter"/>
 
   <module name="TreeWalker">
     <!-- Make the @SuppressWarnings annotations available to Checkstyle -->
-    <module name="SuppressWarningsHolder" />
+    <module name="SuppressWarningsHolder"/>
 
     <!-- no space between parameters and parenthesis -->
     <module name="EmptyForInitializerPad"/>
@@ -65,7 +65,7 @@
     <module name="EmptyLineSeparator">
       <!-- No new line after the license header -->
       <property name="tokens"
-        value="IMPORT, STATIC_IMPORT, CLASS_DEF, INTERFACE_DEF, ENUM_DEF,
+        value="IMPORT, STATIC_IMPORT, INTERFACE_DEF, ENUM_DEF,
                     STATIC_INIT, INSTANCE_INIT, METHOD_DEF, CTOR_DEF, VARIABLE_DEF"/>
       <property name="allowNoEmptyLineBetweenFields" value="true"/>
       <property name="allowMultipleEmptyLines" value="false"/>

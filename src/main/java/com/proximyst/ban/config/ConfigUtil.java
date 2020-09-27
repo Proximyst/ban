@@ -28,22 +28,26 @@ public final class ConfigUtil {
   private static final ObjectMapper<Configuration> OBJECT_MAPPER;
   private static final int VERSION = -1;
 
+  private ConfigUtil() throws IllegalAccessException {
+    throw new IllegalAccessException(this.getClass().getSimpleName() + " cannot be instantiated.");
+  }
+
   static {
     try {
       OBJECT_MAPPER = ObjectMapper.forClass(Configuration.class);
-    } catch (ObjectMappingException ex) {
+    } catch (final ObjectMappingException ex) {
       throw new ExceptionInInitializerError(ex);
     }
   }
 
   @NonNull
-  public static Configuration loadConfiguration(@NonNull ConfigurationNode node)
+  public static Configuration loadConfiguration(@NonNull final ConfigurationNode node)
       throws ObjectMappingException {
     if (!node.isVirtual()) {
       // https://github.com/SpongePowered/Configurate/blob/3.x/configurate-examples/src/main/java/ninja/leaping/configurate/examples/Transformations.java
 
       // Only update existing configurations.
-      ConfigurationTransformation transformation = ConfigurationTransformation.versionedBuilder()
+      final ConfigurationTransformation transformation = ConfigurationTransformation.versionedBuilder()
           .build();
       transformation.apply(node);
     }
@@ -51,8 +55,10 @@ public final class ConfigUtil {
     return OBJECT_MAPPER.bindToNew().populate(node);
   }
 
-  public static void saveConfiguration(@NonNull Configuration configuration, @NonNull ConfigurationNode node)
-      throws ObjectMappingException {
+  public static void saveConfiguration(
+      @NonNull final Configuration configuration,
+      @NonNull final ConfigurationNode node
+  ) throws ObjectMappingException {
     OBJECT_MAPPER.bind(configuration).serialize(node);
   }
 }

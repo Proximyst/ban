@@ -32,7 +32,7 @@ public final class MigrationIndexEntry {
   @MonotonicNonNull
   private String path;
 
-  public MigrationIndexEntry(int version, String path) {
+  public MigrationIndexEntry(final int version, @NonNull final String path) {
     this.version = version;
     this.path = path;
   }
@@ -44,7 +44,7 @@ public final class MigrationIndexEntry {
    * @return The version in the database this migration represents.
    */
   public int getVersion() {
-    return version;
+    return this.version;
   }
 
   /**
@@ -52,6 +52,6 @@ public final class MigrationIndexEntry {
    */
   @NonNull
   public String getPath() {
-    return path;
+    return this.path;
   }
 }

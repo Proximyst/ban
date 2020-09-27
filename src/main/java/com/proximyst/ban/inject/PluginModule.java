@@ -34,20 +34,20 @@ public final class PluginModule extends AbstractModule {
   @NonNull
   private final BanPlugin main;
 
-  public PluginModule(@NonNull BanPlugin main) {
+  public PluginModule(@NonNull final BanPlugin main) {
     this.main = main;
   }
 
   @Override
   protected void configure() {
-    bind(BanPlugin.class).toInstance(main);
-    bind(Logger.class).toInstance(main.getLogger());
-    bind(ProxyServer.class).toInstance(main.getProxyServer());
-    bind(Path.class).annotatedWith(DataDirectory.class).toInstance(main.getDataDirectory());
-    bind(File.class).annotatedWith(DataDirectory.class).toProvider(() -> main.getDataDirectory().toFile());
+    this.bind(BanPlugin.class).toInstance(this.main);
+    this.bind(Logger.class).toInstance(this.main.getLogger());
+    this.bind(ProxyServer.class).toInstance(this.main.getProxyServer());
+    this.bind(Path.class).annotatedWith(DataDirectory.class).toInstance(this.main.getDataDirectory());
+    this.bind(File.class).annotatedWith(DataDirectory.class).toProvider(() -> this.main.getDataDirectory().toFile());
 
-    bind(Configuration.class).toProvider(main::getConfiguration);
-    bind(SqlConfig.class).toProvider(() -> main.getConfiguration().sql);
-    bind(MessagesConfig.class).toProvider(() -> main.getConfiguration().messages);
+    this.bind(Configuration.class).toProvider(this.main::getConfiguration);
+    this.bind(SqlConfig.class).toProvider(() -> this.main.getConfiguration().sql);
+    this.bind(MessagesConfig.class).toProvider(() -> this.main.getConfiguration().messages);
   }
 }

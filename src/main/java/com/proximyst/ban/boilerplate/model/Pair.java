@@ -24,34 +24,34 @@ public class Pair<A, B> {
   private final A first;
   private final B second;
 
-  public Pair(A first, B second) {
+  public Pair(final A first, final B second) {
     this.first = first;
     this.second = second;
   }
 
   public A getFirst() {
-    return first;
+    return this.first;
   }
 
   public B getSecond() {
-    return second;
+    return this.second;
   }
 
   @Override
-  public boolean equals(Object o) {
+  public boolean equals(final Object o) {
     if (this == o) {
       return true;
     }
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    Pair<?, ?> pair = (Pair<?, ?>) o;
-    return Objects.equals(getFirst(), pair.getFirst()) &&
-        Objects.equals(getSecond(), pair.getSecond());
+    final Pair<?, ?> pair = (Pair<?, ?>) o;
+    return Objects.equals(this.getFirst(), pair.getFirst()) &&
+        Objects.equals(this.getSecond(), pair.getSecond());
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(getFirst(), getSecond());
+    return Objects.hash(this.getFirst(), this.getSecond());
   }
 }
