@@ -26,14 +26,18 @@ public final class StringUtils {
   }
 
   @NonNull
-  public static String join(@NonNull String delimiter, int from, @NonNull String... strings) {
+  public static String join(
+      @NonNull final String delimiter,
+      final int from,
+      @NonNull final String @NonNull ... strings
+  ) {
     if (strings.length - 1 == from) {
       return strings[strings.length - 1];
     } else if (strings.length - 1 < from) {
       throw new IllegalArgumentException("from > strings.length - 1");
     }
 
-    StringBuilder builder = new StringBuilder();
+    final StringBuilder builder = new StringBuilder();
     for (int i = from; i < strings.length; ++i) {
       builder.append(strings[i]);
       if (i != strings.length - 1) {
@@ -44,10 +48,10 @@ public final class StringUtils {
   }
 
   @NonNull
-  public static String rehyphenUuid(@NonNull String string) {
+  public static String rehyphenUuid(@NonNull final String string) {
     if (string.length() == 32) {
       // No dashes, add them first.
-      StringBuilder builder = new StringBuilder(string);
+      final StringBuilder builder = new StringBuilder(string);
       builder.insert(8, '-');
       builder.insert(13, '-');
       builder.insert(18, '-');

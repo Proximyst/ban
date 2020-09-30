@@ -32,17 +32,17 @@ public final class DataModule extends AbstractModule {
   @NonNull
   private final BanPlugin main;
 
-  public DataModule(@NonNull BanPlugin main) {
+  public DataModule(@NonNull final BanPlugin main) {
     this.main = main;
   }
 
   @Override
   protected void configure() {
-    bind(IDataInterface.class).toProvider(main::getDataInterface);
-    bind(PunishmentManager.class).toProvider(main::getPunishmentManager);
-    bind(MessageManager.class).toProvider(main::getMessageManager);
-    bind(UserManager.class).toProvider(main::getUserManager);
-    bind(IMojangApi.class).toProvider(main::getMojangApi);
-    bind(Jdbi.class).toProvider(main::getJdbi);
+    this.bind(IDataInterface.class).toProvider(this.main::getDataInterface);
+    this.bind(PunishmentManager.class).toProvider(this.main::getPunishmentManager);
+    this.bind(MessageManager.class).toProvider(this.main::getMessageManager);
+    this.bind(UserManager.class).toProvider(this.main::getUserManager);
+    this.bind(IMojangApi.class).toProvider(this.main::getMojangApi);
+    this.bind(Jdbi.class).toProvider(this.main::getJdbi);
   }
 }

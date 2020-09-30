@@ -20,6 +20,7 @@ package com.proximyst.ban.data.jdbi;
 
 import java.sql.Types;
 import java.util.UUID;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jdbi.v3.core.argument.AbstractArgumentFactory;
 import org.jdbi.v3.core.argument.Argument;
 import org.jdbi.v3.core.config.ConfigRegistry;
@@ -30,7 +31,7 @@ public class UuidJdbiFactory extends AbstractArgumentFactory<UUID> {
   }
 
   @Override
-  protected Argument build(UUID value, ConfigRegistry config) {
+  protected Argument build(@Nullable final UUID value, @Nullable final ConfigRegistry config) {
     return (position, statement, $) -> {
       if (value == null) {
         statement.setNull(position, Types.CHAR);

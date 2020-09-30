@@ -57,6 +57,7 @@ import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.statement.SqlLogger;
 import org.jdbi.v3.core.statement.StatementContext;
@@ -104,189 +105,192 @@ public class BanPlugin {
 
   @Inject
   public BanPlugin(
-      @NonNull ProxyServer proxyServer,
-      @NonNull Logger logger,
-      @NonNull @DataDirectory Path dataDirectory
+      @NonNull final ProxyServer proxyServer,
+      @NonNull final Logger logger,
+      @NonNull @DataDirectory final Path dataDirectory
   ) {
     this.proxyServer = proxyServer;
     this.logger = logger;
     this.dataDirectory = dataDirectory;
     this.schedulerExecutor = new VelocityBanSchedulerExecutor(this);
 
-    injector = Guice.createInjector(
+    this.injector = Guice.createInjector(
         new PluginModule(this),
         new DataModule(this)
     );
   }
 
   @Subscribe
-  public void onProxyInitialisation(ProxyInitializeEvent event) {
-    if (!getProxyServer().getConfiguration().isOnlineMode()) {
-      getLogger().error("This plugin cannot function on offline mode.");
-      getLogger().error("This plugin depends on Mojang's API and the presence of online mode players.");
-      getLogger().error("Please either enable online mode, or find a new punishments plugin.");
+  public void onProxyInitialisation(final ProxyInitializeEvent event) {
+    if (!this.getProxyServer().getConfiguration().isOnlineMode()) {
+      this.getLogger().error("This plugin cannot function on offline mode.");
+      this.getLogger().error("This plugin depends on Mojang's API and the presence of online mode players.");
+      this.getLogger().error("Please either enable online mode, or find a new punishments plugin.");
       return;
     }
 
-    long start = System.currentTimeMillis();
-    TimeMeasurer tm = new TimeMeasurer(getLogger());
+    final long start = System.currentTimeMillis();
+    final TimeMeasurer tm = new TimeMeasurer(this.getLogger());
 
     tm.start("Reading configuration file");
     // Just to ensure the parents exist.
     //noinspection ResultOfMethodCallIgnored
-    getDataDirectory().toFile().mkdirs();
+    this.getDataDirectory().toFile().mkdirs();
 
     // Load configuration.
     try {
-      Path path = getDataDirectory().resolve("config.conf");
+      final Path path = this.getDataDirectory().resolve("config.conf");
       // TODO: Use TOML configuration.
-      HoconConfigurationLoader loader = HoconConfigurationLoader.builder()
+      final HoconConfigurationLoader loader = HoconConfigurationLoader.builder()
           .setPath(path)
           .build();
 
       // Loading...
-      rawConfigurationNode = loader.load();
-      configuration = ConfigUtil.loadConfiguration(getRawConfigurationNode());
+      this.rawConfigurationNode = loader.load();
+      this.configuration = ConfigUtil.loadConfiguration(this.getRawConfigurationNode());
 
       // Saving...
-      ConfigUtil.saveConfiguration(getConfiguration(), getRawConfigurationNode());
-      loader.save(getRawConfigurationNode());
+      ConfigUtil.saveConfiguration(this.getConfiguration(), this.getRawConfigurationNode());
+      loader.save(this.getRawConfigurationNode());
     } catch (IOException | ObjectMappingException ex) {
-      getLogger().error("Cannot read configuration", ex);
+      this.getLogger().error("Cannot read configuration", ex);
       return;
     }
 
     tm.start("Opening database pool");
     try {
       DriverManager.registerDriver(new org.mariadb.jdbc.Driver());
-    } catch (SQLException ex) {
-      getLogger().error("Could not register a SQL driver", ex);
+    } catch (final SQLException ex) {
+      this.getLogger().error("Could not register a SQL driver", ex);
       return;
     }
 
-    HikariConfig hikariConfig = new HikariConfig();
-    hikariConfig.setJdbcUrl(getConfiguration().sql.jdbcUri);
-    hikariConfig.setUsername(getConfiguration().sql.username);
-    hikariConfig.setPassword(getConfiguration().sql.password);
-    hikariConfig.setMaximumPoolSize(getConfiguration().sql.maxConnections);
-    hikariDataSource = new HikariDataSource(hikariConfig);
-    jdbi = Jdbi.create(hikariDataSource)
+    final HikariConfig hikariConfig = new HikariConfig();
+    hikariConfig.setJdbcUrl(this.getConfiguration().sql.jdbcUri);
+    hikariConfig.setUsername(this.getConfiguration().sql.username);
+    hikariConfig.setPassword(this.getConfiguration().sql.password);
+    hikariConfig.setMaximumPoolSize(this.getConfiguration().sql.maxConnections);
+    this.hikariDataSource = new HikariDataSource(hikariConfig);
+    this.jdbi = Jdbi.create(this.hikariDataSource)
         .setSqlLogger(new SqlLogger() {
           @Override
-          public void logException(StatementContext context, SQLException ex) {
-            getLogger().warn("Could not execute JDBI statement.", ex);
+          public void logException(@Nullable final StatementContext context, @NonNull final SQLException ex) {
+            BanPlugin.this.getLogger().warn("Could not execute JDBI statement.", ex);
           }
         })
         .registerArgument(new UuidJdbiFactory());
-    dataInterface = new MySqlInterface(getLogger(), getJdbi());
+    this.dataInterface = new MySqlInterface(this.getLogger(), this.getJdbi());
 
     tm.start("Preparing database");
     try {
-      getDataInterface().applyMigrations();
-    } catch (Exception ex) {
-      getLogger().error("Could not prepare database", ex);
+      this.getDataInterface().applyMigrations();
+    } catch (final Exception ex) {
+      this.getLogger().error("Could not prepare database", ex);
       return;
     }
 
     tm.start("Initialising plugin essentials");
-    mojangApi = new MojangApiAshcon(getSchedulerExecutor());
-    punishmentManager = new PunishmentManager(this);
-    messageManager = new MessageManager(this, getConfiguration().messages);
-    userManager = new UserManager(this);
+    this.mojangApi = new MojangApiAshcon(this.getSchedulerExecutor());
+    this.punishmentManager = new PunishmentManager(this);
+    this.messageManager = new MessageManager(this, this.getConfiguration().messages);
+    this.userManager = new UserManager(this);
 
     tm.start("Registering subscribers");
-    getProxyServer().getEventManager().register(this, getInjector().getInstance(BannedPlayerJoinSubscriber.class));
-    getProxyServer().getEventManager().register(this, getInjector().getInstance(MutedPlayerChatSubscriber.class));
-    getProxyServer().getEventManager().register(this, getInjector().getInstance(CacheUpdatePlayerJoinSubscriber.class));
+    this.getProxyServer().getEventManager()
+        .register(this, this.getInjector().getInstance(BannedPlayerJoinSubscriber.class));
+    this.getProxyServer().getEventManager()
+        .register(this, this.getInjector().getInstance(MutedPlayerChatSubscriber.class));
+    this.getProxyServer().getEventManager()
+        .register(this, this.getInjector().getInstance(CacheUpdatePlayerJoinSubscriber.class));
 
     tm.start("Registering commands");
-    getInjector().getInstance(BanCommand.class).register(getProxyServer().getCommandManager());
-    getInjector().getInstance(UnbanCommand.class).register(getProxyServer().getCommandManager());
+    this.getInjector().getInstance(BanCommand.class).register(this.getProxyServer().getCommandManager());
+    this.getInjector().getInstance(UnbanCommand.class).register(this.getProxyServer().getCommandManager());
 
     tm.finish();
-    getLogger().info("Plugin has finished initialisation in {}ms.", System.currentTimeMillis() - start);
+    this.getLogger().info("Plugin has finished initialisation in {}ms.", System.currentTimeMillis() - start);
   }
 
   @Subscribe
-  public void onProxyShutdown(ProxyShutdownEvent event) {
-    long start = System.currentTimeMillis();
-    TimeMeasurer tm = new TimeMeasurer(getLogger());
+  public void onProxyShutdown(final ProxyShutdownEvent event) {
+    final long start = System.currentTimeMillis();
+    final TimeMeasurer tm = new TimeMeasurer(this.getLogger());
 
     tm.start("Unregistering listeners");
-    getProxyServer().getEventManager().unregisterListeners(this);
+    this.getProxyServer().getEventManager().unregisterListeners(this);
 
     tm.start("Closing database");
-    if (hikariDataSource != null) {
-      hikariDataSource.close();
+    if (this.hikariDataSource != null) {
+      this.hikariDataSource.close();
     }
 
     tm.finish();
-    getLogger().info("Plugin disabled correctly in {}ms.", System.currentTimeMillis() - start);
+    this.getLogger().info("Plugin disabled correctly in {}ms.", System.currentTimeMillis() - start);
   }
 
   @NonNull
   public ProxyServer getProxyServer() {
-    return proxyServer;
+    return this.proxyServer;
   }
 
   @NonNull
   public Logger getLogger() {
-    return logger;
+    return this.logger;
   }
 
   @NonNull
   public Injector getInjector() {
-    return injector;
+    return this.injector;
   }
 
   @NonNull
   public Path getDataDirectory() {
-    return dataDirectory;
+    return this.dataDirectory;
   }
 
   @NonNull
   public Configuration getConfiguration() {
-    return configuration;
+    return this.configuration;
   }
 
   @NonNull
   public ConfigurationNode getRawConfigurationNode() {
-    return rawConfigurationNode;
+    return this.rawConfigurationNode;
   }
 
   @NonNull
   public IDataInterface getDataInterface() {
-    return dataInterface;
+    return this.dataInterface;
   }
 
   @NonNull
   public PunishmentManager getPunishmentManager() {
-    return punishmentManager;
+    return this.punishmentManager;
   }
 
   @NonNull
   public MessageManager getMessageManager() {
-    return messageManager;
+    return this.messageManager;
   }
 
   @NonNull
   public UserManager getUserManager() {
-    return userManager;
+    return this.userManager;
   }
 
   @NonNull
   public IMojangApi getMojangApi() {
-    return mojangApi;
+    return this.mojangApi;
   }
 
   @NonNull
   public Jdbi getJdbi() {
-    return jdbi;
+    return this.jdbi;
   }
 
   @NonNull
   public VelocityBanSchedulerExecutor getSchedulerExecutor() {
-    return schedulerExecutor;
+    return this.schedulerExecutor;
   }
 
   private static class TimeMeasurer {
@@ -294,27 +298,27 @@ public class BanPlugin {
     private long start;
     private String current;
 
-    public TimeMeasurer(Logger logger) {
+    private TimeMeasurer(final Logger logger) {
       this.logger = logger;
     }
 
-    public void start(String stage) {
-      if (start != 0) {
-        finish();
+    public void start(final String stage) {
+      if (this.start != 0) {
+        this.finish();
       }
 
-      start = System.nanoTime();
-      current = stage;
+      this.start = System.nanoTime();
+      this.current = stage;
     }
 
     public void finish() {
-      if (start == 0) {
+      if (this.start == 0) {
         return;
       }
 
-      long duration = System.nanoTime() - start;
-      start = 0;
-      logger.info("Finished stage ({}ms): {}", TimeUnit.NANOSECONDS.toMillis(duration), current);
+      final long duration = System.nanoTime() - this.start;
+      this.start = 0;
+      this.logger.info("Finished stage ({}ms): {}", TimeUnit.NANOSECONDS.toMillis(duration), this.current);
     }
   }
 }

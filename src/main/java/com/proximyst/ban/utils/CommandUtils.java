@@ -30,12 +30,12 @@ public final class CommandUtils {
   }
 
   @NonNull
-  public static String getSourceName(@NonNull CommandSource source) {
+  public static String getSourceName(@NonNull final CommandSource source) {
     return source instanceof Player ? ((Player) source).getUsername() : BanUser.CONSOLE.getUsername();
   }
 
   @NonNull
-  public static UUID getSourceUuid(@NonNull CommandSource source) {
+  public static UUID getSourceUuid(@NonNull final CommandSource source) {
     return source instanceof Player ? ((Player) source).getUniqueId() : BanUser.CONSOLE.getUuid();
   }
 }

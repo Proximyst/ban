@@ -45,7 +45,11 @@ public final class BanUser {
   @NonNull
   private final UsernameHistory usernameHistory;
 
-  public BanUser(@NonNull UUID uuid, @NonNull String username, @NonNull UsernameHistory usernameHistory) {
+  public BanUser(
+      @NonNull final UUID uuid,
+      @NonNull final String username,
+      @NonNull final UsernameHistory usernameHistory
+  ) {
     this.uuid = uuid;
     this.username = username;
     this.usernameHistory = usernameHistory;
@@ -53,16 +57,16 @@ public final class BanUser {
 
   @NonNull
   public UUID getUuid() {
-    return uuid;
+    return this.uuid;
   }
 
   @NonNull
   public String getUsername() {
-    return username;
+    return this.username;
   }
 
   @NonNull
   public UsernameHistory getUsernameHistory() {
-    return usernameHistory;
+    return this.usernameHistory;
   }
 }

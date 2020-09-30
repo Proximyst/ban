@@ -38,49 +38,49 @@ public abstract class BaseCommand {
   @NonNull
   private final BanPlugin main;
 
-  public BaseCommand(@NonNull BanPlugin main) {
+  public BaseCommand(@NonNull final BanPlugin main) {
     this.main = main;
   }
 
-  public abstract void register(@NonNull CommandManager commandManager);
+  public abstract void register(@NonNull final CommandManager commandManager);
 
   @NonNull
-  protected <T> Optional<T> getOptionalArgument(@NonNull ThrowingSupplier<T, CommandSyntaxException> supplier)
+  protected <T> Optional<T> getOptionalArgument(@NonNull final ThrowingSupplier<T, CommandSyntaxException> supplier)
       throws CommandSyntaxException {
     try {
       return Optional.of(supplier.get());
-    } catch (IllegalArgumentException ignored) {
+    } catch (final IllegalArgumentException ignored) {
       // No such argument defined.
       return Optional.empty();
     }
   }
 
   @NonNull
-  protected LiteralArgumentBuilder<CommandSource> literal(@NonNull String name) {
+  protected LiteralArgumentBuilder<CommandSource> literal(@NonNull final String name) {
     return LiteralArgumentBuilder.literal(name);
   }
 
   @NonNull
   protected <T> RequiredArgumentBuilder<CommandSource, T> argRequired(
-      @NonNull String name,
-      @NonNull ArgumentType<T> type
+      @NonNull final String name,
+      @NonNull final ArgumentType<T> type
   ) {
     return RequiredArgumentBuilder.argument(name, type);
   }
 
   @NonNull
   protected Command<CommandSource> execute(
-      @NonNull ThrowingConsumer<CommandContext<CommandSource>, Exception> block
+      @NonNull final ThrowingConsumer<CommandContext<CommandSource>, Exception> block
   ) {
     return ctx -> {
       try {
         block.accept(ctx);
         return 1;
-      } catch (CommandSyntaxException ex) {
+      } catch (final CommandSyntaxException ex) {
         ctx.getSource().sendMessage(TextComponent.of(ex.getMessage(), NamedTextColor.RED));
         return -1;
-      } catch (Exception ex) {
-        getMain().getLogger().warn("Could not execute command.", ex);
+      } catch (final Exception ex) {
+        this.getMain().getLogger().warn("Could not execute command.", ex);
         ctx.getSource().sendMessage(TextComponent.of(
             "An internal command execution error occurred. Please contact an administrator.",
             NamedTextColor.RED
@@ -92,6 +92,6 @@ public abstract class BaseCommand {
 
   @NonNull
   protected BanPlugin getMain() {
-    return main;
+    return this.main;
   }
 }

@@ -31,26 +31,27 @@ public class PunishmentAddedEvent implements ResultedEvent<GenericResult> {
   @NonNull
   private Punishment punishment;
 
-  public PunishmentAddedEvent(@NonNull Punishment punishment) {
+  public PunishmentAddedEvent(@NonNull final Punishment punishment) {
     this.punishment = Objects.requireNonNull(punishment);
   }
 
   @Override
+  @NonNull
   public GenericResult getResult() {
-    return result;
+    return this.result;
   }
 
   @Override
-  public void setResult(@NonNull GenericResult result) {
+  public void setResult(@NonNull final GenericResult result) {
     this.result = Objects.requireNonNull(result);
   }
 
   @NonNull
   public Punishment getPunishment() {
-    return punishment;
+    return this.punishment;
   }
 
-  public void setPunishment(@NonNull Punishment punishment) {
+  public void setPunishment(@NonNull final Punishment punishment) {
     this.punishment = Objects.requireNonNull(punishment);
   }
 }

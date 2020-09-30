@@ -29,12 +29,12 @@ public final class VelocityBanSchedulerExecutor implements Executor {
   @NonNull
   private final BanPlugin main;
 
-  public VelocityBanSchedulerExecutor(@NonNull BanPlugin main) {
+  public VelocityBanSchedulerExecutor(@NonNull final BanPlugin main) {
     this.main = main;
   }
 
   @Override
-  public void execute(@NonNull Runnable command) {
-    main.getProxyServer().getScheduler().buildTask(main, command).schedule();
+  public void execute(@NonNull final Runnable command) {
+    this.main.getProxyServer().getScheduler().buildTask(this.main, command).schedule();
   }
 }

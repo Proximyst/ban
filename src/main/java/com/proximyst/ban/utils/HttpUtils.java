@@ -33,10 +33,10 @@ public final class HttpUtils {
   }
 
   @NonNull
-  public static Optional<String> get(@NonNull String url) {
+  public static Optional<String> get(@NonNull final String url) {
     try {
-      URL u = new URL(url);
-      HttpURLConnection conn = (HttpURLConnection) u.openConnection();
+      final URL u = new URL(url);
+      final HttpURLConnection conn = (HttpURLConnection) u.openConnection();
       conn.setDoOutput(true);
       conn.setRequestProperty("User-Agent",
           "Mozilla/5.0 Proximyst/ban Velocity-plugin <https://github.com/Proximyst/ban>");
@@ -46,13 +46,13 @@ public final class HttpUtils {
         return Optional.empty();
       }
 
-      try (InputStream stream = conn.getInputStream();
-          InputStreamReader reader = new InputStreamReader(stream)) {
+      try (final InputStream stream = conn.getInputStream();
+          final InputStreamReader reader = new InputStreamReader(stream)) {
         return Optional.of(CharStreams.toString(reader));
       } finally {
         conn.disconnect();
       }
-    } catch (IOException ignored) {
+    } catch (final IOException ignored) {
       return Optional.empty();
     }
   }

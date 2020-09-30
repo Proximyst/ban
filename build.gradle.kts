@@ -3,6 +3,7 @@ import java.util.Calendar
 
 plugins {
     java
+    checkstyle
     `java-library`
     id("com.github.johnrengelman.shadow") version "6.0.0"
     id("com.github.hierynomus.license") version "0.15.0"
@@ -100,4 +101,11 @@ license {
     include("**/*.java")
 
     mapping("java", "DOUBLESLASH_STYLE")
+}
+
+checkstyle {
+    toolVersion = "8.34"
+    val configRoot = rootProject.projectDir.resolve(".checkstyle")
+    configDirectory.set(configRoot)
+    configProperties["basedir"] = configRoot.absolutePath
 }
