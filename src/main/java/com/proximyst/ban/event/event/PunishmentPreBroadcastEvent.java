@@ -35,8 +35,8 @@ public class PunishmentPreBroadcastEvent implements ResultedEvent<GenericResult>
   private Component message;
 
   public PunishmentPreBroadcastEvent(
-      @NonNull Punishment punishment,
-      @NonNull Component message
+      @NonNull final Punishment punishment,
+      @NonNull final Component message
   ) {
     this.punishment = punishment;
     this.message = message;
@@ -45,25 +45,25 @@ public class PunishmentPreBroadcastEvent implements ResultedEvent<GenericResult>
   @Override
   @NonNull
   public GenericResult getResult() {
-    return result;
+    return this.result;
   }
 
   @Override
-  public void setResult(@NonNull GenericResult result) {
+  public void setResult(@NonNull final GenericResult result) {
     this.result = result;
   }
 
   @NonNull
   public Punishment getPunishment() {
-    return punishment;
+    return this.punishment;
   }
 
   @NonNull
   public Component getMessage() {
-    return message;
+    return this.message;
   }
 
-  public void setMessage(@NonNull Component message) {
+  public void setMessage(@NonNull final Component message) {
     this.message = message;
   }
 }

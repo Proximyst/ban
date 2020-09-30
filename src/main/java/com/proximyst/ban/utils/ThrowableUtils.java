@@ -18,6 +18,8 @@
 
 package com.proximyst.ban.utils;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+
 public final class ThrowableUtils {
   private ThrowableUtils() throws IllegalAccessException {
     throw new IllegalAccessException(getClass().getSimpleName() + " cannot be instantiated.");
@@ -29,12 +31,12 @@ public final class ThrowableUtils {
    * @param throwable The throwable to rethrow.
    */
   @SuppressWarnings("RedundantTypeArguments")
-  public static void sneakyThrow(Throwable throwable) {
+  public static void sneakyThrow(@NonNull final Throwable throwable) {
     throw ThrowableUtils.<RuntimeException>superSneaky(throwable);
   }
 
   @SuppressWarnings("unchecked")
-  private static <T extends Throwable> T superSneaky(Throwable throwable) throws T {
+  private static <T extends Throwable> T superSneaky(@NonNull final Throwable throwable) throws T {
     throw (T) throwable;
   }
 }

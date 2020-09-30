@@ -39,9 +39,9 @@ public class MutedPlayerChatSubscriber {
 
   @Inject
   public MutedPlayerChatSubscriber(
-      @NonNull BanPlugin main,
-      @NonNull PunishmentManager manager,
-      @NonNull MessagesConfig messagesConfig
+      @NonNull final BanPlugin main,
+      @NonNull final PunishmentManager manager,
+      @NonNull final MessagesConfig messagesConfig
   ) {
     this.main = main;
     this.manager = manager;
@@ -49,15 +49,15 @@ public class MutedPlayerChatSubscriber {
   }
 
   @Subscribe
-  public void onChat(PlayerChatEvent event) {
-    manager.getActiveMute(event.getPlayer().getUniqueId())
+  public void onChat(@NonNull final PlayerChatEvent event) {
+    this.manager.getActiveMute(event.getPlayer().getUniqueId())
         .join() // This *should* be fast, and only on one player's connection thread
         .ifPresent(mute -> {
           event.setResult(ChatResult.denied());
-          main.getMessageManager().formatMessageWith(
+          this.main.getMessageManager().formatMessageWith(
               mute.getReason().isPresent()
-                  ? messagesConfig.applications.muteReason
-                  : messagesConfig.applications.muteReasonless,
+                  ? this.messagesConfig.applications.muteReason
+                  : this.messagesConfig.applications.muteReasonless,
               mute
           ).thenAccept(event.getPlayer()::sendMessage);
         });

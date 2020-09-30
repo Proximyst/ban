@@ -43,15 +43,15 @@ public final class MessageManager {
   private final MessagesConfig cfg;
 
   public MessageManager(
-      @NonNull BanPlugin main,
-      @NonNull MessagesConfig cfg
+      @NonNull final BanPlugin main,
+      @NonNull final MessagesConfig cfg
   ) {
     this.main = main;
     this.cfg = cfg;
   }
 
   @NonNull
-  public Optional<@NonNull String> getNotificationPermissionOf(@NonNull PunishmentType type) {
+  public Optional<@NonNull String> getNotificationPermissionOf(@NonNull final PunishmentType type) {
     switch (type) {
       case BAN:
         return Optional.of(BanPermissions.NOTIFY_BAN);
@@ -70,31 +70,36 @@ public final class MessageManager {
   }
 
   @NonNull
-  public CompletableFuture<@NonNull Optional<@NonNull Component>> notificationMessage(@NonNull Punishment punishment) {
+  public CompletableFuture<@NonNull Optional<@NonNull Component>> notificationMessage(
+      @NonNull final Punishment punishment) {
     String message = null;
     switch (punishment.getPunishmentType()) {
       case BAN:
         if (punishment.isLifted()) {
-          message = cfg.broadcasts.unban;
+          message = this.cfg.broadcasts.unban;
         } else {
-          message = punishment.getReason().isPresent() ? cfg.broadcasts.banReason : cfg.broadcasts.banReasonless;
+          message =
+              punishment.getReason().isPresent() ? this.cfg.broadcasts.banReason : this.cfg.broadcasts.banReasonless;
         }
         break;
       case KICK:
         // No #isLifted; a kick cannot be lifted.
-        message = punishment.getReason().isPresent() ? cfg.broadcasts.kickReason : cfg.broadcasts.kickReasonless;
+        message =
+            punishment.getReason().isPresent() ? this.cfg.broadcasts.kickReason : this.cfg.broadcasts.kickReasonless;
         break;
       case MUTE:
         if (punishment.isLifted()) {
-          message = cfg.broadcasts.unmute;
+          message = this.cfg.broadcasts.unmute;
         } else {
-          message = punishment.getReason().isPresent() ? cfg.broadcasts.muteReason : cfg.broadcasts.muteReasonless;
+          message =
+              punishment.getReason().isPresent() ? this.cfg.broadcasts.muteReason : this.cfg.broadcasts.muteReasonless;
         }
         break;
       case WARNING:
         // It shouldn't actually get here, but let's make sure it doesn't go farther at the very least.
         if (!punishment.isLifted()) {
-          message = punishment.getReason().isPresent() ? cfg.broadcasts.warnReason : cfg.broadcasts.warnReasonless;
+          message =
+              punishment.getReason().isPresent() ? this.cfg.broadcasts.warnReason : this.cfg.broadcasts.warnReasonless;
         }
         break;
 
@@ -111,14 +116,14 @@ public final class MessageManager {
       return CompletableFuture.completedFuture(Optional.of(TextComponent.empty()));
     }
 
-    return formatMessageWith(message, punishment)
+    return this.formatMessageWith(message, punishment)
         .thenApply(Optional::of);
   }
 
   @NonNull
-  public Component errorNoBan(@NonNull BanUser user) {
+  public Component errorNoBan(@NonNull final BanUser user) {
     return MiniMessage.get().parse(
-        cfg.errors.noBan,
+        this.cfg.errors.noBan,
 
         "targetName", user.getUsername(),
         "targetUuid", user.getUuid().toString()
@@ -127,46 +132,58 @@ public final class MessageManager {
 
   @NonNull
   public CompletableFuture<@NonNull Component> formatMessageWith(
-      @NonNull String message,
-      @NonNull Punishment punishment
+      @NonNull final String message,
+      @NonNull final Punishment punishment
   ) {
-    return main.getUserManager().getUser(punishment.getTarget())
+    return this.main.getUserManager().getUser(punishment.getTarget())
         .thenApply(opt ->
             opt.orElseThrow(() -> new IllegalArgumentException("Target of punishment cannot be unknown."))
         )
         .thenCombine(
-            main.getUserManager().getUser(punishment.getPunisher()),
-            (target, $punisher) -> {
-              BanUser punisher = $punisher.orElseThrow(
-                  () -> new IllegalArgumentException("Punisher of punishment cannot be unknown.")
-              );
-              return MiniMessage.get()
-                  .parse(
-                      message,
+            this.main.getUserManager().getUser(punishment.getPunisher()),
+            // CHECKSTYLE:OFF - FIXME
+            (target, punisher) -> this.formatMessageWith(
+                // CHECKSTYLE:ON
+                punishment,
+                message,
+                punisher.orElseThrow(() -> new IllegalArgumentException("Punisher of punishment cannot be unknown")),
+                target
+            )
+        );
+  }
 
-                      "targetName", target.getUsername(),
-                      "targetUuid", target.getUuid().toString(),
+  @NonNull
+  public Component formatMessageWith(
+      @NonNull final Punishment punishment,
+      @NonNull final String message,
+      @NonNull final BanUser punisher,
+      @NonNull final BanUser target
+  ) {
+    return MiniMessage.get()
+        .parse(
+            message,
 
-                      "punisherName", punisher.getUsername(),
-                      "punisherUuid", punisher.getUuid().toString(),
+            "targetName", target.getUsername(),
+            "targetUuid", target.getUuid().toString(),
 
-                      "punishmentId", punishment.getId().orElse(-1L).toString(),
-                      "punishmentDate", SimpleDateFormat.getDateInstance().format(punishment.getDate()),
-                      "reason", punishment.getReason()
-                          .map(MiniMessage.get()::escapeTokens)
-                          .orElse("No reason specified"),
+            "punisherName", punisher.getUsername(),
+            "punisherUuid", punisher.getUuid().toString(),
 
-                      "duration", punishment.isPermanent()
-                          ? cfg.formatting.permanently
-                          : cfg.formatting.durationFormat
-                              .replace("<duration>",
-                                  DurationFormatUtils.formatDurationWords(
-                                      punishment.getExpiration() - System.currentTimeMillis(),
-                                      false,
-                                      false
-                                  ))
-                  );
-            }
+            "punishmentId", punishment.getId().orElse(-1L).toString(),
+            "punishmentDate", SimpleDateFormat.getDateInstance().format(punishment.getDate()),
+            "reason", punishment.getReason()
+                .map(MiniMessage.get()::escapeTokens)
+                .orElse("No reason specified"),
+
+            "duration", punishment.isPermanent()
+                ? this.cfg.formatting.permanently
+                : this.cfg.formatting.durationFormat
+                    .replace("<duration>",
+                        DurationFormatUtils.formatDurationWords(
+                            punishment.getExpiration() - System.currentTimeMillis(),
+                            false,
+                            false
+                        ))
         );
   }
 }

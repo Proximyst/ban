@@ -48,41 +48,47 @@ public final class PunishmentManager {
   @NonNull
   private final BanPlugin main;
 
-  private final LoadingCache<UUID, List<Punishment>> punishmentCache = CacheBuilder.newBuilder()
+  @NonNull
+  private final LoadingCache<@NonNull UUID, @NonNull List<@NonNull Punishment>> punishmentCache = CacheBuilder
+      .newBuilder()
       .expireAfterAccess(10, TimeUnit.MINUTES)
       .initialCapacity(512)
       .removalListener((RemovalListener<UUID, List<Punishment>>) notification -> {
         // Recache punishments of online players.
-        if (getMain().getProxyServer().getPlayer(notification.getKey()).isPresent()) {
-          getPunishmentCache().put(notification.getKey(), notification.getValue());
+        if (this.getMain().getProxyServer().getPlayer(notification.getKey()).isPresent()) {
+          this.getPunishmentCache().put(notification.getKey(), notification.getValue());
         }
       })
       .build(CacheLoader.from(uuid -> {
         Objects.requireNonNull(uuid, "uuid must not be null");
-        return getDataInterface().getPunishmentsForTarget(uuid);
+        return this.getDataInterface().getPunishmentsForTarget(uuid);
       }));
 
   @NonNull
   private final SewerSystem<@NonNull PunishmentBuilder, @NonNull Punishment> addPunishmentPipeline = SewerSystem
       .builder("build", ImmediatePipeHandler.of(PunishmentBuilder::build), null,
+          // CHECKSTYLE:OFF - FIXME
           punishment ->
-              getMain().getProxyServer().getEventManager().fire(new PunishmentAddedEvent(punishment))
+              // CHECKSTYLE:ON
+              this.getMain().getProxyServer().getEventManager().fire(new PunishmentAddedEvent(punishment))
                   .thenApply(event -> event.getResult().isAllowed())
       )
       .pipe("announce", ImmediatePipeHandler.of(punishment -> {
-        punishment.broadcast(getMain());
+        punishment.broadcast(this.getMain());
         return punishment;
       }))
       .pipe("apply to online player", ImmediatePipeHandler.of(punishment -> {
         if (punishment.getPunishmentType().isApplicable()) {
           // TODO(Proximyst): Make this.. not ugly.
-          getMain().getProxyServer().getPlayer(punishment.getTarget())
-              .ifPresent(player -> getMain().getMessageManager().formatMessageWith(
+          this.getMain().getProxyServer().getPlayer(punishment.getTarget())
+              .ifPresent(player -> this.getMain().getMessageManager().formatMessageWith(
                   punishment.getPunishmentType() == PunishmentType.KICK
-                      ? (punishment.getReason().map($ -> getMain().getConfiguration().messages.applications.kickReason)
-                      .orElse(getMain().getConfiguration().messages.applications.kickReasonless))
-                      : (punishment.getReason().map($ -> getMain().getConfiguration().messages.applications.banReason)
-                          .orElse(getMain().getConfiguration().messages.applications.banReasonless)),
+                      ? (punishment.getReason()
+                      .map($ -> this.getMain().getConfiguration().messages.applications.kickReason)
+                      .orElse(this.getMain().getConfiguration().messages.applications.kickReasonless))
+                      : (punishment.getReason()
+                          .map($ -> this.getMain().getConfiguration().messages.applications.banReason)
+                          .orElse(this.getMain().getConfiguration().messages.applications.banReasonless)),
                   punishment
               ).thenAccept(player::disconnect));
         }
@@ -90,11 +96,11 @@ public final class PunishmentManager {
         return punishment;
       }))
       .pipe("push to sql", ImmediatePipeHandler.of(punishment -> {
-        getDataInterface().addPunishment(punishment);
+        this.getDataInterface().addPunishment(punishment);
         return punishment;
       }))
       .pipe("caching", ImmediatePipeHandler.of(punishment -> {
-        punishmentCache.asMap().compute(punishment.getTarget(), (uuid, list) -> {
+        this.punishmentCache.asMap().compute(punishment.getTarget(), (uuid, list) -> {
           if (list == null) {
             return Lists.newArrayList(punishment);
           } else {
@@ -108,12 +114,12 @@ public final class PunishmentManager {
 
   @NonNull
   private final SewerSystem<@NonNull UUID, @NonNull ImmutableList<@NonNull Punishment>> retrievePunishmentsPipeline = SewerSystem
-      .<UUID, List<Punishment>>builder("fetch from cache", ImmediatePipeHandler.of(punishmentCache::get))
+      .<UUID, List<Punishment>>builder("fetch from cache", ImmediatePipeHandler.of(this.punishmentCache::get))
       .<ImmutableList<Punishment>>pipe("immutablelist",
           ImmediatePipeHandler.of(list -> list == null ? ImmutableList.of() : ImmutableList.copyOf(list)))
       .build();
 
-  public PunishmentManager(@NonNull BanPlugin main) {
+  public PunishmentManager(@NonNull final BanPlugin main) {
     this.main = main;
   }
 
@@ -122,8 +128,8 @@ public final class PunishmentManager {
    * @return An immutable copy of the punishments of the player where order is not guaranteed.
    */
   @NonNull
-  public CompletableFuture<ImmutableList<Punishment>> getPunishments(@NonNull UUID target) {
-    return retrievePunishmentsPipeline.pump(target, getMain().getSchedulerExecutor())
+  public CompletableFuture<@NonNull ImmutableList<@NonNull Punishment>> getPunishments(@NonNull final UUID target) {
+    return this.retrievePunishmentsPipeline.pump(target, this.getMain().getSchedulerExecutor())
         .thenApply(result -> {
           if (result.isExceptional()) {
             return ImmutableList.of();
@@ -134,42 +140,43 @@ public final class PunishmentManager {
   }
 
   @NonNull
-  public CompletableFuture<Optional<Punishment>> getActiveBan(@NonNull UUID target) {
-    return getPunishments(target)
+  public CompletableFuture<@NonNull Optional<@NonNull Punishment>> getActiveBan(@NonNull final UUID target) {
+    return this.getPunishments(target)
         .thenApply(list -> list.stream()
             .filter(punishment -> punishment.getPunishmentType() == PunishmentType.BAN
-                && punishment.currentlyApplies(main))
+                && punishment.currentlyApplies(this.main))
             .max(Comparator.comparingLong(Punishment::getTime))
         );
   }
 
   @NonNull
-  public CompletableFuture<Optional<Punishment>> getActiveMute(@NonNull UUID target) {
-    return getPunishments(target)
+  public CompletableFuture<@NonNull Optional<@NonNull Punishment>> getActiveMute(@NonNull final UUID target) {
+    return this.getPunishments(target)
         .thenApply(list -> list.stream()
             .filter(punishment -> punishment.getPunishmentType() == PunishmentType.MUTE
-                && punishment.currentlyApplies(main))
+                && punishment.currentlyApplies(this.main))
             .max(Comparator.comparingLong(Punishment::getTime))
         );
   }
 
   @NonNull
-  public CompletableFuture<PipeResult<Punishment>> addPunishment(@NonNull PunishmentBuilder builder) {
-    return addPunishmentPipeline.pump(builder, getMain().getSchedulerExecutor());
+  public CompletableFuture<@NonNull PipeResult<@NonNull Punishment>> addPunishment(
+      @NonNull final PunishmentBuilder builder) {
+    return this.addPunishmentPipeline.pump(builder, this.getMain().getSchedulerExecutor());
   }
 
   @NonNull
   private BanPlugin getMain() {
-    return main;
+    return this.main;
   }
 
   @NonNull
   private IDataInterface getDataInterface() {
-    return getMain().getDataInterface();
+    return this.getMain().getDataInterface();
   }
 
   @NonNull
-  private LoadingCache<UUID, List<Punishment>> getPunishmentCache() {
-    return punishmentCache;
+  private LoadingCache<@NonNull UUID, @NonNull List<@NonNull Punishment>> getPunishmentCache() {
+    return this.punishmentCache;
   }
 }

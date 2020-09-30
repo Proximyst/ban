@@ -70,7 +70,7 @@ public enum PunishmentType {
   private static final Map<Byte, PunishmentType> PUNISHMENT_TYPES_BY_ID = new HashMap<>();
 
   static {
-    for (PunishmentType type : values()) {
+    for (final PunishmentType type : values()) {
       PUNISHMENT_TYPES_BY_ID.put(type.getId(), type);
     }
   }
@@ -95,18 +95,18 @@ public enum PunishmentType {
    */
   private final boolean isApplicable;
 
-  PunishmentType(byte id, boolean canLift, boolean isAnnouncable, boolean isApplicable) {
+  PunishmentType(final byte id, final boolean canLift, final boolean isAnnouncable, final boolean isApplicable) {
     this.id = id;
     this.canLift = canLift;
     this.isAnnouncable = isAnnouncable;
     this.isApplicable = isApplicable;
   }
 
-  PunishmentType(int id, boolean isAnnouncable, boolean isApplicable) {
+  PunishmentType(final int id, final boolean isAnnouncable, final boolean isApplicable) {
     this(id, true, isAnnouncable, isApplicable);
   }
 
-  PunishmentType(int id, boolean canLift, boolean isAnnouncable, boolean isApplicable) {
+  PunishmentType(final int id, final boolean canLift, final boolean isAnnouncable, final boolean isApplicable) {
     this((byte) id, canLift, isAnnouncable, isApplicable);
   }
 
@@ -115,7 +115,7 @@ public enum PunishmentType {
    * @return An {@link Optional} possibly containing a {@link PunishmentType}.
    */
   @NonNull
-  public static Optional<PunishmentType> getById(byte id) {
+  public static Optional<@NonNull PunishmentType> getById(final byte id) {
     return Optional.ofNullable(PUNISHMENT_TYPES_BY_ID.get(id));
   }
 
@@ -123,27 +123,27 @@ public enum PunishmentType {
    * @return The ID of this {@link PunishmentType} in the database.
    */
   public byte getId() {
-    return id;
+    return this.id;
   }
 
   /**
    * @return Whether this {@link PunishmentType} can be lifted.
    */
   public boolean canBeLifted() {
-    return canLift;
+    return this.canLift;
   }
 
   /**
    * @return Whether this {@link PunishmentType} can be announced.
    */
   public boolean isAnnouncable() {
-    return isAnnouncable;
+    return this.isAnnouncable;
   }
 
   /**
    * @return Whether this {@link PunishmentType} can be applied to online players once placed.
    */
   public boolean isApplicable() {
-    return isApplicable;
+    return this.isApplicable;
   }
 }

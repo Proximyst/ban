@@ -32,27 +32,27 @@ public final class UserManager {
   @NonNull
   private final BanPlugin main;
 
-  public UserManager(@NonNull BanPlugin main) {
+  public UserManager(@NonNull final BanPlugin main) {
     this.main = main;
   }
 
   @SuppressWarnings("DuplicatedCode")
   @NonNull
-  public CompletableFuture<@NonNull Optional<@NonNull BanUser>> getUser(@NonNull UUID uuid) {
+  public CompletableFuture<@NonNull Optional<@NonNull BanUser>> getUser(@NonNull final UUID uuid) {
     if (uuid == BanUser.CONSOLE.getUuid()) {
       return CompletableFuture.completedFuture(Optional.of(BanUser.CONSOLE));
     }
 
-    CompletableFuture<Optional<@NonNull BanUser>> future = CompletableFuture
-        .supplyAsync(() -> main.getDataInterface().getUser(uuid), main.getSchedulerExecutor());
+    final CompletableFuture<Optional<@NonNull BanUser>> future = CompletableFuture
+        .supplyAsync(() -> this.main.getDataInterface().getUser(uuid), this.main.getSchedulerExecutor());
     return future.thenCompose(user -> {
       user.map(BanUser::getUuid).ifPresent(this::scheduleUpdateIfNecessary);
       if (!user.isPresent()) {
-        return main.getMojangApi().getUser(uuid).getOrLoad()
+        return this.main.getMojangApi().getUser(uuid).getOrLoad()
             .thenApply(optionalUser -> {
               optionalUser.ifPresent(fetchedUser ->
-                  main.getProxyServer().getScheduler()
-                      .buildTask(main, () -> main.getDataInterface().saveUser(fetchedUser))
+                  this.main.getProxyServer().getScheduler()
+                      .buildTask(this.main, () -> this.main.getDataInterface().saveUser(fetchedUser))
                       .schedule()
               );
               return optionalUser;
@@ -65,17 +65,17 @@ public final class UserManager {
 
   @SuppressWarnings("DuplicatedCode")
   @NonNull
-  public CompletableFuture<@NonNull Optional<@NonNull BanUser>> getUser(@NonNull String name) {
-    CompletableFuture<Optional<@NonNull BanUser>> future = CompletableFuture
-        .supplyAsync(() -> main.getDataInterface().getUser(name), main.getSchedulerExecutor());
+  public CompletableFuture<@NonNull Optional<@NonNull BanUser>> getUser(@NonNull final String name) {
+    final CompletableFuture<Optional<@NonNull BanUser>> future = CompletableFuture
+        .supplyAsync(() -> this.main.getDataInterface().getUser(name), this.main.getSchedulerExecutor());
     return future.thenCompose(user -> {
       user.map(BanUser::getUuid).ifPresent(this::scheduleUpdateIfNecessary);
       if (!user.isPresent()) {
-        return main.getMojangApi().getUser(name).getOrLoad()
+        return this.main.getMojangApi().getUser(name).getOrLoad()
             .thenApply(optionalUser -> {
               optionalUser.ifPresent(fetchedUser ->
-                  main.getProxyServer().getScheduler()
-                      .buildTask(main, () -> main.getDataInterface().saveUser(fetchedUser))
+                  this.main.getProxyServer().getScheduler()
+                      .buildTask(this.main, () -> this.main.getDataInterface().saveUser(fetchedUser))
                       .schedule()
               );
               return optionalUser;
@@ -86,24 +86,24 @@ public final class UserManager {
     });
   }
 
-  public void scheduleUpdateIfNecessary(@NonNull UUID uuid) {
-    main.getProxyServer().getScheduler()
-        .buildTask(main, () -> {
-          long lastUpdate = main.getDataInterface().getUserCacheDate(uuid).orElse(0L);
+  public void scheduleUpdateIfNecessary(@NonNull final UUID uuid) {
+    this.main.getProxyServer().getScheduler()
+        .buildTask(this.main, () -> {
+          final long lastUpdate = this.main.getDataInterface().getUserCacheDate(uuid).orElse(0L);
           if (lastUpdate + TimeUnit.DAYS.toMillis(1) <= System.currentTimeMillis()) {
-            updateUser(uuid);
+            this.updateUser(uuid);
           }
         })
         .schedule();
   }
 
   @NonNull
-  public CompletableFuture<@NonNull Optional<@NonNull BanUser>> updateUser(@NonNull UUID identifier) {
-    return main.getMojangApi().getUser(identifier).getOrLoad()
+  public CompletableFuture<@NonNull Optional<@NonNull BanUser>> updateUser(@NonNull final UUID identifier) {
+    return this.main.getMojangApi().getUser(identifier).getOrLoad()
         .thenApply(optionalUser -> {
           optionalUser.ifPresent(fetchedUser -> {
-            main.getProxyServer().getScheduler()
-                .buildTask(main, () -> main.getDataInterface().saveUser(fetchedUser))
+            this.main.getProxyServer().getScheduler()
+                .buildTask(this.main, () -> this.main.getDataInterface().saveUser(fetchedUser))
                 .schedule();
           });
           return optionalUser;

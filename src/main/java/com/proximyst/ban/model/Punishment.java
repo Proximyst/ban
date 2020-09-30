@@ -18,7 +18,6 @@
 
 package com.proximyst.ban.model;
 
-
 import com.google.common.base.Preconditions;
 import com.proximyst.ban.BanPlugin;
 import com.proximyst.ban.event.event.PunishmentPostBroadcastEvent;
@@ -106,28 +105,28 @@ public final class Punishment {
   private UUID liftedBy;
 
   public Punishment(
-      @NonNull PunishmentType punishmentType,
-      @NonNull UUID target,
-      @NonNull UUID punisher,
-      @Nullable String reason,
-      boolean lifted,
-      @Nullable UUID liftedBy,
-      long time,
-      long duration
+      @NonNull final PunishmentType punishmentType,
+      @NonNull final UUID target,
+      @NonNull final UUID punisher,
+      @Nullable final String reason,
+      final boolean lifted,
+      @Nullable final UUID liftedBy,
+      final long time,
+      final long duration
   ) {
     this(-1, punishmentType, target, punisher, reason, lifted, liftedBy, time, duration);
   }
 
   public Punishment(
-      long id,
-      @NonNull PunishmentType punishmentType,
-      @NonNull UUID target,
-      @NonNull UUID punisher,
-      @Nullable String reason,
-      boolean lifted,
-      @Nullable UUID liftedBy,
-      long time,
-      long duration
+      final long id,
+      @NonNull final PunishmentType punishmentType,
+      @NonNull final UUID target,
+      @NonNull final UUID punisher,
+      @Nullable final String reason,
+      final boolean lifted,
+      @Nullable final UUID liftedBy,
+      final long time,
+      final long duration
   ) {
     if (!lifted && liftedBy != null) {
       throw new IllegalArgumentException("liftedBy must be null if lifted is false");
@@ -145,7 +144,7 @@ public final class Punishment {
   }
 
   @NonNull
-  public static Punishment fromRow(@NonNull RowView row) {
+  public static Punishment fromRow(@NonNull final RowView row) {
     return new PunishmentBuilder()
         .id(row.getColumn("id", Long.class))
         .type(
@@ -168,16 +167,16 @@ public final class Punishment {
    * @return The ID of this punishment, or an empty optional if none is known.
    */
   @NonNull
-  public Optional<@NonNegative Long> getId() {
-    return id < 0 ? Optional.empty() : Optional.of(id);
+  public Optional<@NonNull @NonNegative Long> getId() {
+    return this.id < 0 ? Optional.empty() : Optional.of(this.id);
   }
 
   /**
    * @param id Set the ID of this punishment.
    * @throws IllegalStateException If this punishment already has an ID.
    */
-  public void setId(long id) {
-    if (getId().isPresent()) {
+  public void setId(final long id) {
+    if (this.getId().isPresent()) {
       throw new IllegalStateException("Cannot set ID of punishment with a pre-existing ID");
     }
 
@@ -189,7 +188,7 @@ public final class Punishment {
    */
   @NonNull
   public PunishmentType getPunishmentType() {
-    return punishmentType;
+    return this.punishmentType;
   }
 
   /**
@@ -199,7 +198,7 @@ public final class Punishment {
    */
   @NonNull
   public UUID getTarget() {
-    return target;
+    return this.target;
   }
 
   /**
@@ -209,17 +208,17 @@ public final class Punishment {
    */
   @NonNull
   public UUID getPunisher() {
-    return punisher;
+    return this.punisher;
   }
 
   @SuppressWarnings({"unchecked", "rawtypes"})
   @NonNull
-  public Optional<CommandSource> getPunisherAsSource(@NonNull ProxyServer proxyServer) {
-    if (getPunisher().equals(BanUser.CONSOLE.getUuid())) {
+  public Optional<@NonNull CommandSource> getPunisherAsSource(@NonNull final ProxyServer proxyServer) {
+    if (this.getPunisher().equals(BanUser.CONSOLE.getUuid())) {
       return Optional.of(proxyServer.getConsoleCommandSource());
     }
 
-    return (Optional) proxyServer.getPlayer(getPunisher());
+    return (Optional) proxyServer.getPlayer(this.getPunisher());
   }
 
   /**
@@ -228,14 +227,14 @@ public final class Punishment {
    * This is a maximum of {@code 255} bytes long.
    */
   @NonNull
-  public Optional<String> getReason() {
-    return Optional.ofNullable(reason);
+  public Optional<@NonNull String> getReason() {
+    return Optional.ofNullable(this.reason);
   }
 
   /**
    * @param reason The reason for the punishment or {@code null} otherwise. This must be a maximum of 255 bytes long.
    */
-  public void setReason(@Nullable String reason) {
+  public void setReason(@Nullable final String reason) {
     Preconditions.checkArgument(reason != null && reason.getBytes().length <= 255, "reason must be <= 255 bytes");
     this.reason = reason;
   }
@@ -245,7 +244,7 @@ public final class Punishment {
    *               bytes long.
    */
   @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-  public void setReason(@NonNull Optional<String> reason) {
+  public void setReason(@NonNull final Optional<@NonNull String> reason) {
     reason.ifPresent(str -> Preconditions.checkArgument(str.getBytes().length <= 255, "reason must be <= 255 bytes"));
     this.reason = reason.orElse(null);
   }
@@ -254,7 +253,7 @@ public final class Punishment {
    * @return The time at which this punishment was created in milliseconds since UNIX epoch.
    */
   public long getTime() {
-    return time;
+    return this.time;
   }
 
   /**
@@ -262,7 +261,7 @@ public final class Punishment {
    */
   @NonNull
   public Date getDate() {
-    return new Date(getTime());
+    return new Date(this.getTime());
   }
 
   /**
@@ -271,7 +270,7 @@ public final class Punishment {
    * If this is {@code 0}, the punishment is permanent.
    */
   public long getDuration() {
-    return duration;
+    return this.duration;
   }
 
   /**
@@ -280,7 +279,7 @@ public final class Punishment {
    * May only be {@code true} if {@link PunishmentType#canBeLifted()} is {@code true}.
    */
   public boolean isLifted() {
-    return lifted;
+    return this.lifted;
   }
 
   /**
@@ -289,8 +288,8 @@ public final class Punishment {
    * This is an empty {@link Optional} if the punishment has not been lifted or has simply expired.
    */
   @NonNull
-  public Optional<UUID> getLiftedBy() {
-    return Optional.ofNullable(liftedBy);
+  public Optional<@NonNull UUID> getLiftedBy() {
+    return Optional.ofNullable(this.liftedBy);
   }
 
   /**
@@ -298,7 +297,7 @@ public final class Punishment {
    *
    * @param liftedBy The user who lifted this punishment.
    */
-  public void setLiftedBy(@NonNull UUID liftedBy) {
+  public void setLiftedBy(@NonNull final UUID liftedBy) {
     this.lifted = true;
     this.liftedBy = liftedBy;
   }
@@ -307,7 +306,7 @@ public final class Punishment {
    * @return Whether this punishment is permanent.
    */
   public boolean isPermanent() {
-    return getDuration() == 0;
+    return this.getDuration() == 0;
   }
 
   /**
@@ -315,11 +314,11 @@ public final class Punishment {
    * #isPermanent() is permanent}.
    */
   public long getExpiration() {
-    if (isPermanent()) {
+    if (this.isPermanent()) {
       return -1;
     }
 
-    return getTime() + getDuration();
+    return this.getTime() + this.getDuration();
   }
 
   /**
@@ -327,37 +326,38 @@ public final class Punishment {
    * permanent}.
    */
   @NonNull
-  public Optional<Date> getExpirationDate() {
-    if (isPermanent()) {
+  public Optional<@NonNull Date> getExpirationDate() {
+    if (this.isPermanent()) {
       return Optional.empty();
     }
-    return Optional.of(new Date(getExpiration()));
+
+    return Optional.of(new Date(this.getExpiration()));
   }
 
   /**
    * @return Whether this punishment still applies to the player.
    */
-  public boolean currentlyApplies(@NonNull BanPlugin main) {
-    if (!getPunishmentType().canBeLifted()) {
+  public boolean currentlyApplies(@NonNull final BanPlugin main) {
+    if (!this.getPunishmentType().canBeLifted()) {
       // The punishment cannot be lifted and therefore cannot apply past the event.
       return false;
     }
 
-    if (isLifted() || isPermanent()) {
+    if (this.isLifted() || this.isPermanent()) {
       // Is lifted already or is permanent.
       // Will return false if lifted, or true if permanent & unlifted.
-      return !isLifted();
+      return !this.isLifted();
     }
 
-    if (getExpiration() > System.currentTimeMillis()) {
+    if (this.getExpiration() > System.currentTimeMillis()) {
       // Expiration is in the future and not lifted, we'll have to wait.
       return true;
     }
 
-    lifted = true;
-    liftedBy = null; // Expired, no-one lifted it.
+    this.lifted = true;
+    this.liftedBy = null; // Expired, no-one lifted it.
     main.getSchedulerExecutor().execute(() -> {
-      main.getLogger().info("Lifting punishment ID " + id + "; it has expired.");
+      main.getLogger().info("Lifting punishment ID " + this.id + "; it has expired.");
       main.getDataInterface().liftPunishment(this);
     });
     return false;
@@ -370,8 +370,8 @@ public final class Punishment {
    * @return Whether the broadcast was successful.
    */
   @NonNull
-  public CompletableFuture<@NonNull Boolean> broadcast(@NonNull BanPlugin main) {
-    if (!getPunishmentType().isAnnouncable()) {
+  public CompletableFuture<@NonNull Boolean> broadcast(@NonNull final BanPlugin main) {
+    if (!this.getPunishmentType().isAnnouncable()) {
       return CompletableFuture.completedFuture(true);
     }
 
@@ -386,8 +386,9 @@ public final class Punishment {
           }
 
           main.getProxyServer().getConsoleCommandSource().sendMessage(event.getMessage());
-          String permission = main.getMessageManager().getNotificationPermissionOf(getPunishmentType()).orElse(null);
-          for (Player player : main.getProxyServer().getAllPlayers()) {
+          final String permission = main.getMessageManager().getNotificationPermissionOf(this.getPunishmentType())
+              .orElse(null);
+          for (final Player player : main.getProxyServer().getAllPlayers()) {
             if (permission != null && !player.hasPermission(permission)) {
               continue;
             }

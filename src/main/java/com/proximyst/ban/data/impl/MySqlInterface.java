@@ -58,26 +58,26 @@ public class MySqlInterface implements IDataInterface {
   @NonNull
   private final Jdbi jdbi;
 
-  public MySqlInterface(@NonNull Logger logger, @NonNull Jdbi jdbi) {
+  public MySqlInterface(@NonNull final Logger logger, @NonNull final Jdbi jdbi) {
     this.logger = logger;
     this.jdbi = jdbi;
   }
 
   @Override
   public void applyMigrations() {
-    String migrationsIndexJson = ResourceReader.readResource(PATH + "migrations/migrations-index.json");
-    List<MigrationIndexEntry> migrations = BanPlugin.COMPACT_GSON
+    final String migrationsIndexJson = ResourceReader.readResource(PATH + "migrations/migrations-index.json");
+    final List<MigrationIndexEntry> migrations = BanPlugin.COMPACT_GSON
         .fromJson(
             migrationsIndexJson,
             new TypeToken<List<MigrationIndexEntry>>() {
             }.getType()
         );
 
-    jdbi.useTransaction(handle -> {
+    this.jdbi.useTransaction(handle -> {
       // Ensure the table exists first.
       SqlQueries.CREATE_VERSION_TABLE.forEachQuery(handle::execute);
 
-      int version = handle.createQuery(SqlQueries.SELECT_VERSION.getQuery())
+      final int version = handle.createQuery(SqlQueries.SELECT_VERSION.getQuery())
           .mapTo(int.class)
           .findOne()
           .orElse(0);
@@ -85,9 +85,9 @@ public class MySqlInterface implements IDataInterface {
           .filter(mig -> mig.getVersion() > version)
           .sorted(Comparator.comparingInt(MigrationIndexEntry::getVersion))
           .forEach(mig -> {
-            logger.info("Migrating database to version " + mig.getVersion() + "...");
-            String queries = ResourceReader.readResource(PATH + "migrations/" + mig.getPath());
-            for (String query : queries.split(";")) {
+            this.logger.info("Migrating database to version " + mig.getVersion() + "...");
+            final String queries = ResourceReader.readResource(PATH + "migrations/" + mig.getPath());
+            for (final String query : queries.split(";")) {
               if (query.trim().isEmpty()) {
                 continue;
               }
@@ -101,8 +101,8 @@ public class MySqlInterface implements IDataInterface {
 
   @Override
   @NonNull
-  public List<Punishment> getPunishmentsForTarget(@NonNull UUID target) {
-    return jdbi.withHandle(handle ->
+  public List<Punishment> getPunishmentsForTarget(@NonNull final UUID target) {
+    return this.jdbi.withHandle(handle ->
         handle.createQuery(SqlQueries.SELECT_PUNISHMENTS_BY_TARGET.getQuery())
             .bind(0, target)
             .map(Punishment::fromRow)
@@ -114,7 +114,7 @@ public class MySqlInterface implements IDataInterface {
 
   @Override
   public void addPunishment(@NonNull final Punishment punishment) {
-    jdbi.useHandle(handle -> {
+    this.jdbi.useHandle(handle -> {
       handle.execute(
           SqlQueries.CREATE_PUNISHMENT.getQuery(),
           punishment.getId().orElse(null),
@@ -141,11 +141,11 @@ public class MySqlInterface implements IDataInterface {
   }
 
   @Override
-  public void liftPunishment(@NonNull Punishment punishment) {
+  public void liftPunishment(@NonNull final Punishment punishment) {
     // Stay boxed to avoid an allocation.
-    Long id = punishment.getId()
+    final Long id = punishment.getId()
         .orElseThrow(() -> new IllegalArgumentException("Punishment must be in DB before lifting"));
-    jdbi.useHandle(handle -> {
+    this.jdbi.useHandle(handle -> {
       handle.execute(
           SqlQueries.LIFT_PUNISHMENT.getQuery(),
           punishment.isLifted(),
@@ -157,9 +157,9 @@ public class MySqlInterface implements IDataInterface {
 
   @Override
   @NonNull
-  public Optional<@NonNull BanUser> getUser(@NonNull UUID uuid) {
-    return jdbi.withHandle(handle -> {
-      UsernameHistory history = new UsernameHistory(
+  public Optional<@NonNull BanUser> getUser(@NonNull final UUID uuid) {
+    return this.jdbi.withHandle(handle -> {
+      final UsernameHistory history = new UsernameHistory(
           uuid,
           handle.createQuery(SqlQueries.SELECT_USERNAME_HISTORY_BY_UUID.getQuery())
               .bind(0, uuid)
@@ -181,9 +181,9 @@ public class MySqlInterface implements IDataInterface {
 
   @Override
   @NonNull
-  public Optional<@NonNull BanUser> getUser(@NonNull String username) {
-    return jdbi.withHandle(handle -> {
-      Pair<UUID, String> user = handle.createQuery(SqlQueries.SELECT_USER_BY_USERNAME.getQuery())
+  public Optional<@NonNull BanUser> getUser(@NonNull final String username) {
+    return this.jdbi.withHandle(handle -> {
+      final Pair<UUID, String> user = handle.createQuery(SqlQueries.SELECT_USER_BY_USERNAME.getQuery())
           .bind(0, username)
           .setMaxRows(1)
           .map((RowView rowView) -> new Pair<>(
@@ -196,7 +196,7 @@ public class MySqlInterface implements IDataInterface {
         return Optional.empty();
       }
 
-      UsernameHistory history = new UsernameHistory(
+      final UsernameHistory history = new UsernameHistory(
           user.getFirst(),
           handle.createQuery(SqlQueries.SELECT_USERNAME_HISTORY_BY_UUID.getQuery())
               .bind(0, user.getFirst())
@@ -214,8 +214,8 @@ public class MySqlInterface implements IDataInterface {
 
   @Override
   @NonNull
-  public Optional<@NonNull Long> getUserCacheDate(@NonNull UUID uuid) {
-    return jdbi.withHandle(handle ->
+  public Optional<@NonNull Long> getUserCacheDate(@NonNull final UUID uuid) {
+    return this.jdbi.withHandle(handle ->
         handle.createQuery(SqlQueries.SELECT_USER_BY_UUID.getQuery())
             .bind(0, uuid)
             .setMaxRows(1)
@@ -226,19 +226,19 @@ public class MySqlInterface implements IDataInterface {
   }
 
   @Override
-  public void saveUser(@NonNull BanUser user) {
+  public void saveUser(@NonNull final BanUser user) {
     if (user == BanUser.CONSOLE) {
       return;
     }
 
-    jdbi.useTransaction(handle -> {
+    this.jdbi.useTransaction(handle -> {
       handle.execute(
           SqlQueries.SAVE_USER.getQuery(),
           user.getUuid(),
           user.getUsername()
       );
 
-      for (Entry entry : user.getUsernameHistory().getEntries()) {
+      for (final Entry entry : user.getUsernameHistory().getEntries()) {
         handle.execute(
             SqlQueries.SAVE_USER_NAME.getQuery(),
             user.getUuid(),
@@ -268,7 +268,7 @@ public class MySqlInterface implements IDataInterface {
     @NonNull
     private final String query;
 
-    SqlQueries(@NonNull String name) {
+    SqlQueries(@NonNull final String name) {
       this.query = ResourceReader.readResource(PATH + name + ".sql");
     }
 
@@ -279,7 +279,7 @@ public class MySqlInterface implements IDataInterface {
      */
     @NonNull
     public String getQuery() {
-      return query;
+      return this.query;
     }
 
     /**
@@ -288,8 +288,8 @@ public class MySqlInterface implements IDataInterface {
      * @return The queries for this enumeration.
      */
     @NonNull
-    public String[] getQueries() {
-      return getQuery().split(";");
+    public String @NonNull [] getQueries() {
+      return this.getQuery().split(";");
     }
 
     /**
@@ -297,8 +297,8 @@ public class MySqlInterface implements IDataInterface {
      *
      * @param consumer The {@link SqlConsumer} to apply to each query.
      */
-    public void forEachQuery(SqlConsumer consumer) {
-      for (String query : getQueries()) {
+    public void forEachQuery(@NonNull final SqlConsumer consumer) {
+      for (final String query : this.getQueries()) {
         if (query.trim().isEmpty()) {
           continue;
         }
@@ -308,17 +308,17 @@ public class MySqlInterface implements IDataInterface {
     }
 
     @FunctionalInterface
-    public interface SqlConsumer extends Consumer<String> {
+    public interface SqlConsumer extends Consumer<@NonNull String> {
       @Override
-      default void accept(String s) {
+      default void accept(@NonNull String s) {
         try {
-          apply(s);
+          this.apply(s);
         } catch (SQLException ex) {
           ThrowableUtils.sneakyThrow(ex);
         }
       }
 
-      void apply(String query) throws SQLException;
+      void apply(@NonNull String query) throws SQLException;
     }
   }
 }

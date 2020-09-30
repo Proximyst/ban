@@ -78,7 +78,7 @@ public final class MojangApiAshcon implements IMojangApi {
                 identifier = StringUtils.rehyphenUuid(identifier);
               }
 
-              UUID uuid = UUID.fromString(identifier);
+              final UUID uuid = UUID.fromString(identifier);
               if (BanUser.CONSOLE.getUuid().equals(uuid)) {
                 return BanUser.CONSOLE;
               }
@@ -89,15 +89,15 @@ public final class MojangApiAshcon implements IMojangApi {
               }
 
               // Let's check if they're already cached.
-              BanUser cachedUser = banUserCache.getIfPresent(uuid);
+              final BanUser cachedUser = this.banUserCache.getIfPresent(uuid);
               if (cachedUser != null) {
                 return cachedUser;
               }
             } else {
               // This is a name. Let's check if they're already cached.
-              UUID uuid = usernameUuidCache.getIfPresent(identifier);
+              final UUID uuid = this.usernameUuidCache.getIfPresent(identifier);
               if (uuid != null) {
-                BanUser cachedUser = banUserCache.getIfPresent(uuid);
+                final BanUser cachedUser = this.banUserCache.getIfPresent(uuid);
                 if (cachedUser != null) {
                   return cachedUser;
                 }
@@ -106,12 +106,12 @@ public final class MojangApiAshcon implements IMojangApi {
             final String finalIdentifier = identifier;
 
             // The user is not cached, so we need to fetch their data.
-            BanUser user = HttpUtils.get(API_BASE + "user/" + finalIdentifier)
+            final BanUser user = HttpUtils.get(API_BASE + "user/" + finalIdentifier)
                 .map(json -> BanPlugin.COMPACT_GSON.fromJson(json, AshconUser.class).toBanUser(this))
                 .orElseThrow(() -> new IllegalArgumentException(
                     "No user with the username/UUID \"" + finalIdentifier + "\" exists."));
 
-            usernameUuidCache.put(user.getUsername(), user.getUuid());
+            this.usernameUuidCache.put(user.getUsername(), user.getUuid());
 
             return user;
           })
@@ -131,40 +131,40 @@ public final class MojangApiAshcon implements IMojangApi {
       .builder("get username history", ImmediatePipeHandler.of(BanUser::getUsernameHistory)).build();
 
   public MojangApiAshcon(
-      @NonNull Executor velocityExecutor
+      @NonNull final Executor velocityExecutor
   ) {
     this.velocityExecutor = velocityExecutor;
   }
 
   @Override
   @NonNull
-  public Loadable<BanUser> getUser(@NonNull String identifier) {
-    return Loadable.builder(userLoader, identifier).executor(this.velocityExecutor).build();
+  public Loadable<BanUser> getUser(@NonNull final String identifier) {
+    return Loadable.builder(this.userLoader, identifier).executor(this.velocityExecutor).build();
   }
 
   @Override
   @NonNull
-  public Loadable<BanUser> getUser(@NonNull UUID uuid) {
+  public Loadable<BanUser> getUser(@NonNull final UUID uuid) {
     // We don't care a whole lot about hyper efficiency.
-    return Loadable.builder(userLoader, uuid.toString()).executor(this.velocityExecutor).build();
+    return Loadable.builder(this.userLoader, uuid.toString()).executor(this.velocityExecutor).build();
   }
 
   @Override
   @NonNull
-  public Loadable<String> getUsername(@NonNull UUID uuid) {
-    return Loadable.builder(usernameFromUser, getUser(uuid)).executor(this.velocityExecutor).build();
+  public Loadable<String> getUsername(@NonNull final UUID uuid) {
+    return Loadable.builder(this.usernameFromUser, this.getUser(uuid)).executor(this.velocityExecutor).build();
   }
 
   @Override
   @NonNull
-  public Loadable<UsernameHistory> getUsernameHistory(@NonNull UUID uuid) {
-    return Loadable.builder(usernameHistoryFromUser, getUser(uuid)).executor(this.velocityExecutor).build();
+  public Loadable<UsernameHistory> getUsernameHistory(@NonNull final UUID uuid) {
+    return Loadable.builder(this.usernameHistoryFromUser, this.getUser(uuid)).executor(this.velocityExecutor).build();
   }
 
   @Override
   @NonNull
-  public Loadable<UUID> getUuid(@NonNull String identifier) {
-    return Loadable.builder(uuidFromUser, getUser(identifier)).executor(this.velocityExecutor).build();
+  public Loadable<UUID> getUuid(@NonNull final String identifier) {
+    return Loadable.builder(this.uuidFromUser, this.getUser(identifier)).executor(this.velocityExecutor).build();
   }
 
   static class AshconUser {
@@ -178,11 +178,11 @@ public final class MojangApiAshcon implements IMojangApi {
     List<UsernameHistory.Entry> history;
 
     @NonNull
-    BanUser toBanUser(@NonNull IMojangApi mojangApi) {
+    BanUser toBanUser(@NonNull final IMojangApi mojangApi) {
       return new BanUser(
-          uuid,
-          username,
-          new UsernameHistory(uuid, history == null ? Collections.emptyList() : history)
+          this.uuid,
+          this.username,
+          new UsernameHistory(this.uuid, this.history == null ? Collections.emptyList() : this.history)
       );
     }
   }

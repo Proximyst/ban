@@ -48,11 +48,11 @@ public final class UserArgument {
 
   @NonNull
   public static CompletableFuture<@NonNull UUID> getUuid(
-      @NonNull UserManager userManager,
-      @NonNull ProxyServer proxyServer,
-      @NonNull String input
+      @NonNull final UserManager userManager,
+      @NonNull final ProxyServer proxyServer,
+      @NonNull final String input
   ) throws CommandSyntaxException {
-    @Nullable Player onlinePlayer = proxyServer.getAllPlayers()
+    @Nullable final Player onlinePlayer = proxyServer.getAllPlayers()
         .stream()
         .filter(p -> p.getUsername().equalsIgnoreCase(input) || p.getUniqueId().toString().equalsIgnoreCase(input))
         .findAny()
@@ -67,9 +67,9 @@ public final class UserArgument {
 
   @NonNull
   public static CompletableFuture<@NonNull BanUser> getUser(
-      @NonNull UserManager userManager,
-      @NonNull ProxyServer proxyServer,
-      @NonNull String input
+      @NonNull final UserManager userManager,
+      @NonNull final ProxyServer proxyServer,
+      @NonNull final String input
   ) throws CommandSyntaxException {
     if (input.length() < 3) {
       // Too short for a player name.
@@ -86,7 +86,7 @@ public final class UserArgument {
         // We only want to make sure the UUID is valid here.
         //noinspection ResultOfMethodCallIgnored
         UUID.fromString(input);
-      } catch (IllegalArgumentException ex) {
+      } catch (final IllegalArgumentException ex) {
         throw INVALID_UUID.create(input);
       }
     }
@@ -95,7 +95,7 @@ public final class UserArgument {
         .thenApply(res -> {
           try {
             return res.orElseThrow(() -> INVALID_USERNAME.create(input));
-          } catch (CommandSyntaxException ex) {
+          } catch (final CommandSyntaxException ex) {
             ThrowableUtils.sneakyThrow(ex);
             throw new RuntimeException();
           }
@@ -103,11 +103,11 @@ public final class UserArgument {
   }
 
   @NonNull
-  public static SuggestionProvider<CommandSource> createSuggestions(@NonNull BanPlugin main) {
+  public static SuggestionProvider<CommandSource> createSuggestions(@NonNull final BanPlugin main) {
     return (ctx, builder) -> {
-      String input = builder.getRemaining().toLowerCase();
+      final String input = builder.getRemaining().toLowerCase();
 
-      for (Player player : main.getProxyServer().getAllPlayers()) {
+      for (final Player player : main.getProxyServer().getAllPlayers()) {
         if (player.getUsername().toLowerCase().startsWith(input)) {
           builder.suggest(player.getUsername(), () -> "target");
         }

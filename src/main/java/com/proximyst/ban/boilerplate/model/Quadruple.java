@@ -19,21 +19,22 @@
 package com.proximyst.ban.boilerplate.model;
 
 import java.util.Objects;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class Quadruple<A, B, C, D> extends Triple<A, B, C> {
   private final D fourth;
 
-  public Quadruple(A first, B second, C third, D fourth) {
+  public Quadruple(final A first, final B second, final C third, final D fourth) {
     super(first, second, third);
     this.fourth = fourth;
   }
 
   public D getFourth() {
-    return fourth;
+    return this.fourth;
   }
 
   @Override
-  public boolean equals(Object o) {
+  public boolean equals(@Nullable final Object o) {
     if (this == o) {
       return true;
     }
@@ -43,12 +44,12 @@ public class Quadruple<A, B, C, D> extends Triple<A, B, C> {
     if (!super.equals(o)) {
       return false;
     }
-    Quadruple<?, ?, ?, ?> quadruple = (Quadruple<?, ?, ?, ?>) o;
-    return Objects.equals(getFourth(), quadruple.getFourth());
+    final Quadruple<?, ?, ?, ?> quadruple = (Quadruple<?, ?, ?, ?>) o;
+    return Objects.equals(this.getFourth(), quadruple.getFourth());
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), getFourth());
+    return Objects.hash(super.hashCode(), this.getFourth());
   }
 }

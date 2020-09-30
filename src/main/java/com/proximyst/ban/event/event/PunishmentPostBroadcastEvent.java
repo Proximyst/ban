@@ -22,6 +22,7 @@ import com.proximyst.ban.model.Punishment;
 import java.util.Objects;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class PunishmentPostBroadcastEvent {
   @NonNull
@@ -31,8 +32,8 @@ public class PunishmentPostBroadcastEvent {
   private final Component message;
 
   public PunishmentPostBroadcastEvent(
-      @NonNull Punishment punishment,
-      @NonNull Component message
+      @NonNull final Punishment punishment,
+      @NonNull final Component message
   ) {
     this.punishment = punishment;
     this.message = message;
@@ -40,29 +41,29 @@ public class PunishmentPostBroadcastEvent {
 
   @NonNull
   public Punishment getPunishment() {
-    return punishment;
+    return this.punishment;
   }
 
   @NonNull
   public Component getMessage() {
-    return message;
+    return this.message;
   }
 
   @Override
-  public boolean equals(Object o) {
+  public boolean equals(@Nullable final Object o) {
     if (this == o) {
       return true;
     }
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    PunishmentPostBroadcastEvent that = (PunishmentPostBroadcastEvent) o;
-    return getPunishment().equals(that.getPunishment()) &&
-        getMessage().equals(that.getMessage());
+    final PunishmentPostBroadcastEvent that = (PunishmentPostBroadcastEvent) o;
+    return this.getPunishment().equals(that.getPunishment()) &&
+        this.getMessage().equals(that.getMessage());
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(getPunishment(), getMessage());
+    return Objects.hash(this.getPunishment(), this.getMessage());
   }
 }

@@ -40,11 +40,11 @@ public final class ResourceReader {
    * @return The read string.
    */
   @NonNull
-  public static String readResource(@NonNull String path) {
-    try (InputStream stream = BanPlugin.class.getResourceAsStream("/" + path);
-        Reader reader = new InputStreamReader(stream)) {
+  public static String readResource(@NonNull final String path) {
+    try (final InputStream stream = BanPlugin.class.getResourceAsStream("/" + path);
+        final Reader reader = new InputStreamReader(stream)) {
       return CharStreams.toString(reader);
-    } catch (IOException ex) {
+    } catch (final IOException ex) {
       ThrowableUtils.sneakyThrow(ex);
       throw new RuntimeException();
     }

@@ -37,33 +37,35 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 
 public final class UnbanCommand extends BaseCommand {
   @Inject
-  public UnbanCommand(@NonNull BanPlugin main) {
+  public UnbanCommand(@NonNull final BanPlugin main) {
     super(main);
   }
 
   @Override
-  public void register(@NonNull CommandManager commandManager) {
+  public void register(@NonNull final CommandManager commandManager) {
     commandManager.register(new BrigadierCommand(
         literal("unban")
             .requires(src -> src.hasPermission(BanPermissions.COMMAND_UNBAN))
             .then(argRequired("target", StringArgumentType.string())
                 .suggests(UserArgument.createSuggestions(getMain()))
-                .executes(execute(this::execute)))
+                .executes(this.execute(this::execute)))
     ));
   }
 
-  private void execute(@NonNull CommandContext<CommandSource> ctx) throws CommandSyntaxException {
+  private void execute(@NonNull final CommandContext<CommandSource> ctx) throws CommandSyntaxException {
     UserArgument.getUser(
         getMain().getUserManager(),
         getMain().getProxyServer(),
         StringArgumentType.getString(ctx, "target")
     ).thenComposeAsync(
+        // CHECKSTYLE:OFF - FIXME
         user -> getMain().getPunishmentManager().getActiveBan(user.getUuid())
+            // CHECKSTYLE:ON
             .thenApply(opt -> new Pair<>(user, opt)),
         getMain().getSchedulerExecutor()
     ).thenAccept(pair -> {
-      BanUser user = pair.getFirst();
-      Punishment punishment = pair.getSecond().orElse(null);
+      final BanUser user = pair.getFirst();
+      final Punishment punishment = pair.getSecond().orElse(null);
       if (punishment == null) {
         ctx.getSource().sendMessage(getMain().getMessageManager().errorNoBan(user));
         return;
