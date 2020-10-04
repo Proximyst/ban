@@ -27,42 +27,44 @@ import com.proximyst.ban.model.BanUser;
 import com.proximyst.ban.model.UsernameHistory;
 import com.proximyst.ban.utils.HttpUtils;
 import com.proximyst.ban.utils.StringUtils;
+import com.proximyst.sewer.Module;
 import com.proximyst.sewer.SewerSystem;
 import com.proximyst.sewer.loadable.Loadable;
-import com.proximyst.sewer.piping.ImmediatePipeHandler;
+import com.proximyst.sewer.piping.SuccessfulResult;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class MojangApiAshcon implements IMojangApi {
   @NonNull
   private static final String API_BASE = "https://api.ashcon.app/mojang/v2/";
 
-  @NonNull
-  private final Executor velocityExecutor;
+  private final @NonNull Executor velocityExecutor;
 
-  @NonNull
-  private final Cache<UUID, BanUser> banUserCache = CacheBuilder.newBuilder()
+  private final @NonNull Cache<@NonNull UUID, @NonNull BanUser> banUserCache = CacheBuilder.newBuilder()
       .maximumSize(512)
       .initialCapacity(512)
       .expireAfterWrite(1, TimeUnit.MINUTES) // We're not too scared of requests with Ashcon.
       .build();
 
-  @NonNull
-  private final Cache<String, UUID> usernameUuidCache = CacheBuilder.newBuilder()
+  private final @NonNull Cache<@NonNull String, @NonNull UUID> usernameUuidCache = CacheBuilder.newBuilder()
       .maximumSize(512)
       .initialCapacity(512)
       .expireAfterWrite(1, TimeUnit.MINUTES) // We're not too scared of requests with Ashcon.
       .build();
 
-  @NonNull
-  private final SewerSystem<String, BanUser> userLoader = SewerSystem
+  private final @NonNull SewerSystem<@NonNull String, @NonNull BanUser> userLoader = SewerSystem
       .<String, BanUser>builder(
           "parse identifier",
-          ImmediatePipeHandler.of(identifier -> {
+          // CHECKSTYLE:OFF - FIXME
+          input -> CompletableFuture.supplyAsync(() -> {
+            String identifier = input;
+            // CHECKSTYLE:ON
             if (identifier.length() < 3) {
               // Too short to be a username.
               throw new IllegalArgumentException("Username \"" + identifier + "\" is too short.");
@@ -114,21 +116,19 @@ public final class MojangApiAshcon implements IMojangApi {
             this.usernameUuidCache.put(user.getUsername(), user.getUuid());
 
             return user;
-          })
+          }, this.getVelocityExecutor())
+              .thenApply(SuccessfulResult::new)
       )
       .build();
 
-  @NonNull
-  private final SewerSystem<BanUser, UUID> uuidFromUser = SewerSystem
-      .builder("get uuid", ImmediatePipeHandler.of(BanUser::getUuid)).build();
+  private final @NonNull SewerSystem<BanUser, UUID> uuidFromUser = SewerSystem
+      .builder("get uuid", Module.immediatelyWrapping(BanUser::getUuid)).build();
 
-  @NonNull
-  private final SewerSystem<BanUser, String> usernameFromUser = SewerSystem
-      .builder("get username", ImmediatePipeHandler.of(BanUser::getUsername)).build();
+  private final @NonNull SewerSystem<BanUser, String> usernameFromUser = SewerSystem
+      .builder("get username", Module.immediatelyWrapping(BanUser::getUsername)).build();
 
-  @NonNull
-  private final SewerSystem<BanUser, UsernameHistory> usernameHistoryFromUser = SewerSystem
-      .builder("get username history", ImmediatePipeHandler.of(BanUser::getUsernameHistory)).build();
+  private final @NonNull SewerSystem<BanUser, UsernameHistory> usernameHistoryFromUser = SewerSystem
+      .builder("get username history", Module.immediatelyWrapping(BanUser::getUsernameHistory)).build();
 
   public MojangApiAshcon(
       @NonNull final Executor velocityExecutor
@@ -137,34 +137,33 @@ public final class MojangApiAshcon implements IMojangApi {
   }
 
   @Override
-  @NonNull
-  public Loadable<BanUser> getUser(@NonNull final String identifier) {
-    return Loadable.builder(this.userLoader, identifier).executor(this.velocityExecutor).build();
+  public @NonNull Loadable<@Nullable BanUser> getUser(@NonNull final String identifier) {
+    return Loadable.of(this.userLoader, identifier);
   }
 
   @Override
-  @NonNull
-  public Loadable<BanUser> getUser(@NonNull final UUID uuid) {
+  public @NonNull Loadable<@Nullable BanUser> getUser(@NonNull final UUID uuid) {
     // We don't care a whole lot about hyper efficiency.
-    return Loadable.builder(this.userLoader, uuid.toString()).executor(this.velocityExecutor).build();
+    return Loadable.of(this.userLoader, uuid.toString());
   }
 
   @Override
-  @NonNull
-  public Loadable<String> getUsername(@NonNull final UUID uuid) {
-    return Loadable.builder(this.usernameFromUser, this.getUser(uuid)).executor(this.velocityExecutor).build();
+  public @NonNull Loadable<@Nullable String> getUsername(@NonNull final UUID uuid) {
+    return Loadable.of(this.usernameFromUser, this.getUser(uuid));
   }
 
   @Override
-  @NonNull
-  public Loadable<UsernameHistory> getUsernameHistory(@NonNull final UUID uuid) {
-    return Loadable.builder(this.usernameHistoryFromUser, this.getUser(uuid)).executor(this.velocityExecutor).build();
+  public @NonNull Loadable<@Nullable UsernameHistory> getUsernameHistory(@NonNull final UUID uuid) {
+    return Loadable.of(this.usernameHistoryFromUser, this.getUser(uuid));
   }
 
   @Override
-  @NonNull
-  public Loadable<UUID> getUuid(@NonNull final String identifier) {
-    return Loadable.builder(this.uuidFromUser, this.getUser(identifier)).executor(this.velocityExecutor).build();
+  public @NonNull Loadable<@Nullable UUID> getUuid(@NonNull final String identifier) {
+    return Loadable.of(this.uuidFromUser, this.getUser(identifier));
+  }
+
+  private @NonNull Executor getVelocityExecutor() {
+    return this.velocityExecutor;
   }
 
   static class AshconUser {
@@ -177,8 +176,7 @@ public final class MojangApiAshcon implements IMojangApi {
     @SerializedName("username_history")
     List<UsernameHistory.Entry> history;
 
-    @NonNull
-    BanUser toBanUser(@NonNull final IMojangApi mojangApi) {
+    @NonNull BanUser toBanUser(@NonNull final IMojangApi mojangApi) {
       return new BanUser(
           this.uuid,
           this.username,

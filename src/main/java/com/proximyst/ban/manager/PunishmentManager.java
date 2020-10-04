@@ -31,25 +31,28 @@ import com.proximyst.ban.event.event.PunishmentAddedEvent;
 import com.proximyst.ban.model.Punishment;
 import com.proximyst.ban.model.PunishmentBuilder;
 import com.proximyst.ban.model.PunishmentType;
+import com.proximyst.ban.utils.ThrowableUtils;
+import com.proximyst.sewer.Module;
 import com.proximyst.sewer.SewerSystem;
-import com.proximyst.sewer.piping.ImmediatePipeHandler;
+import com.proximyst.sewer.piping.FilteredResult;
+import com.proximyst.sewer.piping.NamedPipeResult;
 import com.proximyst.sewer.piping.PipeResult;
+import com.proximyst.sewer.piping.SuccessfulResult;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 @Singleton
 public final class PunishmentManager {
-  @NonNull
-  private final BanPlugin main;
+  private final @NonNull BanPlugin main;
 
-  @NonNull
-  private final LoadingCache<@NonNull UUID, @NonNull List<@NonNull Punishment>> punishmentCache = CacheBuilder
+  private final @NonNull LoadingCache<UUID, @NonNull List<@NonNull Punishment>> punishmentCache = CacheBuilder
       .newBuilder()
       .expireAfterAccess(10, TimeUnit.MINUTES)
       .initialCapacity(512)
@@ -64,20 +67,26 @@ public final class PunishmentManager {
         return this.getDataInterface().getPunishmentsForTarget(uuid);
       }));
 
-  @NonNull
-  private final SewerSystem<@NonNull PunishmentBuilder, @NonNull Punishment> addPunishmentPipeline = SewerSystem
-      .builder("build", ImmediatePipeHandler.of(PunishmentBuilder::build), null,
+  private final @NonNull SewerSystem<@NonNull PunishmentBuilder, @NonNull Punishment> addPunishmentPipeline = SewerSystem
+      .builder("build", Module.immediatelyWrapping(PunishmentBuilder::build))
+      .module(
+          "fire PunishmentAddedEvent",
           // CHECKSTYLE:OFF - FIXME
-          punishment ->
+          punishment -> PunishmentManager.this.getMain().getProxyServer().getEventManager()
               // CHECKSTYLE:ON
-              this.getMain().getProxyServer().getEventManager().fire(new PunishmentAddedEvent(punishment))
-                  .thenApply(event -> event.getResult().isAllowed())
-      )
-      .pipe("announce", ImmediatePipeHandler.of(punishment -> {
+              .fire(new PunishmentAddedEvent(punishment))
+              .thenApply(event -> {
+                if (event.getResult().isAllowed()) {
+                  return new SuccessfulResult<>(punishment);
+                }
+
+                return new FilteredResult<>();
+              }))
+      .module("announce", Module.immediatelyWrapping(punishment -> {
         punishment.broadcast(this.getMain());
         return punishment;
       }))
-      .pipe("apply to online player", ImmediatePipeHandler.of(punishment -> {
+      .module("apply to online player", Module.immediatelyWrapping(punishment -> {
         if (punishment.getPunishmentType().isApplicable()) {
           // TODO(Proximyst): Make this.. not ugly.
           this.getMain().getProxyServer().getPlayer(punishment.getTarget())
@@ -95,11 +104,11 @@ public final class PunishmentManager {
 
         return punishment;
       }))
-      .pipe("push to sql", ImmediatePipeHandler.of(punishment -> {
-        this.getDataInterface().addPunishment(punishment);
-        return punishment;
-      }))
-      .pipe("caching", ImmediatePipeHandler.of(punishment -> {
+      .module("push to sql", punishment -> {
+        this.getMain().getSchedulerExecutor().execute(() -> this.getDataInterface().addPunishment(punishment));
+        return CompletableFuture.completedFuture(new SuccessfulResult<>(punishment));
+      })
+      .module("caching", Module.immediatelyWrapping(punishment -> {
         this.punishmentCache.asMap().compute(punishment.getTarget(), (uuid, list) -> {
           if (list == null) {
             return Lists.newArrayList(punishment);
@@ -112,11 +121,22 @@ public final class PunishmentManager {
       }))
       .build();
 
-  @NonNull
-  private final SewerSystem<@NonNull UUID, @NonNull ImmutableList<@NonNull Punishment>> retrievePunishmentsPipeline = SewerSystem
-      .<UUID, List<Punishment>>builder("fetch from cache", ImmediatePipeHandler.of(this.punishmentCache::get))
-      .<ImmutableList<Punishment>>pipe("immutablelist",
-          ImmediatePipeHandler.of(list -> list == null ? ImmutableList.of() : ImmutableList.copyOf(list)))
+  private final @NonNull SewerSystem<@NonNull UUID, @NonNull ImmutableList<@NonNull Punishment>> retrievePunishmentsPipeline = SewerSystem
+      .<UUID, List<Punishment>>builder("fetch from cache", uuid -> CompletableFuture.supplyAsync(
+          // CHECKSTYLE:OFF - FIXME
+          () -> {
+            try {
+              return new SuccessfulResult<>(this.punishmentCache.get(uuid));
+            } catch (final ExecutionException ex) {
+              ThrowableUtils.sneakyThrow(ex);
+              throw new RuntimeException();
+            }
+          },
+          this.getMain().getSchedulerExecutor()
+      ))
+      // CHECKSTYLE:ON
+      .<ImmutableList<Punishment>>module("immutablelist",
+          Module.immediatelyWrapping(list -> list == null ? ImmutableList.of() : ImmutableList.copyOf(list)))
       .build();
 
   public PunishmentManager(@NonNull final BanPlugin main) {
@@ -129,14 +149,8 @@ public final class PunishmentManager {
    */
   @NonNull
   public CompletableFuture<@NonNull ImmutableList<@NonNull Punishment>> getPunishments(@NonNull final UUID target) {
-    return this.retrievePunishmentsPipeline.pump(target, this.getMain().getSchedulerExecutor())
-        .thenApply(result -> {
-          if (result.isExceptional()) {
-            return ImmutableList.of();
-          }
-
-          return result.asSuccess().getResult();
-        });
+    return this.retrievePunishmentsPipeline.pump(target)
+        .thenApply(result -> result.asOptional().orElseGet(ImmutableList::of));
   }
 
   @NonNull
@@ -161,8 +175,10 @@ public final class PunishmentManager {
 
   @NonNull
   public CompletableFuture<@NonNull PipeResult<@NonNull Punishment>> addPunishment(
-      @NonNull final PunishmentBuilder builder) {
-    return this.addPunishmentPipeline.pump(builder, this.getMain().getSchedulerExecutor());
+      @NonNull final PunishmentBuilder builder
+  ) {
+    // We don't care about the pipe this errs in, so we just do #getResult
+    return this.addPunishmentPipeline.pump(builder).thenApply(NamedPipeResult::getResult);
   }
 
   @NonNull

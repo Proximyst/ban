@@ -26,11 +26,9 @@ import org.checkerframework.checker.nullness.qual.NonNull;
  * A migration entry with the data version and path to its SQL file.
  */
 public final class MigrationIndexEntry {
-  @NonNegative
-  private int version;
+  private @NonNegative int version;
 
-  @MonotonicNonNull
-  private String path;
+  private @MonotonicNonNull String path;
 
   public MigrationIndexEntry(final int version, @NonNull final String path) {
     this.version = version;
@@ -43,15 +41,14 @@ public final class MigrationIndexEntry {
   /**
    * @return The version in the database this migration represents.
    */
-  public int getVersion() {
+  public @NonNegative int getVersion() {
     return this.version;
   }
 
   /**
    * @return The path for the migration SQL file.
    */
-  @NonNull
-  public String getPath() {
+  public @NonNull String getPath() {
     return this.path;
   }
 }

@@ -57,7 +57,7 @@ dependencies {
         isTransitive = false
     }
 
-    implementation("com.proximyst:sewer:0.6.0")
+    implementation("com.proximyst:sewer:0.7.0")
 
     implementation("org.apache.commons:commons-lang3:3.11")
 }
