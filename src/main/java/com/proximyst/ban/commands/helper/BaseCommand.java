@@ -30,7 +30,7 @@ import com.proximyst.ban.utils.ThrowingSupplier;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.command.CommandSource;
 import java.util.Optional;
-import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
@@ -77,11 +77,11 @@ public abstract class BaseCommand {
         block.accept(ctx);
         return 1;
       } catch (final CommandSyntaxException ex) {
-        ctx.getSource().sendMessage(TextComponent.of(ex.getMessage(), NamedTextColor.RED));
+        ctx.getSource().sendMessage(Component.text(ex.getMessage(), NamedTextColor.RED));
         return -1;
       } catch (final Exception ex) {
         this.getMain().getLogger().warn("Could not execute command.", ex);
-        ctx.getSource().sendMessage(TextComponent.of(
+        ctx.getSource().sendMessage(Component.text(
             "An internal command execution error occurred. Please contact an administrator.",
             NamedTextColor.RED
         ));
