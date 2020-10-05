@@ -18,6 +18,8 @@
 
 package com.proximyst.ban;
 
+import cloud.commandframework.execution.CommandExecutionCoordinator;
+import cloud.commandframework.velocity.VelocityCommandManager;
 import com.google.gson.Gson;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
@@ -25,6 +27,7 @@ import com.google.inject.Injector;
 import com.proximyst.ban.boilerplate.VelocityBanSchedulerExecutor;
 import com.proximyst.ban.commands.BanCommand;
 import com.proximyst.ban.commands.UnbanCommand;
+import com.proximyst.ban.commands.cloud.ScheduledCommandExecutionCoordinator;
 import com.proximyst.ban.config.ConfigUtil;
 import com.proximyst.ban.config.Configuration;
 import com.proximyst.ban.data.IDataInterface;
@@ -40,6 +43,7 @@ import com.proximyst.ban.inject.PluginModule;
 import com.proximyst.ban.manager.MessageManager;
 import com.proximyst.ban.manager.PunishmentManager;
 import com.proximyst.ban.manager.UserManager;
+import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
@@ -53,9 +57,11 @@ import java.nio.file.Path;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jdbi.v3.core.Jdbi;
@@ -78,30 +84,26 @@ public class BanPlugin {
 
   public static final Gson COMPACT_GSON = new Gson();
 
-  @NonNull
-  private final ProxyServer proxyServer;
+  private final @NonNull ProxyServer proxyServer;
 
-  @NonNull
-  private final Logger logger;
+  private final @NonNull Logger logger;
 
-  @NonNull
-  private final Path dataDirectory;
+  private final @NonNull Path dataDirectory;
 
-  @NonNull
-  private final Injector injector;
+  private final @NonNull Injector injector;
 
-  @NonNull
-  private final VelocityBanSchedulerExecutor schedulerExecutor;
+  private final @NonNull VelocityBanSchedulerExecutor schedulerExecutor;
 
-  private ConfigurationNode rawConfigurationNode;
-  private Configuration configuration;
-  private IDataInterface dataInterface;
-  private PunishmentManager punishmentManager;
-  private MessageManager messageManager;
-  private UserManager userManager;
-  private IMojangApi mojangApi;
-  private HikariDataSource hikariDataSource;
-  private Jdbi jdbi;
+  private @MonotonicNonNull ConfigurationNode rawConfigurationNode;
+  private @MonotonicNonNull Configuration configuration;
+  private @MonotonicNonNull IDataInterface dataInterface;
+  private @MonotonicNonNull PunishmentManager punishmentManager;
+  private @MonotonicNonNull MessageManager messageManager;
+  private @MonotonicNonNull UserManager userManager;
+  private @MonotonicNonNull IMojangApi mojangApi;
+  private @MonotonicNonNull HikariDataSource hikariDataSource;
+  private @MonotonicNonNull Jdbi jdbi;
+  private @MonotonicNonNull VelocityCommandManager<CommandSource> velocityCommandManager;
 
   @Inject
   public BanPlugin(
@@ -194,6 +196,16 @@ public class BanPlugin {
     this.punishmentManager = new PunishmentManager(this);
     this.messageManager = new MessageManager(this, this.getConfiguration().messages);
     this.userManager = new UserManager(this);
+    this.velocityCommandManager = new VelocityCommandManager<>(
+        this.getProxyServer(),
+        tree -> new ScheduledCommandExecutionCoordinator(
+            tree,
+            this.getSchedulerExecutor(),
+            CommandExecutionCoordinator.<CommandSource>simpleCoordinator().apply(tree)
+        ),
+        Function.identity(),
+        Function.identity()
+    );
 
     tm.start("Registering subscribers");
     this.getProxyServer().getEventManager()
@@ -204,8 +216,8 @@ public class BanPlugin {
         .register(this, this.getInjector().getInstance(CacheUpdatePlayerJoinSubscriber.class));
 
     tm.start("Registering commands");
-    this.getInjector().getInstance(BanCommand.class).register(this.getProxyServer().getCommandManager());
-    this.getInjector().getInstance(UnbanCommand.class).register(this.getProxyServer().getCommandManager());
+    this.getInjector().getInstance(BanCommand.class).register(this.getVelocityCommandManager());
+    this.getInjector().getInstance(UnbanCommand.class).register(this.getVelocityCommandManager());
 
     tm.finish();
     this.getLogger().info("Plugin has finished initialisation in {}ms.", System.currentTimeMillis() - start);
@@ -228,69 +240,60 @@ public class BanPlugin {
     this.getLogger().info("Plugin disabled correctly in {}ms.", System.currentTimeMillis() - start);
   }
 
-  @NonNull
-  public ProxyServer getProxyServer() {
+  public @NonNull ProxyServer getProxyServer() {
     return this.proxyServer;
   }
 
-  @NonNull
-  public Logger getLogger() {
+  public @NonNull Logger getLogger() {
     return this.logger;
   }
 
-  @NonNull
-  public Injector getInjector() {
+  public @NonNull Injector getInjector() {
     return this.injector;
   }
 
-  @NonNull
-  public Path getDataDirectory() {
+  public @NonNull Path getDataDirectory() {
     return this.dataDirectory;
   }
 
-  @NonNull
-  public Configuration getConfiguration() {
+  public @NonNull Configuration getConfiguration() {
     return this.configuration;
   }
 
-  @NonNull
-  public ConfigurationNode getRawConfigurationNode() {
+  public @NonNull ConfigurationNode getRawConfigurationNode() {
     return this.rawConfigurationNode;
   }
 
-  @NonNull
-  public IDataInterface getDataInterface() {
+  public @NonNull IDataInterface getDataInterface() {
     return this.dataInterface;
   }
 
-  @NonNull
-  public PunishmentManager getPunishmentManager() {
+  public @NonNull PunishmentManager getPunishmentManager() {
     return this.punishmentManager;
   }
 
-  @NonNull
-  public MessageManager getMessageManager() {
+  public @NonNull MessageManager getMessageManager() {
     return this.messageManager;
   }
 
-  @NonNull
-  public UserManager getUserManager() {
+  public @NonNull UserManager getUserManager() {
     return this.userManager;
   }
 
-  @NonNull
-  public IMojangApi getMojangApi() {
+  public @NonNull IMojangApi getMojangApi() {
     return this.mojangApi;
   }
 
-  @NonNull
-  public Jdbi getJdbi() {
+  public @NonNull Jdbi getJdbi() {
     return this.jdbi;
   }
 
-  @NonNull
-  public VelocityBanSchedulerExecutor getSchedulerExecutor() {
+  public @NonNull VelocityBanSchedulerExecutor getSchedulerExecutor() {
     return this.schedulerExecutor;
+  }
+
+  public @NonNull VelocityCommandManager<CommandSource> getVelocityCommandManager() {
+    return this.velocityCommandManager;
   }
 
   private static class TimeMeasurer {

@@ -18,20 +18,16 @@
 
 package com.proximyst.ban.commands;
 
+import cloud.commandframework.context.CommandContext;
+import cloud.commandframework.velocity.VelocityCommandManager;
 import com.google.inject.Inject;
-import com.mojang.brigadier.arguments.StringArgumentType;
-import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.proximyst.ban.BanPermissions;
 import com.proximyst.ban.BanPlugin;
-import com.proximyst.ban.boilerplate.model.Pair;
-import com.proximyst.ban.commands.helper.BaseCommand;
-import com.proximyst.ban.commands.helper.UserArgument;
+import com.proximyst.ban.commands.cloud.BanUserArgument;
+import com.proximyst.ban.commands.cloud.BaseCommand;
 import com.proximyst.ban.model.BanUser;
 import com.proximyst.ban.model.Punishment;
 import com.proximyst.ban.utils.CommandUtils;
-import com.velocitypowered.api.command.BrigadierCommand;
-import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.command.CommandSource;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
@@ -42,38 +38,28 @@ public final class UnbanCommand extends BaseCommand {
   }
 
   @Override
-  public void register(@NonNull final CommandManager commandManager) {
-    commandManager.register(new BrigadierCommand(
-        literal("unban")
-            .requires(src -> src.hasPermission(BanPermissions.COMMAND_UNBAN))
-            .then(argRequired("target", StringArgumentType.string())
-                .suggests(UserArgument.createSuggestions(getMain()))
-                .executes(this.execute(this::execute)))
-    ));
+  public void register(final @NonNull VelocityCommandManager<@NonNull CommandSource> commandManager) {
+    commandManager.command(
+        commandManager.commandBuilder("unban")
+            .withPermission(BanPermissions.COMMAND_UNBAN)
+            .argument(BanUserArgument.of("target", this.getMain()))
+            .handler(this::execute)
+    );
   }
 
-  private void execute(@NonNull final CommandContext<CommandSource> ctx) throws CommandSyntaxException {
-    UserArgument.getUser(
-        getMain().getUserManager(),
-        getMain().getProxyServer(),
-        StringArgumentType.getString(ctx, "target")
-    ).thenComposeAsync(
-        // CHECKSTYLE:OFF - FIXME
-        user -> getMain().getPunishmentManager().getActiveBan(user.getUuid())
-            // CHECKSTYLE:ON
-            .thenApply(opt -> new Pair<>(user, opt)),
-        getMain().getSchedulerExecutor()
-    ).thenAccept(pair -> {
-      final BanUser user = pair.getFirst();
-      final Punishment punishment = pair.getSecond().orElse(null);
-      if (punishment == null) {
-        ctx.getSource().sendMessage(getMain().getMessageManager().errorNoBan(user));
-        return;
-      }
+  private void execute(@NonNull final CommandContext<CommandSource> ctx) {
+    @NonNull BanUser target = ctx.get("target");
+    getMain().getPunishmentManager().getActiveBan(target.getUuid())
+        .thenAccept(punishmentOptional -> {
+          final Punishment punishment = punishmentOptional.orElse(null);
+          if (punishment == null) {
+            ctx.getSender().sendMessage(getMain().getMessageManager().errorNoBan(target));
+            return;
+          }
 
-      punishment.setLiftedBy(CommandUtils.getSourceUuid(ctx.getSource()));
-      punishment.broadcast(getMain());
-      getMain().getSchedulerExecutor().execute(() -> getMain().getDataInterface().addPunishment(punishment));
-    });
+          punishment.setLiftedBy(CommandUtils.getSourceUuid(ctx.getSender()));
+          punishment.broadcast(getMain());
+          getMain().getSchedulerExecutor().execute(() -> getMain().getDataInterface().addPunishment(punishment));
+        });
   }
 }

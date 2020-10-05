@@ -18,19 +18,18 @@
 
 package com.proximyst.ban.commands;
 
+import cloud.commandframework.arguments.standard.StringArgument;
+import cloud.commandframework.context.CommandContext;
+import cloud.commandframework.velocity.VelocityCommandManager;
 import com.google.inject.Inject;
-import com.mojang.brigadier.arguments.StringArgumentType;
-import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.proximyst.ban.BanPermissions;
 import com.proximyst.ban.BanPlugin;
-import com.proximyst.ban.commands.helper.BaseCommand;
-import com.proximyst.ban.commands.helper.UserArgument;
+import com.proximyst.ban.commands.cloud.BanUserArgument;
+import com.proximyst.ban.commands.cloud.BaseCommand;
+import com.proximyst.ban.model.BanUser;
 import com.proximyst.ban.model.PunishmentBuilder;
 import com.proximyst.ban.model.PunishmentType;
 import com.proximyst.ban.utils.CommandUtils;
-import com.velocitypowered.api.command.BrigadierCommand;
-import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.command.CommandSource;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -42,33 +41,28 @@ public final class BanCommand extends BaseCommand {
   }
 
   @Override
-  public void register(@NonNull final CommandManager commandManager) {
-    commandManager.register(new BrigadierCommand(
-        literal("ban")
-            .requires(src -> src.hasPermission(BanPermissions.COMMAND_BAN))
-            .then(argRequired("target", StringArgumentType.string())
-                .suggests(UserArgument.createSuggestions(getMain()))
-                .then(argRequired("reason", StringArgumentType.greedyString())
-                    .executes(this.execute(this::execute)))
-                .executes(this.execute(this::execute)))
-    ));
+  public void register(final @NonNull VelocityCommandManager<@NonNull CommandSource> commandManager) {
+    commandManager.command(
+        commandManager.commandBuilder("ban")
+            .withPermission(BanPermissions.COMMAND_BAN)
+            .argument(BanUserArgument.of("target", this.getMain()))
+            .argument(StringArgument.of("reason", StringArgument.StringMode.GREEDY))
+            .handler(this::execute)
+    );
   }
 
-  private void execute(@NonNull final CommandContext<CommandSource> ctx) throws CommandSyntaxException {
-    @Nullable final String reason = getOptionalArgument(() -> StringArgumentType.getString(ctx, "reason"))
+  private void execute(@NonNull final CommandContext<CommandSource> ctx) {
+    @Nullable final String reason = ctx.<String>getOptional("reason")
         .map(String::trim)
         .filter(str -> !str.isEmpty())
         .orElse(null);
-    UserArgument.getUuid(
-        getMain().getUserManager(),
-        getMain().getProxyServer(),
-        StringArgumentType.getString(ctx, "target")
-    ).thenComposeAsync(target -> getMain().getPunishmentManager().addPunishment(
+    @NonNull BanUser target = ctx.get("target");
+    this.getMain().getPunishmentManager().addPunishment(
         new PunishmentBuilder()
             .type(PunishmentType.BAN)
-            .punisher(CommandUtils.getSourceUuid(ctx.getSource()))
-            .target(target)
+            .punisher(CommandUtils.getSourceUuid(ctx.getSender()))
+            .target(target.getUuid())
             .reason(reason)
-    ), getMain().getSchedulerExecutor());
+    );
   }
 }

@@ -19,6 +19,7 @@ repositories {
 
         content {
             includeGroup("net.kyori")
+            includeGroup("cloud.commandframework")
         }
     }
 
@@ -60,6 +61,8 @@ dependencies {
     implementation("com.proximyst:sewer:0.7.0")
 
     implementation("org.apache.commons:commons-lang3:3.11")
+
+    implementation("cloud.commandframework:cloud-velocity:1.0.0-SNAPSHOT")
 }
 
 tasks {
@@ -72,8 +75,6 @@ tasks {
             dependencies.forEach { relocate(it, "com.proximyst.ban.dependencies.$it") }
 
         reloc(
-            "co.aikar.commands",
-            "co.aikar.locale",
             "com.zaxxer.hikari",
             "org.mariadb.jdbc",
             "net.kyori.adventure.text.minimessage",
@@ -82,7 +83,8 @@ tasks {
             "org.apache.commons.lang3",
             "com.github.benmanes.caffeine",
             "org.antlr",
-            "io.leangen.geantyref"
+            "io.leangen.geantyref",
+            "cloud.commandframework"
         )
         mergeServiceFiles()
     }
