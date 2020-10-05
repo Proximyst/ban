@@ -56,7 +56,7 @@ public final class BanCommand extends BaseCommand {
         .map(String::trim)
         .filter(str -> !str.isEmpty())
         .orElse(null);
-    @NonNull BanUser target = ctx.get("target");
+    @NonNull final BanUser target = ctx.get("target");
     this.getMain().getPunishmentManager().addPunishment(
         new PunishmentBuilder()
             .type(PunishmentType.BAN)

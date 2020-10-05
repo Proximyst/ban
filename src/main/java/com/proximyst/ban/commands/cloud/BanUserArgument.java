@@ -133,7 +133,10 @@ public final class BanUserArgument<C> extends CommandArgument<C, BanUser> {
     }
 
     @Override
-    public @NonNull List<String> suggestions(@NonNull CommandContext<C> commandContext, @NonNull String input) {
+    public @NonNull List<String> suggestions(
+        final @NonNull CommandContext<C> commandContext,
+        final @NonNull String input
+    ) {
       final String lowercaseInput = input.toLowerCase(Locale.ENGLISH).trim();
       final ImmutableList.Builder<String> builder = ImmutableList.builder();
       for (final Player player : this.proxyServer.getAllPlayers()) {
@@ -146,8 +149,8 @@ public final class BanUserArgument<C> extends CommandArgument<C, BanUser> {
   }
 
   public static final class InvalidPlayerIdentifierException extends IllegalArgumentException {
-    public InvalidPlayerIdentifierException(String s) {
-      super(s);
+    public InvalidPlayerIdentifierException(@NonNull final String message) {
+      super(message);
     }
   }
 }
