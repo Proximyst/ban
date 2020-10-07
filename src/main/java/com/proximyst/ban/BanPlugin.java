@@ -26,6 +26,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.proximyst.ban.boilerplate.VelocityBanSchedulerExecutor;
 import com.proximyst.ban.commands.BanCommand;
+import com.proximyst.ban.commands.KickCommand;
 import com.proximyst.ban.commands.UnbanCommand;
 import com.proximyst.ban.commands.cloud.ScheduledCommandExecutionCoordinator;
 import com.proximyst.ban.config.ConfigUtil;
@@ -218,6 +219,7 @@ public class BanPlugin {
     tm.start("Registering commands");
     this.getInjector().getInstance(BanCommand.class).register(this.getVelocityCommandManager());
     this.getInjector().getInstance(UnbanCommand.class).register(this.getVelocityCommandManager());
+    this.getInjector().getInstance(KickCommand.class).register(this.getVelocityCommandManager());
 
     tm.finish();
     this.getLogger().info("Plugin has finished initialisation in {}ms.", System.currentTimeMillis() - start);
