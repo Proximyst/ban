@@ -47,6 +47,7 @@ public final class UnbanCommand extends BaseCommand {
 
   private void execute(final @NonNull CommandContext<CommandSource> ctx) {
     final @NonNull BanUser target = ctx.get("target");
+
     this.getMain().getPunishmentManager().getActiveBan(target.getUuid())
         .thenAccept(punishmentOptional -> {
           final Punishment punishment = punishmentOptional.orElse(null);
