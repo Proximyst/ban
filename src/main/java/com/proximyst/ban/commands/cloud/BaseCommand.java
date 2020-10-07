@@ -26,14 +26,13 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 public abstract class BaseCommand {
   private final @NonNull BanPlugin main;
 
-  public BaseCommand(@NonNull final BanPlugin main) {
+  public BaseCommand(final @NonNull BanPlugin main) {
     this.main = main;
   }
 
   public abstract void register(final @NonNull VelocityCommandManager<@NonNull CommandSource> commandManager);
 
-  @NonNull
-  protected BanPlugin getMain() {
+  protected @NonNull BanPlugin getMain() {
     return this.main;
   }
 }

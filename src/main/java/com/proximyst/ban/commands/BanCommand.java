@@ -36,27 +36,25 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class BanCommand extends BaseCommand {
   @Inject
-  public BanCommand(@NonNull final BanPlugin main) {
+  public BanCommand(final @NonNull BanPlugin main) {
     super(main);
   }
 
   @Override
   public void register(final @NonNull VelocityCommandManager<@NonNull CommandSource> commandManager) {
-    commandManager.command(
-        commandManager.commandBuilder("ban")
-            .withPermission(BanPermissions.COMMAND_BAN)
-            .argument(BanUserArgument.of("target", this.getMain()))
-            .argument(StringArgument.of("reason", StringArgument.StringMode.GREEDY))
-            .handler(this::execute)
-    );
+    commandManager.command(commandManager.commandBuilder("ban")
+        .withPermission(BanPermissions.COMMAND_BAN)
+        .argument(BanUserArgument.of("target", this.getMain()))
+        .argument(StringArgument.of("reason", StringArgument.StringMode.GREEDY))
+        .handler(this::execute));
   }
 
   private void execute(@NonNull final CommandContext<CommandSource> ctx) {
-    @Nullable final String reason = ctx.<String>getOptional("reason")
+    final @Nullable String reason = ctx.<String>getOptional("reason")
         .map(String::trim)
         .filter(str -> !str.isEmpty())
         .orElse(null);
-    @NonNull final BanUser target = ctx.get("target");
+    final BanUser target = ctx.get("target");
     this.getMain().getPunishmentManager().addPunishment(
         new PunishmentBuilder()
             .type(PunishmentType.BAN)

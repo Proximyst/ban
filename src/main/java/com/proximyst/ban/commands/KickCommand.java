@@ -16,12 +16,12 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class KickCommand extends BaseCommand {
-  public KickCommand(@NonNull BanPlugin main) {
+  public KickCommand(final @NonNull BanPlugin main) {
     super(main);
   }
 
   @Override
-  public void register(@NonNull VelocityCommandManager<@NonNull CommandSource> commandManager) {
+  public void register(final @NonNull VelocityCommandManager<@NonNull CommandSource> commandManager) {
     commandManager.command(commandManager.commandBuilder("kick")
         .withPermission(BanPermissions.COMMAND_KICK)
         .argument(PlayerArgument.of("target", this.getMain()))

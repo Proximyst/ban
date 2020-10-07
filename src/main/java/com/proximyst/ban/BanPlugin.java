@@ -27,6 +27,7 @@ import com.google.inject.Injector;
 import com.proximyst.ban.boilerplate.VelocityBanSchedulerExecutor;
 import com.proximyst.ban.commands.BanCommand;
 import com.proximyst.ban.commands.KickCommand;
+import com.proximyst.ban.commands.MuteCommand;
 import com.proximyst.ban.commands.UnbanCommand;
 import com.proximyst.ban.commands.cloud.ScheduledCommandExecutionCoordinator;
 import com.proximyst.ban.config.ConfigUtil;
@@ -132,7 +133,7 @@ public class BanPlugin {
       return;
     }
 
-    final long start = System.currentTimeMillis();
+    final long start = System.nanoTime();
     final TimeMeasurer tm = new TimeMeasurer(this.getLogger());
 
     tm.start("Reading configuration file");
@@ -220,9 +221,13 @@ public class BanPlugin {
     this.getInjector().getInstance(BanCommand.class).register(this.getVelocityCommandManager());
     this.getInjector().getInstance(UnbanCommand.class).register(this.getVelocityCommandManager());
     this.getInjector().getInstance(KickCommand.class).register(this.getVelocityCommandManager());
+    this.getInjector().getInstance(MuteCommand.class).register(this.getVelocityCommandManager());
 
     tm.finish();
-    this.getLogger().info("Plugin has finished initialisation in {}ms.", System.currentTimeMillis() - start);
+    this.getLogger().info(
+        "Plugin has finished initialisation in {}ms.",
+        TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start)
+    );
   }
 
   @Subscribe
