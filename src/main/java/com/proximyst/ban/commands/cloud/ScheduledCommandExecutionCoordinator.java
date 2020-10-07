@@ -30,7 +30,9 @@ public final class ScheduledCommandExecutionCoordinator extends CommandExecution
       @NonNull final Queue<String> input
   ) {
     return CompletableFuture.supplyAsync(
+        // CHECKSTYLE:OFF - FIXME
         () -> this.deferee.coordinateExecution(commandContext, input).join(),
+        // CHECKSTYLE:ON
         this.executor
     );
   }

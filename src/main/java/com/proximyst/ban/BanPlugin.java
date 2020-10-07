@@ -200,7 +200,9 @@ public class BanPlugin {
     this.userManager = new UserManager(this);
     this.velocityCommandManager = new VelocityCommandManager<>(
         this.getProxyServer(),
+        // CHECKSTYLE:OFF - FIXME
         tree -> new ScheduledCommandExecutionCoordinator(
+            // CHECKSTYLE:ON
             tree,
             this.getSchedulerExecutor(),
             CommandExecutionCoordinator.<CommandSource>simpleCoordinator().apply(tree)
