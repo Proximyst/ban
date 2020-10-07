@@ -50,11 +50,9 @@ public final class MuteCommand extends BaseCommand {
   }
 
   private void execute(final @NonNull CommandContext<CommandSource> ctx) {
-    final @Nullable String reason = ctx.<String>getOptional("reason")
-        .map(String::trim)
-        .filter(str -> !str.isEmpty())
-        .orElse(null);
     final BanUser target = ctx.get("target");
+    final @Nullable String reason = ctx.getOrDefault("reason", null);
+
     this.getMain().getPunishmentManager().addPunishment(
         new PunishmentBuilder()
             .type(PunishmentType.MUTE)
