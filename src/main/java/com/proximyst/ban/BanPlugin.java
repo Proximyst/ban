@@ -29,6 +29,7 @@ import com.proximyst.ban.commands.BanCommand;
 import com.proximyst.ban.commands.KickCommand;
 import com.proximyst.ban.commands.MuteCommand;
 import com.proximyst.ban.commands.UnbanCommand;
+import com.proximyst.ban.commands.UnmuteCommand;
 import com.proximyst.ban.commands.cloud.ScheduledCommandExecutionCoordinator;
 import com.proximyst.ban.config.ConfigUtil;
 import com.proximyst.ban.config.Configuration;
@@ -224,6 +225,7 @@ public class BanPlugin {
     this.getInjector().getInstance(UnbanCommand.class).register(this.getVelocityCommandManager());
     this.getInjector().getInstance(KickCommand.class).register(this.getVelocityCommandManager());
     this.getInjector().getInstance(MuteCommand.class).register(this.getVelocityCommandManager());
+    this.getInjector().getInstance(UnmuteCommand.class).register(this.getVelocityCommandManager());
 
     tm.finish();
     this.getLogger().info(

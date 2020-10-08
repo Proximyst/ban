@@ -131,6 +131,16 @@ public final class MessageManager {
   }
 
   @NonNull
+  public Component errorNoMute(@NonNull final BanUser user) {
+    return MiniMessage.get().parse(
+        this.cfg.errors.noMute,
+
+        "targetName", user.getUsername(),
+        "targetUuid", user.getUuid().toString()
+    );
+  }
+
+  @NonNull
   public CompletableFuture<@NonNull Component> formatMessageWith(
       @NonNull final String message,
       @NonNull final Punishment punishment
