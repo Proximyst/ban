@@ -27,10 +27,9 @@ import org.slf4j.Logger;
  * A proxy for a {@link java.util.logging.Logger JUL Logger} to a {@link Logger SLF4J Logger}.
  */
 public final class Slf4jLoggerProxy extends java.util.logging.Logger {
-  @NonNull
-  private final Logger logger;
+  private final @NonNull Logger logger;
 
-  public Slf4jLoggerProxy(@NonNull final Logger logger) {
+  public Slf4jLoggerProxy(final @NonNull Logger logger) {
     super(null, null);
 
     this.logger = logger;

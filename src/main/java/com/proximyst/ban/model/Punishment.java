@@ -43,38 +43,35 @@ public final class Punishment {
   /**
    * The type of this punishment.
    */
-  @NonNull
-  private final PunishmentType punishmentType;
+  private final @NonNull PunishmentType punishmentType;
 
   /**
    * The target of this punishment.
    * <p>
    * This is the punished player.
    */
-  @NonNull
-  private final UUID target;
+  private final @NonNull UUID target;
 
   /**
    * The punisher of this punishment.
    * <p>
    * This is the one handing out and enforcing the punishment.
    */
-  @NonNull
-  private final UUID punisher;
+  private final @NonNull UUID punisher;
 
   /**
    * The time at which this punishment was created.
    * <p>
    * This is in milliseconds since UNIX epoch.
    */
-  private final long time;
+  private final @NonNegative long time;
 
   /**
    * The duration of the punishment in milliseconds.
    * <p>
    * If this is {@code 0}, the punishment is permanent.
    */
-  private final long duration;
+  private final @NonNegative long duration;
 
   /**
    * The ID of the punishment in the database.
@@ -86,8 +83,7 @@ public final class Punishment {
    * <p>
    * This must be a maximum of {@code 255} bytes long.
    */
-  @Nullable
-  private String reason;
+  private @Nullable String reason;
 
   /**
    * Whether the punishment has been lifted.
@@ -101,16 +97,15 @@ public final class Punishment {
    * <p>
    * This is {@code null} if the punishment has not been lifted or has simply expired.
    */
-  @Nullable
-  private UUID liftedBy;
+  private @Nullable UUID liftedBy;
 
   public Punishment(
-      @NonNull final PunishmentType punishmentType,
-      @NonNull final UUID target,
-      @NonNull final UUID punisher,
-      @Nullable final String reason,
+      final @NonNull PunishmentType punishmentType,
+      final @NonNull UUID target,
+      final @NonNull UUID punisher,
+      final @Nullable String reason,
       final boolean lifted,
-      @Nullable final UUID liftedBy,
+      final @Nullable UUID liftedBy,
       final long time,
       final long duration
   ) {
@@ -119,12 +114,12 @@ public final class Punishment {
 
   public Punishment(
       final long id,
-      @NonNull final PunishmentType punishmentType,
-      @NonNull final UUID target,
-      @NonNull final UUID punisher,
-      @Nullable final String reason,
+      final @NonNull PunishmentType punishmentType,
+      final @NonNull UUID target,
+      final @NonNull UUID punisher,
+      final @Nullable String reason,
       final boolean lifted,
-      @Nullable final UUID liftedBy,
+      final @Nullable UUID liftedBy,
       final long time,
       final long duration
   ) {
@@ -143,8 +138,7 @@ public final class Punishment {
     this.duration = Math.max(duration, 0);
   }
 
-  @NonNull
-  public static Punishment fromRow(@NonNull final RowView row) {
+  public static @NonNull Punishment fromRow(final @NonNull RowView row) {
     return new PunishmentBuilder()
         .id(row.getColumn("id", Long.class))
         .type(
@@ -166,8 +160,7 @@ public final class Punishment {
   /**
    * @return The ID of this punishment, or an empty optional if none is known.
    */
-  @NonNull
-  public Optional<@NonNull @NonNegative Long> getId() {
+  public @NonNull Optional<@NonNull @NonNegative Long> getId() {
     return this.id < 0 ? Optional.empty() : Optional.of(this.id);
   }
 
@@ -186,8 +179,7 @@ public final class Punishment {
   /**
    * @return The type of this punishment.
    */
-  @NonNull
-  public PunishmentType getPunishmentType() {
+  public @NonNull PunishmentType getPunishmentType() {
     return this.punishmentType;
   }
 
@@ -196,8 +188,7 @@ public final class Punishment {
    * <p>
    * This is the punished player.
    */
-  @NonNull
-  public UUID getTarget() {
+  public @NonNull UUID getTarget() {
     return this.target;
   }
 
@@ -206,14 +197,12 @@ public final class Punishment {
    * <p>
    * This is the one handing out and enforcing the punishment.
    */
-  @NonNull
-  public UUID getPunisher() {
+  public @NonNull UUID getPunisher() {
     return this.punisher;
   }
 
   @SuppressWarnings({"unchecked", "rawtypes"})
-  @NonNull
-  public Optional<@NonNull CommandSource> getPunisherAsSource(@NonNull final ProxyServer proxyServer) {
+  public @NonNull Optional<@NonNull CommandSource> getPunisherAsSource(final @NonNull ProxyServer proxyServer) {
     if (this.getPunisher().equals(BanUser.CONSOLE.getUuid())) {
       return Optional.of(proxyServer.getConsoleCommandSource());
     }
@@ -226,15 +215,14 @@ public final class Punishment {
    * <p>
    * This is a maximum of {@code 255} bytes long.
    */
-  @NonNull
-  public Optional<@NonNull String> getReason() {
+  public @NonNull Optional<@NonNull String> getReason() {
     return Optional.ofNullable(this.reason);
   }
 
   /**
    * @param reason The reason for the punishment or {@code null} otherwise. This must be a maximum of 255 bytes long.
    */
-  public void setReason(@Nullable final String reason) {
+  public void setReason(final @Nullable String reason) {
     Preconditions.checkArgument(reason != null && reason.getBytes().length <= 255, "reason must be <= 255 bytes");
     this.reason = reason;
   }
@@ -244,7 +232,7 @@ public final class Punishment {
    *               bytes long.
    */
   @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-  public void setReason(@NonNull final Optional<@NonNull String> reason) {
+  public void setReason(final @NonNull Optional<@NonNull String> reason) {
     reason.ifPresent(str -> Preconditions.checkArgument(str.getBytes().length <= 255, "reason must be <= 255 bytes"));
     this.reason = reason.orElse(null);
   }
@@ -252,15 +240,14 @@ public final class Punishment {
   /**
    * @return The time at which this punishment was created in milliseconds since UNIX epoch.
    */
-  public long getTime() {
+  public @NonNegative long getTime() {
     return this.time;
   }
 
   /**
    * @return The time at which this punishment was created.
    */
-  @NonNull
-  public Date getDate() {
+  public @NonNull Date getDate() {
     return new Date(this.getTime());
   }
 
@@ -269,7 +256,7 @@ public final class Punishment {
    * <p>
    * If this is {@code 0}, the punishment is permanent.
    */
-  public long getDuration() {
+  public @NonNegative long getDuration() {
     return this.duration;
   }
 
@@ -287,8 +274,7 @@ public final class Punishment {
    * <p>
    * This is an empty {@link Optional} if the punishment has not been lifted or has simply expired.
    */
-  @NonNull
-  public Optional<@NonNull UUID> getLiftedBy() {
+  public @NonNull Optional<@NonNull UUID> getLiftedBy() {
     return Optional.ofNullable(this.liftedBy);
   }
 
@@ -297,7 +283,7 @@ public final class Punishment {
    *
    * @param liftedBy The user who lifted this punishment.
    */
-  public void setLiftedBy(@NonNull final UUID liftedBy) {
+  public void setLiftedBy(final @NonNull UUID liftedBy) {
     this.lifted = true;
     this.liftedBy = liftedBy;
   }
@@ -312,6 +298,8 @@ public final class Punishment {
   /**
    * @return The expiration time of this punishment in milliseconds since the UNIX epoch, or {@code -1} if it {@link
    * #isPermanent() is permanent}.
+   * @see #isPermanent()
+   * @see #getExpirationDate()
    */
   public long getExpiration() {
     if (this.isPermanent()) {
@@ -324,9 +312,9 @@ public final class Punishment {
   /**
    * @return The expiration time of this punishment, or an empty {@link Optional} if it {@link #isPermanent() is
    * permanent}.
+   * @see #isPermanent()
    */
-  @NonNull
-  public Optional<@NonNull Date> getExpirationDate() {
+  public @NonNull Optional<@NonNull Date> getExpirationDate() {
     if (this.isPermanent()) {
       return Optional.empty();
     }
@@ -337,7 +325,7 @@ public final class Punishment {
   /**
    * @return Whether this punishment still applies to the player.
    */
-  public boolean currentlyApplies(@NonNull final BanPlugin main) {
+  public boolean currentlyApplies(final @NonNull BanPlugin main) {
     if (!this.getPunishmentType().canBeLifted()) {
       // The punishment cannot be lifted and therefore cannot apply past the event.
       return false;
@@ -369,8 +357,7 @@ public final class Punishment {
    * @param main The main plugin instance.
    * @return Whether the broadcast was successful.
    */
-  @NonNull
-  public CompletableFuture<@NonNull Boolean> broadcast(@NonNull final BanPlugin main) {
+  public @NonNull CompletableFuture<@NonNull Boolean> broadcast(final @NonNull BanPlugin main) {
     if (!this.getPunishmentType().isAnnouncable()) {
       return CompletableFuture.completedFuture(true);
     }

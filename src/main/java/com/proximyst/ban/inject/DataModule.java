@@ -29,10 +29,9 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jdbi.v3.core.Jdbi;
 
 public final class DataModule extends AbstractModule {
-  @NonNull
-  private final BanPlugin main;
+  private final @NonNull BanPlugin main;
 
-  public DataModule(@NonNull final BanPlugin main) {
+  public DataModule(final @NonNull BanPlugin main) {
     this.main = main;
   }
 

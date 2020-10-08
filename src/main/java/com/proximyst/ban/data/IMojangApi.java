@@ -31,7 +31,7 @@ public interface IMojangApi {
    * @param identifier The identifier to get the UUID of.
    * @return The UUID of the identifier.
    */
-  @NonNull Loadable<UUID> getUuid(@NonNull String identifier);
+  @NonNull Loadable<UUID> getUuid(final @NonNull String identifier);
 
   /**
    * Get the username of a UUID.
@@ -39,7 +39,7 @@ public interface IMojangApi {
    * @param uuid The UUID to get the username of.
    * @return The username of the UUID.
    */
-  @NonNull Loadable<String> getUsername(@NonNull UUID uuid);
+  @NonNull Loadable<String> getUsername(final @NonNull UUID uuid);
 
   /**
    * Get the username history of a UUID.
@@ -47,7 +47,7 @@ public interface IMojangApi {
    * @param uuid The UUID to get the username history of.
    * @return The username history of the UUID, unsorted.
    */
-  @NonNull Loadable<UsernameHistory> getUsernameHistory(@NonNull UUID uuid);
+  @NonNull Loadable<UsernameHistory> getUsernameHistory(final @NonNull UUID uuid);
 
   /**
    * Get a populated {@link BanUser} for the user given.
@@ -55,7 +55,7 @@ public interface IMojangApi {
    * @param identifier Either the UUID of the user in string form (with or without hyphens), or their username.
    * @return Data about the user, fully populated with known data.
    */
-  @NonNull Loadable<BanUser> getUser(@NonNull String identifier);
+  @NonNull Loadable<BanUser> getUser(final @NonNull String identifier);
 
   /**
    * Get a populated {@link BanUser} from the user given.
@@ -63,5 +63,5 @@ public interface IMojangApi {
    * @param uuid The UUID of the user.
    * @return Data about the user, fully populated with known data.
    */
-  @NonNull Loadable<BanUser> getUser(@NonNull UUID uuid);
+  @NonNull Loadable<BanUser> getUser(final @NonNull UUID uuid);
 }

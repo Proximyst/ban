@@ -23,14 +23,13 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 
 @FunctionalInterface
 public interface ThrowingSupplier<T, E extends Exception> {
-  @NonNull
   T get() throws E;
 
-  default Supplier<T> toSupplier() {
+  default @NonNull Supplier<T> toSupplier() {
     return () -> {
       try {
         return this.get();
-      } catch (Exception ex) {
+      } catch (final Exception ex) {
         ThrowableUtils.sneakyThrow(ex);
         throw new RuntimeException();
       }

@@ -41,8 +41,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class MojangApiAshcon implements IMojangApi {
-  @NonNull
-  private static final String API_BASE = "https://api.ashcon.app/mojang/v2/";
+  private static final @NonNull String API_BASE = "https://api.ashcon.app/mojang/v2/";
 
   private final @NonNull Executor velocityExecutor;
 
@@ -109,7 +108,7 @@ public final class MojangApiAshcon implements IMojangApi {
 
             // The user is not cached, so we need to fetch their data.
             final BanUser user = HttpUtils.get(API_BASE + "user/" + finalIdentifier)
-                .map(json -> BanPlugin.COMPACT_GSON.fromJson(json, AshconUser.class).toBanUser(this))
+                .map(json -> BanPlugin.COMPACT_GSON.fromJson(json, AshconUser.class).toBanUser())
                 .orElseThrow(() -> new IllegalArgumentException(
                     "No user with the username/UUID \"" + finalIdentifier + "\" exists."));
 
@@ -166,6 +165,7 @@ public final class MojangApiAshcon implements IMojangApi {
     return this.velocityExecutor;
   }
 
+  @NonNull
   static class AshconUser {
     @SerializedName("uuid")
     UUID uuid;
@@ -174,9 +174,9 @@ public final class MojangApiAshcon implements IMojangApi {
     String username;
 
     @SerializedName("username_history")
-    List<UsernameHistory.Entry> history;
+    @Nullable List<UsernameHistory.@NonNull Entry> history;
 
-    @NonNull BanUser toBanUser(@NonNull final IMojangApi mojangApi) {
+    @NonNull BanUser toBanUser() {
       return new BanUser(
           this.uuid,
           this.username,

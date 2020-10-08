@@ -25,33 +25,28 @@ import java.util.Objects;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class PunishmentAddedEvent implements ResultedEvent<GenericResult> {
-  @NonNull
-  private GenericResult result = GenericResult.allowed();
+  private @NonNull GenericResult result = GenericResult.allowed();
+  private @NonNull Punishment punishment;
 
-  @NonNull
-  private Punishment punishment;
-
-  public PunishmentAddedEvent(@NonNull final Punishment punishment) {
+  public PunishmentAddedEvent(final @NonNull Punishment punishment) {
     this.punishment = Objects.requireNonNull(punishment);
   }
 
   @Override
-  @NonNull
-  public GenericResult getResult() {
+  public @NonNull GenericResult getResult() {
     return this.result;
   }
 
   @Override
-  public void setResult(@NonNull final GenericResult result) {
+  public void setResult(final @NonNull GenericResult result) {
     this.result = Objects.requireNonNull(result);
   }
 
-  @NonNull
-  public Punishment getPunishment() {
+  public @NonNull Punishment getPunishment() {
     return this.punishment;
   }
 
-  public void setPunishment(@NonNull final Punishment punishment) {
+  public void setPunishment(final @NonNull Punishment punishment) {
     this.punishment = Objects.requireNonNull(punishment);
   }
 }

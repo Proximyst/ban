@@ -28,20 +28,15 @@ import com.velocitypowered.api.event.connection.LoginEvent;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class BannedPlayerJoinSubscriber {
-  @NonNull
-  private final BanPlugin main;
-
-  @NonNull
-  private final PunishmentManager manager;
-
-  @NonNull
-  private final MessagesConfig messagesConfig;
+  private final @NonNull BanPlugin main;
+  private final @NonNull PunishmentManager manager;
+  private final @NonNull MessagesConfig messagesConfig;
 
   @Inject
   public BannedPlayerJoinSubscriber(
-      @NonNull final BanPlugin main,
-      @NonNull final PunishmentManager manager,
-      @NonNull final MessagesConfig messagesConfig
+      final @NonNull BanPlugin main,
+      final @NonNull PunishmentManager manager,
+      final @NonNull MessagesConfig messagesConfig
   ) {
     this.main = main;
     this.manager = manager;
@@ -49,7 +44,7 @@ public class BannedPlayerJoinSubscriber {
   }
 
   @Subscribe
-  public void onJoinServer(@NonNull final LoginEvent event) {
+  public void onJoinServer(final @NonNull LoginEvent event) {
     this.manager.getActiveBan(event.getPlayer().getUniqueId())
         .join() // This *should* be fast, and only on one player's connection thread
         .ifPresent(ban -> {

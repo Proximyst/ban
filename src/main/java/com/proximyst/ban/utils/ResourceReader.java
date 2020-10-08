@@ -39,8 +39,7 @@ public final class ResourceReader {
    * @param path The path on the classpath to read.
    * @return The read string.
    */
-  @NonNull
-  public static String readResource(@NonNull final String path) {
+  public static @NonNull String readResource(final @NonNull String path) {
     try (final InputStream stream = BanPlugin.class.getResourceAsStream("/" + path);
         final Reader reader = new InputStreamReader(stream)) {
       return CharStreams.toString(reader);

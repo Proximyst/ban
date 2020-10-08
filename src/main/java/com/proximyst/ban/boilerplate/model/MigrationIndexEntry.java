@@ -30,7 +30,7 @@ public final class MigrationIndexEntry {
 
   private @MonotonicNonNull String path;
 
-  public MigrationIndexEntry(final int version, @NonNull final String path) {
+  public MigrationIndexEntry(final int version, final @NonNull String path) {
     this.version = version;
     this.path = path;
   }

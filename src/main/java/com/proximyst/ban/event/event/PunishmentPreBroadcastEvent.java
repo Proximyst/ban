@@ -25,45 +25,37 @@ import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class PunishmentPreBroadcastEvent implements ResultedEvent<GenericResult> {
-  @NonNull
-  private final Punishment punishment;
-
-  @NonNull
-  private GenericResult result = GenericResult.allowed();
-
-  @NonNull
-  private Component message;
+  private final @NonNull Punishment punishment;
+  private @NonNull GenericResult result = GenericResult.allowed();
+  private @NonNull Component message;
 
   public PunishmentPreBroadcastEvent(
-      @NonNull final Punishment punishment,
-      @NonNull final Component message
+      final @NonNull Punishment punishment,
+      final @NonNull Component message
   ) {
     this.punishment = punishment;
     this.message = message;
   }
 
   @Override
-  @NonNull
-  public GenericResult getResult() {
+  public @NonNull GenericResult getResult() {
     return this.result;
   }
 
   @Override
-  public void setResult(@NonNull final GenericResult result) {
+  public void setResult(final @NonNull GenericResult result) {
     this.result = result;
   }
 
-  @NonNull
-  public Punishment getPunishment() {
+  public @NonNull Punishment getPunishment() {
     return this.punishment;
   }
 
-  @NonNull
-  public Component getMessage() {
+  public @NonNull Component getMessage() {
     return this.message;
   }
 
-  public void setMessage(@NonNull final Component message) {
+  public void setMessage(final @NonNull Component message) {
     this.message = message;
   }
 }

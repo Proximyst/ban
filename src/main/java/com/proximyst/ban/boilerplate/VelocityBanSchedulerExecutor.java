@@ -26,15 +26,14 @@ import org.checkerframework.checker.nullness.qual.NonNull;
  * A {@link Executor} that just defers to the Velocity scheduler using the plugin instance.
  */
 public final class VelocityBanSchedulerExecutor implements Executor {
-  @NonNull
-  private final BanPlugin main;
+  private final @NonNull BanPlugin main;
 
-  public VelocityBanSchedulerExecutor(@NonNull final BanPlugin main) {
+  public VelocityBanSchedulerExecutor(final @NonNull BanPlugin main) {
     this.main = main;
   }
 
   @Override
-  public void execute(@NonNull final Runnable command) {
+  public void execute(final @NonNull Runnable command) {
     this.main.getProxyServer().getScheduler().buildTask(this.main, command).schedule();
   }
 }

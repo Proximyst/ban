@@ -33,9 +33,9 @@ public final class ScheduledCommandExecutionCoordinator extends CommandExecution
   private final @NonNull CommandExecutionCoordinator<CommandSource> deferee;
 
   public ScheduledCommandExecutionCoordinator(
-      @NonNull final CommandTree<CommandSource> commandTree,
-      @NonNull final Executor executor,
-      @NonNull final CommandExecutionCoordinator<CommandSource> deferee
+      final @NonNull CommandTree<CommandSource> commandTree,
+      final @NonNull Executor executor,
+      final @NonNull CommandExecutionCoordinator<CommandSource> deferee
   ) {
     super(commandTree);
     this.executor = executor;
@@ -44,8 +44,8 @@ public final class ScheduledCommandExecutionCoordinator extends CommandExecution
 
   @Override
   public @NonNull CompletableFuture<CommandResult<@NonNull CommandSource>> coordinateExecution(
-      @NonNull final CommandContext<CommandSource> commandContext,
-      @NonNull final Queue<String> input
+      final @NonNull CommandContext<CommandSource> commandContext,
+      final @NonNull Queue<String> input
   ) {
     return CompletableFuture.supplyAsync(
         // CHECKSTYLE:OFF - FIXME
