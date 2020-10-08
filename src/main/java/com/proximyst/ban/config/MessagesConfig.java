@@ -43,6 +43,9 @@ public class MessagesConfig {
   public static class Errors {
     @Setting(comment = "The target player has no active ban.")
     public String noBan = "<red><gold><targetName></gold> has no active bans.";
+
+    @Setting(comment = "The target player has no active mute.")
+    public String noMute = "<red><gold><targetName></gold> has no active mutes.";
   }
 
   @ConfigSerializable

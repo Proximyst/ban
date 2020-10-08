@@ -27,6 +27,7 @@ public final class BanPermissions {
   public static final String COMMAND_UNBAN = BASE_COMMANDS + "unban";
   public static final String COMMAND_KICK = BASE_COMMANDS + "kick";
   public static final String COMMAND_MUTE = BASE_COMMANDS + "mute";
+  public static final String COMMAND_UNMUTE = BASE_COMMANDS + "unmute";
 
   public static final String NOTIFY_BAN = BASE_NOTIFY + "ban";
   public static final String NOTIFY_KICK = BASE_NOTIFY + "kick";
