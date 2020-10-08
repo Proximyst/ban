@@ -35,8 +35,8 @@ import java.util.function.BiFunction;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public final class PlayerArgument<C> extends CommandArgument<C, Player> {
-  private static final TypeToken<Player> PLAYER_TYPE_TOKEN = TypeToken.get(Player.class);
+public final class PlayerArgument<C> extends CommandArgument<C, @NonNull Player> {
+  private static final @NonNull TypeToken<@NonNull Player> PLAYER_TYPE_TOKEN = TypeToken.get(Player.class);
 
   private PlayerArgument(
       final boolean required,
@@ -76,7 +76,7 @@ public final class PlayerArgument<C> extends CommandArgument<C, Player> {
     return PlayerArgument.<C>newBuilder(name, plugin).asOptional().build();
   }
 
-  public static final class Builder<C> extends CommandArgument.Builder<C, Player> {
+  public static final class Builder<C> extends CommandArgument.Builder<C, @NonNull Player> {
     private final @NonNull BanPlugin banPlugin;
 
     public Builder(
@@ -99,7 +99,7 @@ public final class PlayerArgument<C> extends CommandArgument<C, Player> {
     }
   }
 
-  public static final class PlayerParser<C> implements ArgumentParser<C, Player> {
+  public static final class PlayerParser<C> implements ArgumentParser<C, @NonNull Player> {
     private final @NonNull ProxyServer proxyServer;
 
     public PlayerParser(final @NonNull ProxyServer proxyServer) {
@@ -107,7 +107,7 @@ public final class PlayerArgument<C> extends CommandArgument<C, Player> {
     }
 
     @Override
-    public @NonNull ArgumentParseResult<Player> parse(
+    public @NonNull ArgumentParseResult<@NonNull Player> parse(
         final @NonNull CommandContext<C> commandContext,
         final @NonNull Queue<String> inputQueue
     ) {
@@ -130,7 +130,6 @@ public final class PlayerArgument<C> extends CommandArgument<C, Player> {
 
         try {
           // We only want to make sure the UUID is valid here.
-          //noinspection ResultOfMethodCallIgnored
           final UUID uuid = UUID.fromString(input);
           player = this.proxyServer.getPlayer(uuid).orElse(null);
         } catch (final IllegalArgumentException ignored) {
@@ -149,23 +148,25 @@ public final class PlayerArgument<C> extends CommandArgument<C, Player> {
     }
 
     @Override
-    public @NonNull List<String> suggestions(
+    public @NonNull List<@NonNull String> suggestions(
         final @NonNull CommandContext<C> commandContext,
         final @NonNull String input
     ) {
       final String lowercaseInput = input.toLowerCase(Locale.ENGLISH).trim();
       final ImmutableList.Builder<String> builder = ImmutableList.builder();
+
       for (final Player player : this.proxyServer.getAllPlayers()) {
         if (lowercaseInput.isEmpty() || player.getUsername().toLowerCase(Locale.ENGLISH).startsWith(lowercaseInput)) {
           builder.add(player.getUsername());
         }
       }
+
       return builder.build();
     }
   }
 
   public static final class InvalidPlayerIdentifierException extends IllegalArgumentException {
-    public InvalidPlayerIdentifierException(@NonNull final String message) {
+    public InvalidPlayerIdentifierException(final @NonNull String message) {
       super(message);
     }
   }

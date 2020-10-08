@@ -64,6 +64,7 @@ import java.util.function.Function;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
+import org.checkerframework.checker.index.qual.NonNegative;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -80,21 +81,17 @@ import org.slf4j.Logger;
     authors = "Proximyst"
 )
 public class BanPlugin {
-  public static final String PLUGIN_ID = "ban";
-  public static final String PLUGIN_NAME = "ban";
-  public static final String PLUGIN_VERSION = "0.1.0";
-  public static final String PLUGIN_DESCRIPTION = "A simple punishment suite for Velocity.";
+  public static final @NonNull String PLUGIN_ID = "ban";
+  public static final @NonNull String PLUGIN_NAME = "ban";
+  public static final @NonNull String PLUGIN_VERSION = "0.1.0";
+  public static final @NonNull String PLUGIN_DESCRIPTION = "A simple punishment suite for Velocity.";
 
-  public static final Gson COMPACT_GSON = new Gson();
+  public static final @NonNull Gson COMPACT_GSON = new Gson();
 
   private final @NonNull ProxyServer proxyServer;
-
   private final @NonNull Logger logger;
-
   private final @NonNull Path dataDirectory;
-
   private final @NonNull Injector injector;
-
   private final @NonNull VelocityBanSchedulerExecutor schedulerExecutor;
 
   private @MonotonicNonNull ConfigurationNode rawConfigurationNode;
@@ -126,7 +123,7 @@ public class BanPlugin {
   }
 
   @Subscribe
-  public void onProxyInitialisation(final ProxyInitializeEvent event) {
+  public void onProxyInitialisation(final @NonNull ProxyInitializeEvent event) {
     if (!this.getProxyServer().getConfiguration().isOnlineMode()) {
       this.getLogger().error("This plugin cannot function on offline mode.");
       this.getLogger().error("This plugin depends on Mojang's API and the presence of online mode players.");
@@ -235,7 +232,7 @@ public class BanPlugin {
   }
 
   @Subscribe
-  public void onProxyShutdown(final ProxyShutdownEvent event) {
+  public void onProxyShutdown(final @NonNull ProxyShutdownEvent event) {
     final long start = System.currentTimeMillis();
     final TimeMeasurer tm = new TimeMeasurer(this.getLogger());
 
@@ -308,15 +305,15 @@ public class BanPlugin {
   }
 
   private static class TimeMeasurer {
-    private final Logger logger;
-    private long start;
-    private String current;
+    private final @NonNull Logger logger;
+    private @NonNegative long start;
+    private @MonotonicNonNull String current;
 
-    private TimeMeasurer(final Logger logger) {
+    private TimeMeasurer(final @NonNull Logger logger) {
       this.logger = logger;
     }
 
-    public void start(final String stage) {
+    public void start(final @NonNull String stage) {
       if (this.start != 0) {
         this.finish();
       }

@@ -49,7 +49,7 @@ public final class BanCommand extends BaseCommand {
         .handler(this::execute));
   }
 
-  private void execute(@NonNull final CommandContext<CommandSource> ctx) {
+  private void execute(final @NonNull CommandContext<CommandSource> ctx) {
     final BanUser target = ctx.get("target");
     final @Nullable String reason = ctx.getOrDefault("reason", null);
 

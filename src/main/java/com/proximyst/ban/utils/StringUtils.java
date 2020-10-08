@@ -25,30 +25,7 @@ public final class StringUtils {
     throw new IllegalAccessException(getClass().getSimpleName() + " cannot be instantiated.");
   }
 
-  @NonNull
-  public static String join(
-      @NonNull final String delimiter,
-      final int from,
-      @NonNull final String @NonNull ... strings
-  ) {
-    if (strings.length - 1 == from) {
-      return strings[strings.length - 1];
-    } else if (strings.length - 1 < from) {
-      throw new IllegalArgumentException("from > strings.length - 1");
-    }
-
-    final StringBuilder builder = new StringBuilder();
-    for (int i = from; i < strings.length; ++i) {
-      builder.append(strings[i]);
-      if (i != strings.length - 1) {
-        builder.append(delimiter);
-      }
-    }
-    return builder.toString();
-  }
-
-  @NonNull
-  public static String rehyphenUuid(@NonNull final String string) {
+  public static @NonNull String rehyphenUuid(final @NonNull String string) {
     if (string.length() == 32) {
       // No dashes, add them first.
       final StringBuilder builder = new StringBuilder(string);

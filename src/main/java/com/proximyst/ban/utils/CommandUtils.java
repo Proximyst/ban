@@ -29,13 +29,11 @@ public final class CommandUtils {
     throw new IllegalAccessException(getClass().getSimpleName() + " cannot be instantiated.");
   }
 
-  @NonNull
-  public static String getSourceName(@NonNull final CommandSource source) {
+  public static @NonNull String getSourceName(final @NonNull CommandSource source) {
     return source instanceof Player ? ((Player) source).getUsername() : BanUser.CONSOLE.getUsername();
   }
 
-  @NonNull
-  public static UUID getSourceUuid(@NonNull final CommandSource source) {
+  public static @NonNull UUID getSourceUuid(final @NonNull CommandSource source) {
     return source instanceof Player ? ((Player) source).getUniqueId() : BanUser.CONSOLE.getUuid();
   }
 }

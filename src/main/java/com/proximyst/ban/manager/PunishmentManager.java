@@ -139,7 +139,7 @@ public final class PunishmentManager {
           Module.immediatelyWrapping(list -> list == null ? ImmutableList.of() : ImmutableList.copyOf(list)))
       .build();
 
-  public PunishmentManager(@NonNull final BanPlugin main) {
+  public PunishmentManager(final @NonNull BanPlugin main) {
     this.main = main;
   }
 
@@ -147,14 +147,13 @@ public final class PunishmentManager {
    * @param target The target whose punishments are requested.
    * @return An immutable copy of the punishments of the player where order is not guaranteed.
    */
-  @NonNull
-  public CompletableFuture<@NonNull ImmutableList<@NonNull Punishment>> getPunishments(@NonNull final UUID target) {
+  public @NonNull CompletableFuture<@NonNull ImmutableList<@NonNull Punishment>> getPunishments(
+      final @NonNull UUID target) {
     return this.retrievePunishmentsPipeline.pump(target)
         .thenApply(result -> result.asOptional().orElseGet(ImmutableList::of));
   }
 
-  @NonNull
-  public CompletableFuture<@NonNull Optional<@NonNull Punishment>> getActiveBan(@NonNull final UUID target) {
+  public @NonNull CompletableFuture<@NonNull Optional<@NonNull Punishment>> getActiveBan(final @NonNull UUID target) {
     return this.getPunishments(target)
         .thenApply(list -> list.stream()
             .filter(punishment -> punishment.getPunishmentType() == PunishmentType.BAN
@@ -163,8 +162,7 @@ public final class PunishmentManager {
         );
   }
 
-  @NonNull
-  public CompletableFuture<@NonNull Optional<@NonNull Punishment>> getActiveMute(@NonNull final UUID target) {
+  public @NonNull CompletableFuture<@NonNull Optional<@NonNull Punishment>> getActiveMute(final @NonNull UUID target) {
     return this.getPunishments(target)
         .thenApply(list -> list.stream()
             .filter(punishment -> punishment.getPunishmentType() == PunishmentType.MUTE
@@ -173,26 +171,22 @@ public final class PunishmentManager {
         );
   }
 
-  @NonNull
-  public CompletableFuture<@NonNull PipeResult<@NonNull Punishment>> addPunishment(
+  public @NonNull CompletableFuture<@NonNull PipeResult<@NonNull Punishment>> addPunishment(
       @NonNull final PunishmentBuilder builder
   ) {
     // We don't care about the pipe this errs in, so we just do #getResult
     return this.addPunishmentPipeline.pump(builder).thenApply(NamedPipeResult::getResult);
   }
 
-  @NonNull
-  private BanPlugin getMain() {
+  private @NonNull BanPlugin getMain() {
     return this.main;
   }
 
-  @NonNull
-  private IDataInterface getDataInterface() {
+  private @NonNull IDataInterface getDataInterface() {
     return this.getMain().getDataInterface();
   }
 
-  @NonNull
-  private LoadingCache<@NonNull UUID, @NonNull List<@NonNull Punishment>> getPunishmentCache() {
+  private @NonNull LoadingCache<@NonNull UUID, @NonNull List<@NonNull Punishment>> getPunishmentCache() {
     return this.punishmentCache;
   }
 }

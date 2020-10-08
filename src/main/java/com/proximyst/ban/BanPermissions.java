@@ -18,17 +18,20 @@
 
 package com.proximyst.ban;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+
+@NonNull
 public final class BanPermissions {
   private static final String BASE = "ban.";
-  private static final String BASE_COMMANDS = BASE + "commands.";
-  private static final String BASE_NOTIFY = BASE + "notify.";
 
+  private static final String BASE_COMMANDS = BASE + "commands.";
   public static final String COMMAND_BAN = BASE_COMMANDS + "ban";
   public static final String COMMAND_UNBAN = BASE_COMMANDS + "unban";
   public static final String COMMAND_KICK = BASE_COMMANDS + "kick";
   public static final String COMMAND_MUTE = BASE_COMMANDS + "mute";
   public static final String COMMAND_UNMUTE = BASE_COMMANDS + "unmute";
 
+  private static final String BASE_NOTIFY = BASE + "notify.";
   public static final String NOTIFY_BAN = BASE_NOTIFY + "ban";
   public static final String NOTIFY_KICK = BASE_NOTIFY + "kick";
   public static final String NOTIFY_MUTE = BASE_NOTIFY + "mute";

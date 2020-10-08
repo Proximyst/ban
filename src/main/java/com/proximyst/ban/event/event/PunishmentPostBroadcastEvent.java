@@ -25,32 +25,27 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class PunishmentPostBroadcastEvent {
-  @NonNull
-  private final Punishment punishment;
-
-  @NonNull
-  private final Component message;
+  private final @NonNull Punishment punishment;
+  private final @NonNull Component message;
 
   public PunishmentPostBroadcastEvent(
-      @NonNull final Punishment punishment,
-      @NonNull final Component message
+      final @NonNull Punishment punishment,
+      final @NonNull Component message
   ) {
     this.punishment = punishment;
     this.message = message;
   }
 
-  @NonNull
-  public Punishment getPunishment() {
+  public @NonNull Punishment getPunishment() {
     return this.punishment;
   }
 
-  @NonNull
-  public Component getMessage() {
+  public @NonNull Component getMessage() {
     return this.message;
   }
 
   @Override
-  public boolean equals(@Nullable final Object o) {
+  public boolean equals(final @Nullable Object o) {
     if (this == o) {
       return true;
     }

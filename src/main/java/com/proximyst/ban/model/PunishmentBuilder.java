@@ -36,65 +36,47 @@ public final class PunishmentBuilder {
   private long time = System.currentTimeMillis();
   private long duration = 0;
 
-  @NonNull
-  @This
-  public PunishmentBuilder id(final long id) {
+  public @NonNull @This PunishmentBuilder id(final long id) {
     this.id = id;
     return this;
   }
 
-  @NonNull
-  @This
-  public PunishmentBuilder type(@NonNull final PunishmentType punishmentType) {
+  public @NonNull @This PunishmentBuilder type(final @NonNull PunishmentType punishmentType) {
     this.punishmentType = punishmentType;
     return this;
   }
 
-  @NonNull
-  @This
-  public PunishmentBuilder target(@NonNull final UUID target) {
+  public @NonNull @This PunishmentBuilder target(final @NonNull UUID target) {
     this.target = target;
     return this;
   }
 
-  @NonNull
-  @This
-  public PunishmentBuilder punisher(@NonNull final UUID punisher) {
+  public @NonNull @This PunishmentBuilder punisher(final @NonNull UUID punisher) {
     this.punisher = punisher;
     return this;
   }
 
-  @NonNull
-  @This
-  public PunishmentBuilder reason(@Nullable final String reason) {
+  public @NonNull @This PunishmentBuilder reason(final @Nullable String reason) {
     this.reason = reason;
     return this;
   }
 
-  @NonNull
-  @This
-  public PunishmentBuilder lifted(final boolean lifted) {
+  public @NonNull @This PunishmentBuilder lifted(final boolean lifted) {
     this.lifted = lifted;
     return this;
   }
 
-  @NonNull
-  @This
-  public PunishmentBuilder liftedBy(@Nullable final UUID liftedBy) {
+  public @NonNull @This PunishmentBuilder liftedBy(final @Nullable UUID liftedBy) {
     this.liftedBy = liftedBy;
     return this;
   }
 
-  @NonNull
-  @This
-  public PunishmentBuilder time(final long time) {
+  public @NonNull @This PunishmentBuilder time(final long time) {
     this.time = time;
     return this;
   }
 
-  @NonNull
-  @This
-  public PunishmentBuilder duration(final long duration) {
+  public @NonNull @This PunishmentBuilder duration(final long duration) {
     if (duration == 0L) {
       return this.duration(-1L);
     }
@@ -103,9 +85,8 @@ public final class PunishmentBuilder {
     return this;
   }
 
-  @NonNull
   @RequiresNonNull({"target", "punisher", "punishmentType"})
-  public Punishment build() {
+  public @NonNull Punishment build() {
     return new Punishment(
         this.id,
         this.punishmentType,

@@ -25,18 +25,17 @@ import com.velocitypowered.api.event.connection.LoginEvent;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class CacheUpdatePlayerJoinSubscriber {
-  @NonNull
-  private final UserManager userManager;
+  private final @NonNull UserManager userManager;
 
   @Inject
   public CacheUpdatePlayerJoinSubscriber(
-      @NonNull final UserManager userManager
+      final @NonNull UserManager userManager
   ) {
     this.userManager = userManager;
   }
 
   @Subscribe
-  public void onJoinServer(@NonNull final LoginEvent event) {
+  public void onJoinServer(final @NonNull LoginEvent event) {
     this.userManager.updateUser(event.getPlayer().getUniqueId());
   }
 }

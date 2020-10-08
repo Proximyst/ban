@@ -67,7 +67,7 @@ public enum PunishmentType {
   /**
    * All {@link PunishmentType}s by their IDs.
    */
-  private static final Map<Byte, PunishmentType> PUNISHMENT_TYPES_BY_ID = new HashMap<>();
+  private static final @NonNull Map<@NonNull Byte, @NonNull PunishmentType> PUNISHMENT_TYPES_BY_ID = new HashMap<>();
 
   static {
     for (final PunishmentType type : values()) {
@@ -114,8 +114,7 @@ public enum PunishmentType {
    * @param id The ID of the punishment type.
    * @return An {@link Optional} possibly containing a {@link PunishmentType}.
    */
-  @NonNull
-  public static Optional<@NonNull PunishmentType> getById(final byte id) {
+  public static @NonNull Optional<@NonNull PunishmentType> getById(final byte id) {
     return Optional.ofNullable(PUNISHMENT_TYPES_BY_ID.get(id));
   }
 

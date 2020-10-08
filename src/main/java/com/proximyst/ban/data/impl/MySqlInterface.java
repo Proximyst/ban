@@ -49,16 +49,12 @@ import org.slf4j.Logger;
  */
 @Singleton
 public class MySqlInterface implements IDataInterface {
-  @NonNull
-  private static final String PATH = "sql/mysql/";
+  private static final @NonNull String PATH = "sql/mysql/";
 
-  @NonNull
-  private final Logger logger;
+  private final @NonNull Logger logger;
+  private final @NonNull Jdbi jdbi;
 
-  @NonNull
-  private final Jdbi jdbi;
-
-  public MySqlInterface(@NonNull final Logger logger, @NonNull final Jdbi jdbi) {
+  public MySqlInterface(final @NonNull Logger logger, final @NonNull Jdbi jdbi) {
     this.logger = logger;
     this.jdbi = jdbi;
   }
@@ -100,8 +96,7 @@ public class MySqlInterface implements IDataInterface {
   }
 
   @Override
-  @NonNull
-  public List<Punishment> getPunishmentsForTarget(@NonNull final UUID target) {
+  public @NonNull List<@NonNull Punishment> getPunishmentsForTarget(final @NonNull UUID target) {
     return this.jdbi.withHandle(handle ->
         handle.createQuery(SqlQueries.SELECT_PUNISHMENTS_BY_TARGET.getQuery())
             .bind(0, target)
@@ -113,7 +108,7 @@ public class MySqlInterface implements IDataInterface {
   }
 
   @Override
-  public void addPunishment(@NonNull final Punishment punishment) {
+  public void addPunishment(final @NonNull Punishment punishment) {
     this.jdbi.useHandle(handle -> {
       handle.execute(
           SqlQueries.CREATE_PUNISHMENT.getQuery(),
@@ -141,7 +136,7 @@ public class MySqlInterface implements IDataInterface {
   }
 
   @Override
-  public void liftPunishment(@NonNull final Punishment punishment) {
+  public void liftPunishment(final @NonNull Punishment punishment) {
     // Stay boxed to avoid an allocation.
     final Long id = punishment.getId()
         .orElseThrow(() -> new IllegalArgumentException("Punishment must be in DB before lifting"));
@@ -156,8 +151,7 @@ public class MySqlInterface implements IDataInterface {
   }
 
   @Override
-  @NonNull
-  public Optional<@NonNull BanUser> getUser(@NonNull final UUID uuid) {
+  public @NonNull Optional<@NonNull BanUser> getUser(final @NonNull UUID uuid) {
     return this.jdbi.withHandle(handle -> {
       final UsernameHistory history = new UsernameHistory(
           uuid,
@@ -180,8 +174,7 @@ public class MySqlInterface implements IDataInterface {
   }
 
   @Override
-  @NonNull
-  public Optional<@NonNull BanUser> getUser(@NonNull final String username) {
+  public @NonNull Optional<@NonNull BanUser> getUser(final @NonNull String username) {
     return this.jdbi.withHandle(handle -> {
       final Pair<UUID, String> user = handle.createQuery(SqlQueries.SELECT_USER_BY_USERNAME.getQuery())
           .bind(0, username)
@@ -213,8 +206,7 @@ public class MySqlInterface implements IDataInterface {
   }
 
   @Override
-  @NonNull
-  public Optional<@NonNull Long> getUserCacheDate(@NonNull final UUID uuid) {
+  public @NonNull Optional<@NonNull Long> getUserCacheDate(final @NonNull UUID uuid) {
     return this.jdbi.withHandle(handle ->
         handle.createQuery(SqlQueries.SELECT_USER_BY_UUID.getQuery())
             .bind(0, uuid)
@@ -226,7 +218,7 @@ public class MySqlInterface implements IDataInterface {
   }
 
   @Override
-  public void saveUser(@NonNull final BanUser user) {
+  public void saveUser(final @NonNull BanUser user) {
     if (user == BanUser.CONSOLE) {
       return;
     }
@@ -265,10 +257,9 @@ public class MySqlInterface implements IDataInterface {
     SAVE_USER_NAME("save-user-name"),
     ;
 
-    @NonNull
-    private final String query;
+    private final @NonNull String query;
 
-    SqlQueries(@NonNull final String name) {
+    SqlQueries(final @NonNull String name) {
       this.query = ResourceReader.readResource(PATH + name + ".sql");
     }
 
@@ -277,8 +268,7 @@ public class MySqlInterface implements IDataInterface {
      *
      * @return The query for this enumeration.
      */
-    @NonNull
-    public String getQuery() {
+    public @NonNull String getQuery() {
       return this.query;
     }
 
@@ -287,8 +277,7 @@ public class MySqlInterface implements IDataInterface {
      *
      * @return The queries for this enumeration.
      */
-    @NonNull
-    public String @NonNull [] getQueries() {
+    public @NonNull String @NonNull [] getQueries() {
       return this.getQuery().split(";");
     }
 
@@ -297,7 +286,7 @@ public class MySqlInterface implements IDataInterface {
      *
      * @param consumer The {@link SqlConsumer} to apply to each query.
      */
-    public void forEachQuery(@NonNull final SqlConsumer consumer) {
+    public void forEachQuery(final @NonNull SqlConsumer consumer) {
       for (final String query : this.getQueries()) {
         if (query.trim().isEmpty()) {
           continue;
@@ -310,7 +299,7 @@ public class MySqlInterface implements IDataInterface {
     @FunctionalInterface
     public interface SqlConsumer extends Consumer<@NonNull String> {
       @Override
-      default void accept(@NonNull String s) {
+      default void accept(final @NonNull String s) {
         try {
           this.apply(s);
         } catch (SQLException ex) {
@@ -318,7 +307,7 @@ public class MySqlInterface implements IDataInterface {
         }
       }
 
-      void apply(@NonNull String query) throws SQLException;
+      void apply(final @NonNull String query) throws SQLException;
     }
   }
 }

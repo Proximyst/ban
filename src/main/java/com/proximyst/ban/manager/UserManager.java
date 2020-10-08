@@ -29,16 +29,14 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 
 @Singleton
 public final class UserManager {
-  @NonNull
-  private final BanPlugin main;
+  private final @NonNull BanPlugin main;
 
-  public UserManager(@NonNull final BanPlugin main) {
+  public UserManager(final @NonNull BanPlugin main) {
     this.main = main;
   }
 
   @SuppressWarnings("DuplicatedCode")
-  @NonNull
-  public CompletableFuture<@NonNull Optional<@NonNull BanUser>> getUser(@NonNull final UUID uuid) {
+  public @NonNull CompletableFuture<@NonNull Optional<@NonNull BanUser>> getUser(final @NonNull UUID uuid) {
     if (uuid == BanUser.CONSOLE.getUuid()) {
       return CompletableFuture.completedFuture(Optional.of(BanUser.CONSOLE));
     }
@@ -64,8 +62,7 @@ public final class UserManager {
   }
 
   @SuppressWarnings("DuplicatedCode")
-  @NonNull
-  public CompletableFuture<@NonNull Optional<@NonNull BanUser>> getUser(@NonNull final String name) {
+  public @NonNull CompletableFuture<@NonNull Optional<@NonNull BanUser>> getUser(final @NonNull String name) {
     final CompletableFuture<Optional<@NonNull BanUser>> future = CompletableFuture
         .supplyAsync(() -> this.main.getDataInterface().getUser(name), this.main.getSchedulerExecutor());
     return future.thenCompose(user -> {
@@ -86,7 +83,7 @@ public final class UserManager {
     });
   }
 
-  public void scheduleUpdateIfNecessary(@NonNull final UUID uuid) {
+  public void scheduleUpdateIfNecessary(final @NonNull UUID uuid) {
     this.main.getProxyServer().getScheduler()
         .buildTask(this.main, () -> {
           final long lastUpdate = this.main.getDataInterface().getUserCacheDate(uuid).orElse(0L);
@@ -97,8 +94,7 @@ public final class UserManager {
         .schedule();
   }
 
-  @NonNull
-  public CompletableFuture<@NonNull Optional<@NonNull BanUser>> updateUser(@NonNull final UUID identifier) {
+  public @NonNull CompletableFuture<@NonNull Optional<@NonNull BanUser>> updateUser(final @NonNull UUID identifier) {
     return this.main.getMojangApi().getUser(identifier).getOrLoad()
         .thenApply(optionalUser -> {
           optionalUser.ifPresent(fetchedUser -> {

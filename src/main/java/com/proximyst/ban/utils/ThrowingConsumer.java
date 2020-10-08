@@ -23,13 +23,13 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 
 @FunctionalInterface
 public interface ThrowingConsumer<T, E extends Exception> {
-  void accept(@NonNull T input) throws E;
+  void accept(final T input) throws E;
 
-  default Consumer<T> toConsumer() {
+  default @NonNull Consumer<T> toConsumer() {
     return input -> {
       try {
         this.accept(input);
-      } catch (Exception ex) {
+      } catch (final Exception ex) {
         ThrowableUtils.sneakyThrow(ex);
       }
     };

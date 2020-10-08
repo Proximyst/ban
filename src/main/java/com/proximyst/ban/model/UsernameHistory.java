@@ -30,13 +30,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jdbi.v3.core.result.RowView;
 
 public final class UsernameHistory {
-  @NonNull
-  private final UUID uuid;
+  private final @NonNull UUID uuid;
+  private final @NonNull ImmutableList<@NonNull Entry> entries;
 
-  @NonNull
-  private final ImmutableList<@NonNull Entry> entries;
-
-  public UsernameHistory(@NonNull final UUID uuid, @NonNull final Iterable<? extends UsernameHistory.Entry> entries) {
+  public UsernameHistory(final @NonNull UUID uuid, final @NonNull Iterable<? extends UsernameHistory.Entry> entries) {
     this.uuid = uuid;
     this.entries = ImmutableList.sortedCopyOf(
         Comparator.comparingLong(entry -> entry
@@ -48,13 +45,12 @@ public final class UsernameHistory {
     );
   }
 
-  @NonNull
-  public ImmutableList<@NonNull Entry> getEntries() {
+  public @NonNull ImmutableList<@NonNull Entry> getEntries() {
     return this.entries;
   }
 
   @Override
-  public String toString() {
+  public @NonNull String toString() {
     return "UsernameHistory{" +
         "uuid=" + this.uuid +
         ", entries=" + this.entries +
@@ -62,7 +58,7 @@ public final class UsernameHistory {
   }
 
   @Override
-  public boolean equals(@Nullable final Object o) {
+  public boolean equals(final @Nullable Object o) {
     if (this == o) {
       return true;
     }
@@ -80,19 +76,15 @@ public final class UsernameHistory {
   }
 
   public static class Entry {
-    @NonNull
-    private final String username;
+    private final @NonNull String username;
+    private final @Nullable Date changedAt;
 
-    @Nullable
-    private final Date changedAt;
-
-    public Entry(@NonNull final String username, @Nullable final Date changedAt) {
+    public Entry(final @NonNull String username, final @Nullable Date changedAt) {
       this.username = username;
       this.changedAt = changedAt;
     }
 
-    @NonNull
-    public static Entry fromRow(@NonNull final RowView view) {
+    public static @NonNull Entry fromRow(final @NonNull RowView view) {
       return new Entry(
           view.getColumn("username", String.class),
           Optional.ofNullable(view.getColumn("timestamp", Timestamp.class))
@@ -101,13 +93,11 @@ public final class UsernameHistory {
       );
     }
 
-    @NonNull
-    public String getUsername() {
+    public @NonNull String getUsername() {
       return this.username;
     }
 
-    @NonNull
-    public Optional<Date> getChangedAt() {
+    public @NonNull Optional<@NonNull Date> getChangedAt() {
       return Optional.ofNullable(this.changedAt);
     }
 
@@ -116,7 +106,7 @@ public final class UsernameHistory {
     }
 
     @Override
-    public boolean equals(@Nullable final Object o) {
+    public boolean equals(final @Nullable Object o) {
       if (this == o) {
         return true;
       }
@@ -134,7 +124,7 @@ public final class UsernameHistory {
     }
 
     @Override
-    public String toString() {
+    public @NonNull String toString() {
       return "Entry{" +
           "username='" + this.username + '\'' +
           ", changedAt=" + this.changedAt +

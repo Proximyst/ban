@@ -32,8 +32,7 @@ public final class HttpUtils {
     throw new IllegalAccessException(getClass().getSimpleName() + " cannot be instantiated.");
   }
 
-  @NonNull
-  public static Optional<String> get(@NonNull final String url) {
+  public static @NonNull Optional<@NonNull String> get(final @NonNull String url) {
     try {
       final URL u = new URL(url);
       final HttpURLConnection conn = (HttpURLConnection) u.openConnection();

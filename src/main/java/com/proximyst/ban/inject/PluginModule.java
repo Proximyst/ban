@@ -31,10 +31,9 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.slf4j.Logger;
 
 public final class PluginModule extends AbstractModule {
-  @NonNull
-  private final BanPlugin main;
+  private final @NonNull BanPlugin main;
 
-  public PluginModule(@NonNull final BanPlugin main) {
+  public PluginModule(final @NonNull BanPlugin main) {
     this.main = main;
   }
 

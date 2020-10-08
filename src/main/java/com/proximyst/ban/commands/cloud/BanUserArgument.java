@@ -37,8 +37,8 @@ import java.util.function.BiFunction;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public final class BanUserArgument<C> extends CommandArgument<C, BanUser> {
-  private static final TypeToken<BanUser> BAN_USER_TYPE_TOKEN = TypeToken.get(BanUser.class);
+public final class BanUserArgument<C> extends CommandArgument<C, @NonNull BanUser> {
+  private static final @NonNull TypeToken<BanUser> BAN_USER_TYPE_TOKEN = TypeToken.get(BanUser.class);
 
   private BanUserArgument(
       final boolean required,
@@ -78,7 +78,7 @@ public final class BanUserArgument<C> extends CommandArgument<C, BanUser> {
     return BanUserArgument.<C>newBuilder(name, plugin).asOptional().build();
   }
 
-  public static final class Builder<C> extends CommandArgument.Builder<C, BanUser> {
+  public static final class Builder<C> extends CommandArgument.Builder<C, @NonNull BanUser> {
     private final @NonNull BanPlugin banPlugin;
 
     public Builder(
@@ -157,17 +157,19 @@ public final class BanUserArgument<C> extends CommandArgument<C, BanUser> {
     ) {
       final String lowercaseInput = input.toLowerCase(Locale.ENGLISH).trim();
       final ImmutableList.Builder<String> builder = ImmutableList.builder();
+
       for (final Player player : this.proxyServer.getAllPlayers()) {
         if (lowercaseInput.isEmpty() || player.getUsername().toLowerCase(Locale.ENGLISH).startsWith(lowercaseInput)) {
           builder.add(player.getUsername());
         }
       }
+
       return builder.build();
     }
   }
 
   public static final class InvalidPlayerIdentifierException extends IllegalArgumentException {
-    public InvalidPlayerIdentifierException(@NonNull final String message) {
+    public InvalidPlayerIdentifierException(final @NonNull String message) {
       super(message);
     }
   }

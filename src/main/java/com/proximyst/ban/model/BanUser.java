@@ -26,47 +26,37 @@ public final class BanUser {
   /**
    * The UUID used for the console in data storage.
    */
-  @NonNull
-  private static final UUID CONSOLE_UUID = new UUID(0, 0);
+  private static final @NonNull UUID CONSOLE_UUID = new UUID(0, 0);
 
-  @NonNull
-  public static final BanUser CONSOLE = new BanUser(
+  public static final @NonNull BanUser CONSOLE = new BanUser(
       CONSOLE_UUID,
       "CONSOLE",
       new UsernameHistory(CONSOLE_UUID, Collections.emptyList())
   );
 
-  @NonNull
-  private final UUID uuid;
-
-  @NonNull
-  private final String username;
-
-  @NonNull
-  private final UsernameHistory usernameHistory;
+  private final @NonNull UUID uuid;
+  private final @NonNull String username;
+  private final @NonNull UsernameHistory usernameHistory;
 
   public BanUser(
-      @NonNull final UUID uuid,
-      @NonNull final String username,
-      @NonNull final UsernameHistory usernameHistory
+      final @NonNull UUID uuid,
+      final @NonNull String username,
+      final @NonNull UsernameHistory usernameHistory
   ) {
     this.uuid = uuid;
     this.username = username;
     this.usernameHistory = usernameHistory;
   }
 
-  @NonNull
-  public UUID getUuid() {
+  public @NonNull UUID getUuid() {
     return this.uuid;
   }
 
-  @NonNull
-  public String getUsername() {
+  public @NonNull String getUsername() {
     return this.username;
   }
 
-  @NonNull
-  public UsernameHistory getUsernameHistory() {
+  public @NonNull UsernameHistory getUsernameHistory() {
     return this.usernameHistory;
   }
 }

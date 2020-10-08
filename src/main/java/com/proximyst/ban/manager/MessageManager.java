@@ -36,22 +36,18 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 
 @Singleton
 public final class MessageManager {
-  @NonNull
-  private final BanPlugin main;
-
-  @NonNull
-  private final MessagesConfig cfg;
+  private final @NonNull BanPlugin main;
+  private final @NonNull MessagesConfig cfg;
 
   public MessageManager(
-      @NonNull final BanPlugin main,
-      @NonNull final MessagesConfig cfg
+      final @NonNull BanPlugin main,
+      final @NonNull MessagesConfig cfg
   ) {
     this.main = main;
     this.cfg = cfg;
   }
 
-  @NonNull
-  public Optional<@NonNull String> getNotificationPermissionOf(@NonNull final PunishmentType type) {
+  public @NonNull Optional<@NonNull String> getNotificationPermissionOf(final @NonNull PunishmentType type) {
     switch (type) {
       case BAN:
         return Optional.of(BanPermissions.NOTIFY_BAN);
@@ -69,9 +65,9 @@ public final class MessageManager {
     }
   }
 
-  @NonNull
-  public CompletableFuture<@NonNull Optional<@NonNull Component>> notificationMessage(
-      @NonNull final Punishment punishment) {
+  public @NonNull CompletableFuture<@NonNull Optional<@NonNull Component>> notificationMessage(
+      @NonNull final Punishment punishment
+  ) {
     String message = null;
     switch (punishment.getPunishmentType()) {
       case BAN:
@@ -120,8 +116,7 @@ public final class MessageManager {
         .thenApply(Optional::of);
   }
 
-  @NonNull
-  public Component errorNoBan(@NonNull final BanUser user) {
+  public @NonNull Component errorNoBan(final @NonNull BanUser user) {
     return MiniMessage.get().parse(
         this.cfg.errors.noBan,
 
@@ -130,8 +125,7 @@ public final class MessageManager {
     );
   }
 
-  @NonNull
-  public Component errorNoMute(@NonNull final BanUser user) {
+  public @NonNull Component errorNoMute(final @NonNull BanUser user) {
     return MiniMessage.get().parse(
         this.cfg.errors.noMute,
 
@@ -140,10 +134,9 @@ public final class MessageManager {
     );
   }
 
-  @NonNull
-  public CompletableFuture<@NonNull Component> formatMessageWith(
-      @NonNull final String message,
-      @NonNull final Punishment punishment
+  public @NonNull CompletableFuture<@NonNull Component> formatMessageWith(
+      final @NonNull String message,
+      final @NonNull Punishment punishment
   ) {
     return this.main.getUserManager().getUser(punishment.getTarget())
         .thenApply(opt ->
@@ -162,12 +155,11 @@ public final class MessageManager {
         );
   }
 
-  @NonNull
-  public Component formatMessageWith(
-      @NonNull final Punishment punishment,
-      @NonNull final String message,
-      @NonNull final BanUser punisher,
-      @NonNull final BanUser target
+  public @NonNull Component formatMessageWith(
+      final @NonNull Punishment punishment,
+      final @NonNull String message,
+      final @NonNull BanUser punisher,
+      final @NonNull BanUser target
   ) {
     return MiniMessage.get()
         .parse(

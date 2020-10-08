@@ -25,12 +25,8 @@ import ninja.leaping.configurate.transformation.ConfigurationTransformation;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public final class ConfigUtil {
-  private static final ObjectMapper<Configuration> OBJECT_MAPPER;
+  private static final @NonNull ObjectMapper<@NonNull Configuration> OBJECT_MAPPER;
   private static final int VERSION = -1;
-
-  private ConfigUtil() throws IllegalAccessException {
-    throw new IllegalAccessException(this.getClass().getSimpleName() + " cannot be instantiated.");
-  }
 
   static {
     try {
@@ -40,8 +36,11 @@ public final class ConfigUtil {
     }
   }
 
-  @NonNull
-  public static Configuration loadConfiguration(@NonNull final ConfigurationNode node)
+  private ConfigUtil() throws IllegalAccessException {
+    throw new IllegalAccessException(this.getClass().getSimpleName() + " cannot be instantiated.");
+  }
+
+  public static @NonNull Configuration loadConfiguration(final @NonNull ConfigurationNode node)
       throws ObjectMappingException {
     if (!node.isVirtual()) {
       // https://github.com/SpongePowered/Configurate/blob/3.x/configurate-examples/src/main/java/ninja/leaping/configurate/examples/Transformations.java
@@ -56,8 +55,8 @@ public final class ConfigUtil {
   }
 
   public static void saveConfiguration(
-      @NonNull final Configuration configuration,
-      @NonNull final ConfigurationNode node
+      final @NonNull Configuration configuration,
+      final @NonNull ConfigurationNode node
   ) throws ObjectMappingException {
     OBJECT_MAPPER.bind(configuration).serialize(node);
   }

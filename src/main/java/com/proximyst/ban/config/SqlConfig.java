@@ -20,6 +20,7 @@ package com.proximyst.ban.config;
 
 import ninja.leaping.configurate.objectmapping.Setting;
 import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
+import org.checkerframework.checker.index.qual.Positive;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 @SuppressWarnings("FieldMayBeFinal")
@@ -36,5 +37,5 @@ public final class SqlConfig {
   public String password = "";
 
   @Setting(comment = "The max connections to have open in the pool.")
-  public int maxConnections = 10;
+  public @Positive int maxConnections = 10;
 }
