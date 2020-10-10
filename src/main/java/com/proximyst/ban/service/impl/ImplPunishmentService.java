@@ -133,6 +133,7 @@ public final class ImplPunishmentService implements IPunishmentService {
       case KICK:
         bypassPermission = BanPermissions.BYPASS_KICK;
         break;
+      default:
     }
     if (bypassPermission != null && target.hasPermission(bypassPermission)) {
       // Don't apply the punishment; they can bypass it.
