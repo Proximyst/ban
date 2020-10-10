@@ -47,6 +47,7 @@ public final class BanPermissions {
   public static final String BYPASS_LOCKDOWN = BASE_BYPASS + "lockdown";
   public static final String BYPASS_BAN = BASE_BYPASS + "ban";
   public static final String BYPASS_KICK = BASE_BYPASS + "kick";
+  public static final String BYPASS_MUTE = BASE_BYPASS + "mute";
 
   private BanPermissions() throws IllegalAccessException {
     throw new IllegalAccessException(getClass().getSimpleName() + " cannot be instantiated.");
