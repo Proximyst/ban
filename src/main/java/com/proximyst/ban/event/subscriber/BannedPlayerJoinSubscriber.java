@@ -19,6 +19,7 @@
 package com.proximyst.ban.event.subscriber;
 
 import com.google.inject.Inject;
+import com.proximyst.ban.BanPermissions;
 import com.proximyst.ban.config.MessagesConfig;
 import com.proximyst.ban.service.IMessageService;
 import com.proximyst.ban.service.IPunishmentService;
@@ -43,6 +44,11 @@ public class BannedPlayerJoinSubscriber {
 
   @Subscribe
   public void onJoinServer(final @NonNull LoginEvent event) {
+    if (event.getPlayer().hasPermission(BanPermissions.BYPASS_BAN)) {
+      // Don't bother to check players who can bypass bans.
+      return;
+    }
+
     this.punishmentService.getActiveBan(event.getPlayer().getUniqueId())
         .join() // This *should* be fast, and only on one player's connection thread
         .ifPresent(ban -> {
