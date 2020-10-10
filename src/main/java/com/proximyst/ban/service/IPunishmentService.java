@@ -58,6 +58,15 @@ public interface IPunishmentService {
    */
   @NonNull CompletableFuture<@Nullable Void> savePunishment(final @NonNull Punishment punishment);
 
+  /**
+   * Apply the punishment to the target if they are online.
+   * <p>
+   * This is only useful for {@link PunishmentType#BAN bans} and {@link PunishmentType#KICK kicks}.
+   *
+   * @param punishment The punishment to apply.
+   */
+  @NonNull CompletableFuture<@Nullable Void> applyPunishment(final @NonNull Punishment punishment);
+
   default @NonNull CompletableFuture<@NonNull Optional<@NonNull Punishment>> getActiveBan(@NonNull final UUID target) {
     return this.getPunishments(target)
         .thenApply(list -> list.stream()

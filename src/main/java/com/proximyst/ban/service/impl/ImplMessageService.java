@@ -106,6 +106,28 @@ public final class ImplMessageService implements IMessageService {
   }
 
   @Override
+  public @NonNull CompletableFuture<@NonNull Component> formatApplication(final @NonNull Punishment punishment) {
+    final boolean hasReason = punishment.getReason().isPresent();
+    String message;
+    switch (punishment.getPunishmentType()) {
+      case KICK:
+        message = hasReason ? this.cfg.applications.kickReason : this.cfg.applications.kickReasonless;
+        break;
+      case BAN:
+        message = hasReason ? this.cfg.applications.banReason : this.cfg.applications.banReasonless;
+        break;
+      case MUTE:
+        message = hasReason ? this.cfg.applications.muteReason : this.cfg.applications.muteReasonless;
+        break;
+
+      default:
+        return CompletableFuture.completedFuture(Component.empty());
+    }
+
+    return formatMessageWith(message, punishment);
+  }
+
+  @Override
   public @NonNull CompletableFuture<@NonNull Component> formatMessageWith(
       final @NonNull String message,
       final @NonNull Punishment punishment) {

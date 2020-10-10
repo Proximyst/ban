@@ -71,6 +71,7 @@ public final class BanCommand extends BaseCommand {
             .reason(reason)
             .build();
     this.punishmentService.savePunishment(punishment);
+    this.punishmentService.applyPunishment(punishment);
     this.messageService.announceNewPunishment(punishment);
   }
 }

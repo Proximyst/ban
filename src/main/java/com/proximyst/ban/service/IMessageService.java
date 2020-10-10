@@ -34,6 +34,8 @@ public interface IMessageService {
 
   @NonNull Component errorNoMute(final @NonNull BanUser user);
 
+  @NonNull CompletableFuture<@NonNull Component> formatApplication(final @NonNull Punishment punishment);
+
   @NonNull CompletableFuture<@NonNull Component> formatMessageWith(
       final @NonNull String message,
       final @NonNull Punishment punishment);
