@@ -21,6 +21,7 @@ package com.proximyst.ban.service.impl;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.proximyst.ban.inject.annotation.VelocityExecutor;
@@ -82,10 +83,22 @@ public final class ImplPunishmentService implements IPunishmentService {
 
   @Override
   public @NonNull CompletableFuture<@Nullable Void> savePunishment(final @NonNull Punishment punishment) {
-    return CompletableFuture.supplyAsync(() -> {
-      this.dataService.savePunishment(punishment);
-      return null;
-    }, this.executor);
+    return this.getPunishments(punishment.getTarget()) // Ensure we have their punishments loaded
+        .thenComposeAsync($ -> {
+          this.punishmentCache.asMap().compute(punishment.getTarget(), (uuid, list) -> {
+            if (list == null) {
+              return Lists.newArrayList(punishment);
+            }
+
+            if (!list.contains(punishment)) { // Referential comparison
+              list.add(punishment);
+            }
+            return list;
+          });
+
+          this.dataService.savePunishment(punishment);
+          return CompletableFuture.completedFuture(null);
+        }, this.executor);
   }
 
   @Override
