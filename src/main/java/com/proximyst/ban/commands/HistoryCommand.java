@@ -25,22 +25,24 @@ import com.proximyst.ban.BanPermissions;
 import com.proximyst.ban.commands.cloud.BaseCommand;
 import com.proximyst.ban.factory.ICloudArgumentFactory;
 import com.proximyst.ban.model.BanUser;
-import com.proximyst.ban.model.Punishment;
+import com.proximyst.ban.service.IMessageService;
 import com.proximyst.ban.service.IPunishmentService;
 import com.velocitypowered.api.command.CommandSource;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public final class HistoryCommand extends BaseCommand {
   private final @NonNull ICloudArgumentFactory cloudArgumentFactory;
   private final @NonNull IPunishmentService punishmentService;
+  private final @NonNull IMessageService messageService;
 
   @Inject
   public HistoryCommand(final @NonNull ICloudArgumentFactory cloudArgumentFactory,
-      final @NonNull IPunishmentService punishmentService) {
+      final @NonNull IPunishmentService punishmentService,
+      final @NonNull IMessageService messageService) {
     this.cloudArgumentFactory = cloudArgumentFactory;
     this.punishmentService = punishmentService;
+    this.messageService = messageService;
   }
 
   @Override
@@ -55,17 +57,10 @@ public final class HistoryCommand extends BaseCommand {
     final BanUser target = ctx.get("target");
 
     this.punishmentService.getPunishments(target.getUuid())
-        .thenAccept(punishments -> {
-          // TODO: Customisable messages
-          ctx.getSender().sendMessage(Component.text()
-              .append(Component.text("Found ", NamedTextColor.YELLOW))
-              .append(Component.text(punishments.size(), NamedTextColor.GOLD))
-              .append(Component.text(" punishments for ", NamedTextColor.YELLOW))
-              .append(Component.text(target.getUsername(), NamedTextColor.GOLD))
-              .append(Component.text(".", NamedTextColor.YELLOW)));
-          for (final Punishment punishment : punishments) {
-            // TODO: Proper message
-            ctx.getSender().sendMessage(Component.text(punishment.toString()));
+        .thenCompose(punishments -> this.messageService.formatHistory(punishments, target))
+        .thenAccept(messages -> {
+          for (Component message : messages) {
+            ctx.getSender().sendMessage(message);
           }
         });
   }

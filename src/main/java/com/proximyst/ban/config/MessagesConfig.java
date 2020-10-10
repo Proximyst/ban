@@ -38,6 +38,9 @@ public class MessagesConfig {
   @Setting
   public Formatting formatting = new Formatting();
 
+  @Setting
+  public Commands commands = new Commands();
+
   @ConfigSerializable
   @NonNull
   public static class Errors {
@@ -112,6 +115,27 @@ public class MessagesConfig {
 
     @Setting(comment = "The format for punishments with durations.")
     public String durationFormat = " for <duration>";
+
+    @Setting(comment = "The word used in an expiration for when it will never expire.")
+    public String never = "never";
+
+    @Setting(comment = "The name of an expiry for when it has already been lifted.")
+    public String isLifted = "lifted";
+
+    @Setting(comment = "The past tense verb for banning.")
+    public String banVerb = "banned";
+
+    @Setting(comment = "The past tense verb for kicking.")
+    public String kickVerb = "kicked";
+
+    @Setting(comment = "The past tense verb for muting.")
+    public String muteVerb = "muted";
+
+    @Setting(comment = "The past tense verb for warning.")
+    public String warnVerb = "warned";
+
+    @Setting(comment = "The past tense verb for noting.")
+    public String noteVerb = "noted";
   }
 
   @ConfigSerializable
@@ -121,6 +145,6 @@ public class MessagesConfig {
     public String historyHeader = "<yellow>Found <gold><amount></gold> punishment(s) for <gold><targetName></gold>.";
 
     @Setting
-    public String historyEntry = "<blue>History > <yellow><punisherName> <punishmentType><duration> (<expiry>): <reason>";
+    public String historyEntry = "<blue>History > <yellow><punisherName> <punishmentVerb><duration> (<expiry>): <reason>";
   }
 }

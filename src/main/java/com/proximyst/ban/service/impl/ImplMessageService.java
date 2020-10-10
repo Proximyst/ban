@@ -18,11 +18,14 @@
 
 package com.proximyst.ban.service.impl;
 
+import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.proximyst.ban.config.MessagesConfig;
 import com.proximyst.ban.model.BanUser;
 import com.proximyst.ban.model.Punishment;
+import com.proximyst.ban.model.PunishmentType;
 import com.proximyst.ban.service.IMessageService;
 import com.proximyst.ban.service.IUserService;
 import com.velocitypowered.api.proxy.Player;
@@ -107,6 +110,42 @@ public final class ImplMessageService implements IMessageService {
     return this.parseWithTarget(this.cfg.errors.noMute, user);
   }
 
+  @SuppressWarnings("UnstableApiUsage")
+  @Override
+  public @NonNull CompletableFuture<@NonNull ImmutableList<@NonNull Component>> formatHistory(
+      final @NonNull ImmutableCollection<@NonNull Punishment> punishments,
+      final @NonNull BanUser target) {
+    final ImmutableList.Builder<Component> builder = ImmutableList.builderWithExpectedSize(punishments.size());
+    builder.add(MiniMessage.get().parse(
+        this.cfg.commands.historyHeader,
+
+        "targetName", target.getUsername(),
+        "targetUuid", target.getUuid().toString(),
+
+        "amount", Integer.toString(punishments.size())));
+    if (punishments.isEmpty()) {
+      // Don't do wasteful allocations.
+      return CompletableFuture.completedFuture(builder.build());
+    }
+
+    CompletableFuture<Component> future = CompletableFuture.completedFuture(null);
+    for (final Punishment punishment : punishments) {
+      if (punishment.getPunishmentType() == PunishmentType.NOTE) {
+        // Don't show history of notes.
+        continue;
+      }
+
+      future = future.thenCombine(
+          this.formatMessageWith(this.cfg.commands.historyEntry, punishment),
+          (first, second) -> {
+            builder.add(second);
+            return null;
+          });
+    }
+
+    return future.thenApply($ -> builder.build());
+  }
+
   @Override
   public @NonNull CompletableFuture<@NonNull Component> formatApplication(final @NonNull Punishment punishment) {
     final boolean hasReason = punishment.getReason().isPresent();
@@ -155,6 +194,26 @@ public final class ImplMessageService implements IMessageService {
       final @NonNull String message,
       final @NonNull BanUser punisher,
       final @NonNull BanUser target) {
+    @SuppressWarnings("checkstyle:FinalLocalVariable")
+    String punishmentVerb = "UNKNOWN VERB, REPORT TO BAN";
+    switch (punishment.getPunishmentType()) {
+      case KICK:
+        punishmentVerb = this.cfg.formatting.kickVerb;
+        break;
+      case BAN:
+        punishmentVerb = this.cfg.formatting.banVerb;
+        break;
+      case WARNING:
+        punishmentVerb = this.cfg.formatting.warnVerb;
+        break;
+      case MUTE:
+        punishmentVerb = this.cfg.formatting.muteVerb;
+        break;
+      case NOTE:
+        punishmentVerb = this.cfg.formatting.noteVerb;
+        break;
+    }
+
     return MiniMessage.get()
         .parse(
             message,
@@ -170,7 +229,14 @@ public final class ImplMessageService implements IMessageService {
             "reason", punishment.getReason()
                 .map(MiniMessage.get()::escapeTokens)
                 .orElse("No reason specified"),
+            "punishmentType", punishment.getPunishmentType().name(),
+            "punishmentVerb", punishmentVerb,
 
+            "expiry", !punishment.currentlyApplies()
+                ? this.cfg.formatting.isLifted
+                : punishment.isPermanent()
+                    ? this.cfg.formatting.never
+                    : DurationFormatUtils.formatDurationHMS(punishment.getExpiration() - System.currentTimeMillis()),
             "duration", punishment.isPermanent()
                 ? this.cfg.formatting.permanently
                 : this.cfg.formatting.durationFormat

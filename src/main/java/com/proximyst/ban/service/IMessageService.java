@@ -18,6 +18,8 @@
 
 package com.proximyst.ban.service;
 
+import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
 import com.proximyst.ban.model.BanUser;
 import com.proximyst.ban.model.Punishment;
 import java.util.concurrent.CompletableFuture;
@@ -33,6 +35,10 @@ public interface IMessageService {
   @NonNull Component errorNoBan(final @NonNull BanUser user);
 
   @NonNull Component errorNoMute(final @NonNull BanUser user);
+
+  @NonNull CompletableFuture<@NonNull ImmutableList<@NonNull Component>> formatHistory(
+      final @NonNull ImmutableCollection<@NonNull Punishment> punishments,
+      final @NonNull BanUser target);
 
   @NonNull CompletableFuture<@NonNull Component> formatApplication(final @NonNull Punishment punishment);
 
