@@ -64,9 +64,7 @@ public final class ImplMessageService implements IMessageService {
         )
         .thenCombine(
             this.userService.getUser(punishment.getPunisher()),
-            // CHECKSTYLE:OFF - FIXME
             (target, punisher) -> this.formatMessageWith(
-                // CHECKSTYLE:ON
                 punishment,
                 message,
                 punisher.orElseThrow(() -> new IllegalArgumentException("Punisher of punishment cannot be unknown")),
