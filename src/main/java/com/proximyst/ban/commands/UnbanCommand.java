@@ -65,9 +65,9 @@ public final class UnbanCommand extends BaseCommand {
             return;
           }
 
-          // TODO: Broadcast
           punishment.setLiftedBy(CommandUtils.getSourceUuid(ctx.getSender()));
           this.punishmentService.savePunishment(punishment);
+          this.messageService.announceLiftedPunishment(punishment);
         });
   }
 }

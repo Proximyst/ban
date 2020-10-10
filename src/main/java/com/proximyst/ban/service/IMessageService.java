@@ -23,8 +23,13 @@ import com.proximyst.ban.model.Punishment;
 import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public interface IMessageService {
+  @NonNull CompletableFuture<@Nullable Void> announceNewPunishment(final @NonNull Punishment punishment);
+
+  @NonNull CompletableFuture<@Nullable Void> announceLiftedPunishment(final @NonNull Punishment punishment);
+
   @NonNull Component errorNoBan(final @NonNull BanUser user);
 
   @NonNull Component errorNoMute(final @NonNull BanUser user);
