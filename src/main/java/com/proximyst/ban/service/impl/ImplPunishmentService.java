@@ -26,8 +26,11 @@ import com.google.inject.Singleton;
 import com.proximyst.ban.inject.annotation.VelocityExecutor;
 import com.proximyst.ban.model.Punishment;
 import com.proximyst.ban.service.IDataService;
+import com.proximyst.ban.service.IMessageService;
 import com.proximyst.ban.service.IPunishmentService;
 import com.proximyst.ban.utils.ThrowableUtils;
+import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.ProxyServer;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -39,7 +42,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 @Singleton
 public final class ImplPunishmentService implements IPunishmentService {
   private final @NonNull IDataService dataService;
+  private final @NonNull IMessageService messageService;
   private final @NonNull Executor executor;
+  private final @NonNull ProxyServer proxyServer;
+
   private final @NonNull Cache<@NonNull UUID, @NonNull List<@NonNull Punishment>> punishmentCache =
       CacheBuilder.newBuilder()
           .initialCapacity(512)
@@ -50,9 +56,13 @@ public final class ImplPunishmentService implements IPunishmentService {
   @Inject
   public ImplPunishmentService(
       final @NonNull IDataService dataService,
-      final @NonNull @VelocityExecutor Executor executor) {
+      final @NonNull IMessageService messageService,
+      final @NonNull @VelocityExecutor Executor executor,
+      final @NonNull ProxyServer proxyServer) {
     this.dataService = dataService;
+    this.messageService = messageService;
     this.executor = executor;
+    this.proxyServer = proxyServer;
   }
 
   @Override
@@ -76,5 +86,39 @@ public final class ImplPunishmentService implements IPunishmentService {
       this.dataService.savePunishment(punishment);
       return null;
     }, this.executor);
+  }
+
+  @Override
+  public @NonNull CompletableFuture<@Nullable Void> applyPunishment(final @NonNull Punishment punishment) {
+    if (!punishment.getPunishmentType().isApplicable()) {
+      return CompletableFuture.completedFuture(null);
+    }
+
+    final Player target = this.proxyServer
+        .getPlayer(punishment.getTarget())
+        .orElse(null);
+    if (target == null) {
+      // We have no-one to apply the punishment on.
+      return CompletableFuture.completedFuture(null);
+    }
+
+    return this.messageService.formatApplication(punishment)
+        .thenApply(component -> {
+          switch (punishment.getPunishmentType()) {
+            case BAN:
+              // Fall through.
+            case KICK:
+              target.disconnect(component);
+              break;
+
+            case MUTE:
+              // Fall through.
+            default:
+              target.sendMessage(component);
+              break;
+          }
+
+          return null;
+        });
   }
 }
