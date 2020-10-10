@@ -32,6 +32,7 @@ import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.Queue;
 import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -91,7 +92,9 @@ public final class BanUserArgument extends CommandArgument<@NonNull CommandSourc
         }
       }
 
-      return this.userService.getUser(input).join()
+      return this.userService.getUser(input)
+          .exceptionally(ex -> Optional.empty())
+          .join()
           .map(user -> {
             inputQueue.remove();
             return ArgumentParseResult.success(user);
@@ -116,6 +119,11 @@ public final class BanUserArgument extends CommandArgument<@NonNull CommandSourc
       }
 
       return builder.build();
+    }
+
+    @Override
+    public boolean isContextFree() {
+      return true;
     }
   }
 
