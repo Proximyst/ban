@@ -40,6 +40,12 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public final class ImplPunishmentService implements IPunishmentService {
   private final @NonNull IDataService dataService;
   private final @NonNull Executor executor;
+  private final @NonNull Cache<@NonNull UUID, @NonNull List<@NonNull Punishment>> punishmentCache =
+      CacheBuilder.newBuilder()
+          .initialCapacity(512)
+          .maximumSize(1024)
+          .expireAfterAccess(5, TimeUnit.MINUTES)
+          .build();
 
   @Inject
   public ImplPunishmentService(
@@ -48,13 +54,6 @@ public final class ImplPunishmentService implements IPunishmentService {
     this.dataService = dataService;
     this.executor = executor;
   }
-
-  private final @NonNull Cache<@NonNull UUID, @NonNull List<@NonNull Punishment>> punishmentCache =
-      CacheBuilder.newBuilder()
-          .initialCapacity(512)
-          .maximumSize(1024)
-          .expireAfterAccess(5, TimeUnit.MINUTES)
-          .build();
 
   @Override
   public @NonNull CompletableFuture<@NonNull ImmutableList<@NonNull Punishment>> getPunishments(

@@ -198,9 +198,7 @@ public class BanPlugin {
     tm.start("Initialising plugin essentials");
     final VelocityCommandManager<CommandSource> velocityCommandManager = new VelocityCommandManager<>(
         this.proxyServer,
-        // CHECKSTYLE:OFF - FIXME
         tree -> new ScheduledCommandExecutionCoordinator(
-            // CHECKSTYLE:ON
             tree,
             this.injector.getInstance(Key.get(Executor.class, VelocityExecutor.class)),
             CommandExecutionCoordinator.<CommandSource>simpleCoordinator().apply(tree)),
