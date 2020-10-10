@@ -24,15 +24,6 @@ repositories {
     }
 
     maven {
-        name = "sewer"
-        url = uri("https://dl.bintray.com/proximyst/sewer")
-
-        content {
-            includeGroup("com.proximyst")
-        }
-    }
-
-    maven {
         name = "velocity"
         url = uri("https://repo.velocitypowered.com/snapshots/")
     }
@@ -57,8 +48,6 @@ dependencies {
         // We get adventure through velocity-api
         isTransitive = false
     }
-
-    implementation("com.proximyst:sewer:0.7.0")
 
     implementation("org.apache.commons:commons-lang3:3.11")
 
@@ -85,7 +74,6 @@ tasks {
             "org.mariadb.jdbc",
             "net.kyori.adventure.text.minimessage",
             "org.jdbi",
-            "com.proximyst.sewer",
             "org.apache.commons.lang3",
             "com.github.benmanes.caffeine",
             "org.antlr",
