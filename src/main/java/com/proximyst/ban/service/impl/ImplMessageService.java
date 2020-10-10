@@ -53,6 +53,7 @@ public final class ImplMessageService implements IMessageService {
   @Override
   public @NonNull CompletableFuture<@Nullable Void> announceNewPunishment(final @NonNull Punishment punishment) {
     final boolean hasReason = punishment.getReason().isPresent();
+    @SuppressWarnings("checkstyle:FinalLocalVariable")
     String message;
     switch (punishment.getPunishmentType()) {
       case BAN:
@@ -73,11 +74,12 @@ public final class ImplMessageService implements IMessageService {
         return CompletableFuture.completedFuture(null);
     }
 
-    return announcePunishmentMessage(punishment, message);
+    return this.announcePunishmentMessage(punishment, message);
   }
 
   @Override
   public @NonNull CompletableFuture<@Nullable Void> announceLiftedPunishment(final @NonNull Punishment punishment) {
+    @SuppressWarnings("checkstyle:FinalLocalVariable")
     String message;
     switch (punishment.getPunishmentType()) {
       case BAN:
@@ -92,7 +94,7 @@ public final class ImplMessageService implements IMessageService {
         return CompletableFuture.completedFuture(null);
     }
 
-    return announcePunishmentMessage(punishment, message);
+    return this.announcePunishmentMessage(punishment, message);
   }
 
   @Override
@@ -108,6 +110,7 @@ public final class ImplMessageService implements IMessageService {
   @Override
   public @NonNull CompletableFuture<@NonNull Component> formatApplication(final @NonNull Punishment punishment) {
     final boolean hasReason = punishment.getReason().isPresent();
+    @SuppressWarnings("checkstyle:FinalLocalVariable")
     String message;
     switch (punishment.getPunishmentType()) {
       case KICK:
@@ -124,7 +127,7 @@ public final class ImplMessageService implements IMessageService {
         return CompletableFuture.completedFuture(Component.empty());
     }
 
-    return formatMessageWith(message, punishment);
+    return this.formatMessageWith(message, punishment);
   }
 
   @Override
@@ -195,9 +198,9 @@ public final class ImplMessageService implements IMessageService {
       final @NonNull Punishment punishment,
       final @NonNull String message) {
     final String permission = punishment.getPunishmentType().getNotificationPermission().orElse(null);
-    return formatMessageWith(message, punishment)
+    return this.formatMessageWith(message, punishment)
         .thenApply(component -> {
-          for (final Player player : proxyServer.getAllPlayers()) {
+          for (final Player player : this.proxyServer.getAllPlayers()) {
             if (permission != null && !player.hasPermission(permission)) {
               continue;
             }
