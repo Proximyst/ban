@@ -26,6 +26,7 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Singleton;
 import com.proximyst.ban.commands.BanCommand;
+import com.proximyst.ban.commands.HistoryCommand;
 import com.proximyst.ban.commands.KickCommand;
 import com.proximyst.ban.commands.MuteCommand;
 import com.proximyst.ban.commands.UnbanCommand;
@@ -216,9 +217,10 @@ public class BanPlugin {
 
     tm.start("Registering commands");
     this.injector.getInstance(BanCommand.class).register(velocityCommandManager);
-    this.injector.getInstance(UnbanCommand.class).register(velocityCommandManager);
+    this.injector.getInstance(HistoryCommand.class).register(velocityCommandManager);
     this.injector.getInstance(KickCommand.class).register(velocityCommandManager);
     this.injector.getInstance(MuteCommand.class).register(velocityCommandManager);
+    this.injector.getInstance(UnbanCommand.class).register(velocityCommandManager);
     this.injector.getInstance(UnmuteCommand.class).register(velocityCommandManager);
 
     tm.finish();
