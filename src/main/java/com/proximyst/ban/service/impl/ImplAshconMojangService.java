@@ -20,6 +20,7 @@ package com.proximyst.ban.service.impl;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.RemovalNotification;
 import com.google.gson.annotations.SerializedName;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -31,6 +32,7 @@ import com.proximyst.ban.service.IMojangService;
 import com.proximyst.ban.utils.HttpUtils;
 import com.proximyst.ban.utils.StringUtils;
 import com.proximyst.ban.utils.ThrowableUtils;
+import com.velocitypowered.api.proxy.ProxyServer;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -44,27 +46,35 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 @Singleton
 public final class ImplAshconMojangService implements IMojangService {
   private static final @NonNull String API_BASE = "https://api.ashcon.app/mojang/v2/";
+  private static final int MAXIMUM_BAN_USER_CACHE_CAPACITY =
+      Integer.getInteger("ban.maxBanUserCacheCapacity", 512);
+  private static final int MAXIMUM_USERNAME_TO_UUID_CACHE_CAPACITY =
+      Integer.getInteger("ban.maxUsernameToUuidCacheCapacity", 512);
   private static final @NonNull CompletableFuture<@NonNull Optional<@NonNull BanUser>> CONSOLE_USER =
       CompletableFuture.completedFuture(Optional.of(BanUser.CONSOLE));
 
   private final @NonNull Executor executor;
+  private final @NonNull ProxyServer proxyServer;
 
   private final @NonNull Cache<@NonNull UUID, @NonNull BanUser> banUserCache = CacheBuilder.newBuilder()
       .initialCapacity(512)
-      .maximumSize(512)
+      .maximumSize(MAXIMUM_BAN_USER_CACHE_CAPACITY)
       .expireAfterWrite(2, TimeUnit.MINUTES)
+      .removalListener(this::banUserCacheRemovalCallback)
       .build();
 
   private final @NonNull Cache<@NonNull String, @NonNull UUID> usernameUuidCache = CacheBuilder.newBuilder()
       .initialCapacity(512)
-      .maximumSize(512)
+      .maximumSize(MAXIMUM_USERNAME_TO_UUID_CACHE_CAPACITY)
       .expireAfterWrite(2, TimeUnit.MINUTES)
+      .removalListener(this::usernameToUuidRemovalCallback)
       .build();
 
   @Inject
-  public ImplAshconMojangService(
-      final @NonNull @VelocityExecutor Executor executor) {
+  public ImplAshconMojangService(final @NonNull @VelocityExecutor Executor executor,
+      final @NonNull ProxyServer proxyServer) {
     this.executor = executor;
+    this.proxyServer = proxyServer;
   }
 
   @Override
@@ -156,6 +166,32 @@ public final class ImplAshconMojangService implements IMojangService {
           return user;
         }, this.executor
     );
+  }
+
+  private void banUserCacheRemovalCallback(
+      final @NonNull RemovalNotification<@NonNull UUID, @NonNull BanUser> notification) {
+    if (this.proxyServer.getPlayerCount() >= MAXIMUM_BAN_USER_CACHE_CAPACITY) {
+      // We can't afford to recache the players' users!
+      // At this point, perhaps they should change the capacity?
+      return;
+    }
+
+    if (this.proxyServer.getPlayer(notification.getKey()).isPresent()) {
+      this.banUserCache.put(notification.getKey(), notification.getValue());
+    }
+  }
+
+  private void usernameToUuidRemovalCallback(
+      final @NonNull RemovalNotification<@NonNull String, @NonNull UUID> notification) {
+    if (this.proxyServer.getPlayerCount() >= MAXIMUM_USERNAME_TO_UUID_CACHE_CAPACITY) {
+      // We can't afford to recache the players' usernames!
+      // At this point, perhaps they should change the capacity?
+      return;
+    }
+
+    if (this.proxyServer.getPlayer(notification.getKey()).isPresent()) {
+      this.usernameUuidCache.put(notification.getKey(), notification.getValue());
+    }
   }
 
   @NonNull
