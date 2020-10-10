@@ -23,26 +23,31 @@ import cloud.commandframework.velocity.VelocityCommandManager;
 import com.google.inject.Inject;
 import com.proximyst.ban.BanPermissions;
 import com.proximyst.ban.commands.cloud.BaseCommand;
+import com.proximyst.ban.config.MessagesConfig;
 import com.proximyst.ban.factory.ICloudArgumentFactory;
 import com.proximyst.ban.model.BanUser;
 import com.proximyst.ban.service.IMessageService;
 import com.proximyst.ban.service.IPunishmentService;
 import com.velocitypowered.api.command.CommandSource;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public final class HistoryCommand extends BaseCommand {
   private final @NonNull ICloudArgumentFactory cloudArgumentFactory;
   private final @NonNull IPunishmentService punishmentService;
   private final @NonNull IMessageService messageService;
+  private final @NonNull MessagesConfig messagesConfig;
 
   @Inject
   public HistoryCommand(final @NonNull ICloudArgumentFactory cloudArgumentFactory,
       final @NonNull IPunishmentService punishmentService,
-      final @NonNull IMessageService messageService) {
+      final @NonNull IMessageService messageService,
+      final @NonNull MessagesConfig messagesConfig) {
     this.cloudArgumentFactory = cloudArgumentFactory;
     this.punishmentService = punishmentService;
     this.messageService = messageService;
+    this.messagesConfig = messagesConfig;
   }
 
   @Override
@@ -55,6 +60,13 @@ public final class HistoryCommand extends BaseCommand {
 
   private void execute(final @NonNull CommandContext<CommandSource> ctx) {
     final BanUser target = ctx.get("target");
+
+    ctx.getSender().sendMessage(MiniMessage.get().parse(
+        this.messagesConfig.commands.historyFeedback,
+
+        "targetName", target.getUsername(),
+        "targetUuid", target.getUuid().toString()
+    ));
 
     this.punishmentService.getPunishments(target.getUuid())
         .thenCompose(punishments -> this.messageService.formatHistory(punishments, target))

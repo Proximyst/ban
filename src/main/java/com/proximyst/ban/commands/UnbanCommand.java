@@ -23,6 +23,7 @@ import cloud.commandframework.velocity.VelocityCommandManager;
 import com.google.inject.Inject;
 import com.proximyst.ban.BanPermissions;
 import com.proximyst.ban.commands.cloud.BaseCommand;
+import com.proximyst.ban.config.MessagesConfig;
 import com.proximyst.ban.factory.ICloudArgumentFactory;
 import com.proximyst.ban.model.BanUser;
 import com.proximyst.ban.model.Punishment;
@@ -30,20 +31,24 @@ import com.proximyst.ban.service.IMessageService;
 import com.proximyst.ban.service.IPunishmentService;
 import com.proximyst.ban.utils.CommandUtils;
 import com.velocitypowered.api.command.CommandSource;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public final class UnbanCommand extends BaseCommand {
   private final @NonNull ICloudArgumentFactory cloudArgumentFactory;
   private final @NonNull IMessageService messageService;
   private final @NonNull IPunishmentService punishmentService;
+  private final @NonNull MessagesConfig messagesConfig;
 
   @Inject
   public UnbanCommand(final @NonNull ICloudArgumentFactory cloudArgumentFactory,
       final @NonNull IMessageService messageService,
-      final @NonNull IPunishmentService punishmentService) {
+      final @NonNull IPunishmentService punishmentService,
+      final @NonNull MessagesConfig messagesConfig) {
     this.cloudArgumentFactory = cloudArgumentFactory;
     this.messageService = messageService;
     this.punishmentService = punishmentService;
+    this.messagesConfig = messagesConfig;
   }
 
   @Override
@@ -56,6 +61,13 @@ public final class UnbanCommand extends BaseCommand {
 
   private void execute(final @NonNull CommandContext<CommandSource> ctx) {
     final @NonNull BanUser target = ctx.get("target");
+
+    ctx.getSender().sendMessage(MiniMessage.get().parse(
+        this.messagesConfig.commands.banFeedback,
+
+        "targetName", target.getUsername(),
+        "targetUuid", target.getUuid().toString()
+    ));
 
     this.punishmentService.getActiveBan(target.getUuid())
         .thenAccept(punishmentOptional -> {

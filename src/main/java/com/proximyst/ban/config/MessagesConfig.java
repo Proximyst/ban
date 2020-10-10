@@ -141,10 +141,28 @@ public class MessagesConfig {
   @ConfigSerializable
   @NonNull
   public static class Commands {
-    @Setting
+    @Setting(comment = "Feedback for when the ban command is ran.")
+    public String banFeedback = "<yellow>Issuing a ban on <gold><targetName></gold>...";
+
+    @Setting(comment = "Feedback for when the kick command is ran.")
+    public String kickFeedback = "<yellow>Issuing a kick on <gold><targetName></gold>...";
+
+    @Setting(comment = "Feedback for when the history command is ran.")
+    public String historyFeedback = "<yellow>Fetching history on <gold><targetName></gold>...";
+
+    @Setting(comment = "Feedback for when the mute command is ran.")
+    public String muteFeedback = "<yellow>Issuing a mute on <gold><targetName></gold>...";
+
+    @Setting(comment = "Feedback for when the unban command is ran.")
+    public String unbanFeedback = "<yellow>Issuing an unban on <gold><targetName></gold>...";
+
+    @Setting(comment = "Feedback for when the unmute command is ran.")
+    public String unmuteFeedback = "<yellow>Issuing an unmute on <gold><targetName></gold>...";
+
+    @Setting(comment = "The header of the history shown.")
     public String historyHeader = "<yellow>Found <gold><amount></gold> punishment(s) for <gold><targetName></gold>.";
 
-    @Setting
-    public String historyEntry = "<blue>History > <yellow><punisherName> <punishmentVerb><duration> (<expiry>): <reason>";
+    @Setting(comment = "A single entry in the history.")
+    public String historyEntry = "<blue><bold>H</bold> > <yellow><punisherName> <punishmentVerb><duration> (<expiry>): <reason>";
   }
 }
