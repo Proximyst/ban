@@ -25,8 +25,10 @@ import com.google.inject.Inject;
 import com.proximyst.ban.BanPermissions;
 import com.proximyst.ban.commands.cloud.BaseCommand;
 import com.proximyst.ban.factory.ICloudArgumentFactory;
+import com.proximyst.ban.model.Punishment;
 import com.proximyst.ban.model.PunishmentBuilder;
 import com.proximyst.ban.model.PunishmentType;
+import com.proximyst.ban.service.IMessageService;
 import com.proximyst.ban.service.IPunishmentService;
 import com.proximyst.ban.utils.CommandUtils;
 import com.velocitypowered.api.command.CommandSource;
@@ -37,12 +39,15 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class KickCommand extends BaseCommand {
   private final @NonNull ICloudArgumentFactory cloudArgumentFactory;
   private final @NonNull IPunishmentService punishmentService;
+  private final @NonNull IMessageService messageService;
 
   @Inject
   public KickCommand(final @NonNull ICloudArgumentFactory cloudArgumentFactory,
-      final @NonNull IPunishmentService punishmentService) {
+      final @NonNull IPunishmentService punishmentService,
+      final @NonNull IMessageService messageService) {
     this.cloudArgumentFactory = cloudArgumentFactory;
     this.punishmentService = punishmentService;
+    this.messageService = messageService;
   }
 
   @Override
@@ -58,14 +63,14 @@ public class KickCommand extends BaseCommand {
     final Player target = ctx.get("target");
     final @Nullable String reason = ctx.getOrDefault("reason", null);
 
-    // TODO: Broadcast
-    this.punishmentService.savePunishment(
+    final Punishment punishment =
         new PunishmentBuilder()
             .type(PunishmentType.KICK)
             .punisher(CommandUtils.getSourceUuid(ctx.getSender()))
             .target(target.getUniqueId())
             .reason(reason)
-            .build()
-    );
+            .build();
+    this.punishmentService.savePunishment(punishment);
+    this.messageService.announceNewPunishment(punishment);
   }
 }

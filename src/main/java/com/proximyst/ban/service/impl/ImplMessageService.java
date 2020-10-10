@@ -25,23 +25,74 @@ import com.proximyst.ban.model.BanUser;
 import com.proximyst.ban.model.Punishment;
 import com.proximyst.ban.service.IMessageService;
 import com.proximyst.ban.service.IUserService;
+import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.ProxyServer;
 import java.text.SimpleDateFormat;
 import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 @Singleton
 public final class ImplMessageService implements IMessageService {
   private final @NonNull IUserService userService;
   private final @NonNull MessagesConfig cfg;
+  private final @NonNull ProxyServer proxyServer;
 
   @Inject
   public ImplMessageService(final @NonNull IUserService userService,
-      final @NonNull MessagesConfig messagesConfig) {
+      final @NonNull MessagesConfig messagesConfig,
+      final @NonNull ProxyServer proxyServer) {
     this.userService = userService;
     this.cfg = messagesConfig;
+    this.proxyServer = proxyServer;
+  }
+
+  @Override
+  public @NonNull CompletableFuture<@Nullable Void> announceNewPunishment(final @NonNull Punishment punishment) {
+    final boolean hasReason = punishment.getReason().isPresent();
+    String message;
+    switch (punishment.getPunishmentType()) {
+      case BAN:
+        message = hasReason ? this.cfg.broadcasts.banReason : this.cfg.broadcasts.banReasonless;
+        break;
+      case MUTE:
+        message = hasReason ? this.cfg.broadcasts.muteReason : this.cfg.broadcasts.muteReasonless;
+        break;
+      case KICK:
+        message = hasReason ? this.cfg.broadcasts.kickReason : this.cfg.broadcasts.kickReasonless;
+        break;
+      case WARNING:
+        message = hasReason ? this.cfg.broadcasts.warnReason : this.cfg.broadcasts.warnReasonless;
+        break;
+
+      default:
+        // The type is not announcable upon placing.
+        return CompletableFuture.completedFuture(null);
+    }
+
+    return announcePunishmentMessage(punishment, message);
+  }
+
+  @Override
+  public @NonNull CompletableFuture<@Nullable Void> announceLiftedPunishment(final @NonNull Punishment punishment) {
+    String message;
+    switch (punishment.getPunishmentType()) {
+      case BAN:
+        message = this.cfg.broadcasts.unban;
+        break;
+      case MUTE:
+        message = this.cfg.broadcasts.unmute;
+        break;
+
+      default:
+        // The type is not announcable upon lifting.
+        return CompletableFuture.completedFuture(null);
+    }
+
+    return announcePunishmentMessage(punishment, message);
   }
 
   @Override
@@ -116,5 +167,23 @@ public final class ImplMessageService implements IMessageService {
         "targetName", target.getUsername(),
         "targetUuid", target.getUuid().toString()
     );
+  }
+
+  private @NonNull CompletableFuture<@Nullable Void> announcePunishmentMessage(
+      final @NonNull Punishment punishment,
+      final @NonNull String message) {
+    final String permission = punishment.getPunishmentType().getNotificationPermission().orElse(null);
+    return formatMessageWith(message, punishment)
+        .thenApply(component -> {
+          for (final Player player : proxyServer.getAllPlayers()) {
+            if (permission != null && !player.hasPermission(permission)) {
+              continue;
+            }
+
+            player.sendMessage(component);
+          }
+
+          return null;
+        });
   }
 }
