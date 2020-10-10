@@ -19,37 +19,35 @@
 package com.proximyst.ban.event.subscriber;
 
 import com.google.inject.Inject;
-import com.proximyst.ban.BanPlugin;
 import com.proximyst.ban.config.MessagesConfig;
-import com.proximyst.ban.manager.PunishmentManager;
+import com.proximyst.ban.service.IMessageService;
+import com.proximyst.ban.service.IPunishmentService;
 import com.velocitypowered.api.event.ResultedEvent.ComponentResult;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.LoginEvent;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class BannedPlayerJoinSubscriber {
-  private final @NonNull BanPlugin main;
-  private final @NonNull PunishmentManager manager;
+  private final @NonNull IPunishmentService punishmentService;
+  private final @NonNull IMessageService messageService;
   private final @NonNull MessagesConfig messagesConfig;
 
   @Inject
-  public BannedPlayerJoinSubscriber(
-      final @NonNull BanPlugin main,
-      final @NonNull PunishmentManager manager,
-      final @NonNull MessagesConfig messagesConfig
-  ) {
-    this.main = main;
-    this.manager = manager;
+  public BannedPlayerJoinSubscriber(final @NonNull IPunishmentService punishmentService,
+      final @NonNull IMessageService messageService,
+      final @NonNull MessagesConfig messagesConfig) {
+    this.punishmentService = punishmentService;
+    this.messageService = messageService;
     this.messagesConfig = messagesConfig;
   }
 
   @Subscribe
   public void onJoinServer(final @NonNull LoginEvent event) {
-    this.manager.getActiveBan(event.getPlayer().getUniqueId())
+    this.punishmentService.getActiveBan(event.getPlayer().getUniqueId())
         .join() // This *should* be fast, and only on one player's connection thread
         .ifPresent(ban -> {
           event.setResult(ComponentResult.denied(
-              this.main.getMessageManager().formatMessageWith(
+              this.messageService.formatMessageWith(
                   ban.getReason().isPresent()
                       ? this.messagesConfig.applications.banReason
                       : this.messagesConfig.applications.banReasonless,

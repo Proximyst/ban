@@ -22,44 +22,52 @@ import cloud.commandframework.context.CommandContext;
 import cloud.commandframework.velocity.VelocityCommandManager;
 import com.google.inject.Inject;
 import com.proximyst.ban.BanPermissions;
-import com.proximyst.ban.BanPlugin;
-import com.proximyst.ban.commands.cloud.BanUserArgument;
 import com.proximyst.ban.commands.cloud.BaseCommand;
+import com.proximyst.ban.factory.ICloudArgumentFactory;
 import com.proximyst.ban.model.BanUser;
 import com.proximyst.ban.model.Punishment;
+import com.proximyst.ban.service.IMessageService;
+import com.proximyst.ban.service.IPunishmentService;
 import com.proximyst.ban.utils.CommandUtils;
 import com.velocitypowered.api.command.CommandSource;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public final class UnmuteCommand extends BaseCommand {
+  private final @NonNull ICloudArgumentFactory cloudArgumentFactory;
+  private final @NonNull IPunishmentService punishmentService;
+  private final @NonNull IMessageService messageService;
+
   @Inject
-  public UnmuteCommand(final @NonNull BanPlugin main) {
-    super(main);
+  public UnmuteCommand(final @NonNull ICloudArgumentFactory cloudArgumentFactory,
+      final @NonNull IPunishmentService punishmentService,
+      final @NonNull IMessageService messageService) {
+    this.cloudArgumentFactory = cloudArgumentFactory;
+    this.punishmentService = punishmentService;
+    this.messageService = messageService;
   }
 
   @Override
   public void register(final @NonNull VelocityCommandManager<@NonNull CommandSource> commandManager) {
     commandManager.command(commandManager.commandBuilder("unmute")
-        .withPermission(BanPermissions.COMMAND_UNMUTE)
-        .argument(BanUserArgument.of("target", this.getMain()))
+        .permission(BanPermissions.COMMAND_UNMUTE)
+        .argument(this.cloudArgumentFactory.banUser("target", true))
         .handler(this::execute));
   }
 
   private void execute(final @NonNull CommandContext<CommandSource> ctx) {
     final @NonNull BanUser target = ctx.get("target");
 
-    this.getMain().getPunishmentManager().getActiveMute(target.getUuid())
+    this.punishmentService.getActiveMute(target.getUuid())
         .thenAccept(punishmentOptional -> {
           final Punishment punishment = punishmentOptional.orElse(null);
           if (punishment == null) {
-            ctx.getSender().sendMessage(this.getMain().getMessageManager().errorNoMute(target));
+            ctx.getSender().sendMessage(this.messageService.errorNoMute(target));
             return;
           }
 
+          // TODO: Broadcast
           punishment.setLiftedBy(CommandUtils.getSourceUuid(ctx.getSender()));
-          punishment.broadcast(this.getMain());
-          this.getMain().getSchedulerExecutor()
-              .execute(() -> this.getMain().getDataInterface().addPunishment(punishment));
+          this.punishmentService.savePunishment(punishment);
         });
   }
 }

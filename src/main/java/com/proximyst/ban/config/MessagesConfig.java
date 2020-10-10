@@ -113,4 +113,14 @@ public class MessagesConfig {
     @Setting(comment = "The format for punishments with durations.")
     public String durationFormat = " for <duration>";
   }
+
+  @ConfigSerializable
+  @NonNull
+  public static class Commands {
+    @Setting
+    public String historyHeader = "<yellow>Found <gold><amount></gold> punishment(s) for <gold><targetName></gold>.";
+
+    @Setting
+    public String historyEntry = "<blue>History > <yellow><punisherName> <punishmentType><duration> (<expiry>): <reason>";
+  }
 }

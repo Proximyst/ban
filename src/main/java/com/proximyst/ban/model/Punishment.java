@@ -19,18 +19,12 @@
 package com.proximyst.ban.model;
 
 import com.google.common.base.Preconditions;
-import com.proximyst.ban.BanPlugin;
-import com.proximyst.ban.event.event.PunishmentPostBroadcastEvent;
-import com.proximyst.ban.event.event.PunishmentPreBroadcastEvent;
 import com.velocitypowered.api.command.CommandSource;
-import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import java.util.Date;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import net.kyori.adventure.text.TextComponent;
 import org.checkerframework.checker.index.qual.NonNegative;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -325,7 +319,7 @@ public final class Punishment {
   /**
    * @return Whether this punishment still applies to the player.
    */
-  public boolean currentlyApplies(final @NonNull BanPlugin main) {
+  public boolean currentlyApplies() {
     if (!this.getPunishmentType().canBeLifted()) {
       // The punishment cannot be lifted and therefore cannot apply past the event.
       return false;
@@ -344,48 +338,6 @@ public final class Punishment {
 
     this.lifted = true;
     this.liftedBy = null; // Expired, no-one lifted it.
-    main.getSchedulerExecutor().execute(() -> {
-      main.getLogger().info("Lifting punishment ID " + this.id + "; it has expired.");
-      main.getDataInterface().liftPunishment(this);
-    });
     return false;
-  }
-
-  /**
-   * Broadcast the message to the entire proxy.
-   *
-   * @param main The main plugin instance.
-   * @return Whether the broadcast was successful.
-   */
-  public @NonNull CompletableFuture<@NonNull Boolean> broadcast(final @NonNull BanPlugin main) {
-    if (!this.getPunishmentType().isAnnouncable()) {
-      return CompletableFuture.completedFuture(true);
-    }
-
-    return main.getMessageManager().notificationMessage(Punishment.this)
-        .thenApply(opt -> opt.orElse(TextComponent.empty()))
-        .thenCompose(notification -> main.getProxyServer().getEventManager().fire(
-            new PunishmentPreBroadcastEvent(Punishment.this, notification)
-        ))
-        .thenApply(event -> {
-          if (!event.getResult().isAllowed()) {
-            return false;
-          }
-
-          main.getProxyServer().getConsoleCommandSource().sendMessage(event.getMessage());
-          final String permission = main.getMessageManager().getNotificationPermissionOf(this.getPunishmentType())
-              .orElse(null);
-          for (final Player player : main.getProxyServer().getAllPlayers()) {
-            if (permission != null && !player.hasPermission(permission)) {
-              continue;
-            }
-
-            player.sendMessage(event.getMessage());
-          }
-          main.getProxyServer().getEventManager().fireAndForget(
-              new PunishmentPostBroadcastEvent(this, event.getMessage())
-          );
-          return true;
-        });
   }
 }

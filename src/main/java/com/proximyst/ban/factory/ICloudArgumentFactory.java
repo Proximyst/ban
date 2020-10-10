@@ -16,30 +16,17 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-package com.proximyst.ban.boilerplate;
+package com.proximyst.ban.factory;
 
-import com.google.inject.Inject;
-import com.proximyst.ban.BanPlugin;
-import com.velocitypowered.api.proxy.ProxyServer;
-import java.util.concurrent.Executor;
+import com.google.inject.assistedinject.Assisted;
+import com.proximyst.ban.commands.cloud.BanUserArgument;
+import com.proximyst.ban.commands.cloud.PlayerArgument;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
-/**
- * A {@link Executor} that just defers to the Velocity scheduler using the plugin instance.
- */
-public final class VelocityBanSchedulerExecutor implements Executor {
-  private final @NonNull BanPlugin main;
-  private final @NonNull ProxyServer proxyServer;
+public interface ICloudArgumentFactory {
+  @NonNull BanUserArgument banUser(final @Assisted("name") @NonNull String name,
+      final @Assisted("required") boolean required);
 
-  @Inject
-  public VelocityBanSchedulerExecutor(final @NonNull BanPlugin main,
-      final @NonNull ProxyServer proxyServer) {
-    this.main = main;
-    this.proxyServer = proxyServer;
-  }
-
-  @Override
-  public void execute(final @NonNull Runnable command) {
-    this.proxyServer.getScheduler().buildTask(this.main, command).schedule();
-  }
+  @NonNull PlayerArgument player(final @Assisted("name") @NonNull String name,
+      final @Assisted("required") boolean required);
 }

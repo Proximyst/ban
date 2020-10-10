@@ -22,44 +22,52 @@ import cloud.commandframework.context.CommandContext;
 import cloud.commandframework.velocity.VelocityCommandManager;
 import com.google.inject.Inject;
 import com.proximyst.ban.BanPermissions;
-import com.proximyst.ban.BanPlugin;
-import com.proximyst.ban.commands.cloud.BanUserArgument;
 import com.proximyst.ban.commands.cloud.BaseCommand;
+import com.proximyst.ban.factory.ICloudArgumentFactory;
 import com.proximyst.ban.model.BanUser;
 import com.proximyst.ban.model.Punishment;
+import com.proximyst.ban.service.IMessageService;
+import com.proximyst.ban.service.IPunishmentService;
 import com.proximyst.ban.utils.CommandUtils;
 import com.velocitypowered.api.command.CommandSource;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public final class UnbanCommand extends BaseCommand {
+  private final @NonNull ICloudArgumentFactory cloudArgumentFactory;
+  private final @NonNull IMessageService messageService;
+  private final @NonNull IPunishmentService punishmentService;
+
   @Inject
-  public UnbanCommand(final @NonNull BanPlugin main) {
-    super(main);
+  public UnbanCommand(final @NonNull ICloudArgumentFactory cloudArgumentFactory,
+      final @NonNull IMessageService messageService,
+      final @NonNull IPunishmentService punishmentService) {
+    this.cloudArgumentFactory = cloudArgumentFactory;
+    this.messageService = messageService;
+    this.punishmentService = punishmentService;
   }
 
   @Override
   public void register(final @NonNull VelocityCommandManager<@NonNull CommandSource> commandManager) {
     commandManager.command(commandManager.commandBuilder("unban")
-        .withPermission(BanPermissions.COMMAND_UNBAN)
-        .argument(BanUserArgument.of("target", this.getMain()))
+        .permission(BanPermissions.COMMAND_UNBAN)
+        .argument(this.cloudArgumentFactory.banUser("target", true))
         .handler(this::execute));
   }
 
   private void execute(final @NonNull CommandContext<CommandSource> ctx) {
     final @NonNull BanUser target = ctx.get("target");
 
-    this.getMain().getPunishmentManager().getActiveBan(target.getUuid())
+    this.punishmentService.getActiveBan(target.getUuid())
         .thenAccept(punishmentOptional -> {
           final Punishment punishment = punishmentOptional.orElse(null);
           if (punishment == null) {
-            ctx.getSender().sendMessage(this.getMain().getMessageManager().errorNoBan(target));
+            ctx.getSender().sendMessage(this.messageService.errorNoBan(target));
             return;
           }
 
+          // TODO: Broadcast
           punishment.setLiftedBy(CommandUtils.getSourceUuid(ctx.getSender()));
-          punishment.broadcast(this.getMain());
-          this.getMain().getSchedulerExecutor()
-              .execute(() -> this.getMain().getDataInterface().addPunishment(punishment));
+          this.punishmentService.savePunishment(punishment);
         });
   }
 }

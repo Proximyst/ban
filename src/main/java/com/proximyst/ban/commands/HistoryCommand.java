@@ -18,7 +18,6 @@
 
 package com.proximyst.ban.commands;
 
-import cloud.commandframework.arguments.standard.StringArgument;
 import cloud.commandframework.context.CommandContext;
 import cloud.commandframework.velocity.VelocityCommandManager;
 import com.google.inject.Inject;
@@ -26,20 +25,19 @@ import com.proximyst.ban.BanPermissions;
 import com.proximyst.ban.commands.cloud.BaseCommand;
 import com.proximyst.ban.factory.ICloudArgumentFactory;
 import com.proximyst.ban.model.BanUser;
-import com.proximyst.ban.model.PunishmentBuilder;
-import com.proximyst.ban.model.PunishmentType;
+import com.proximyst.ban.model.Punishment;
 import com.proximyst.ban.service.IPunishmentService;
-import com.proximyst.ban.utils.CommandUtils;
 import com.velocitypowered.api.command.CommandSource;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
-public final class MuteCommand extends BaseCommand {
+public final class HistoryCommand extends BaseCommand {
   private final @NonNull ICloudArgumentFactory cloudArgumentFactory;
   private final @NonNull IPunishmentService punishmentService;
 
   @Inject
-  public MuteCommand(final @NonNull ICloudArgumentFactory cloudArgumentFactory,
+  public HistoryCommand(final @NonNull ICloudArgumentFactory cloudArgumentFactory,
       final @NonNull IPunishmentService punishmentService) {
     this.cloudArgumentFactory = cloudArgumentFactory;
     this.punishmentService = punishmentService;
@@ -47,25 +45,28 @@ public final class MuteCommand extends BaseCommand {
 
   @Override
   public void register(final @NonNull VelocityCommandManager<@NonNull CommandSource> commandManager) {
-    commandManager.command(commandManager.commandBuilder("mute")
-        .permission(BanPermissions.COMMAND_MUTE)
+    commandManager.command(commandManager.commandBuilder("history")
+        .permission(BanPermissions.COMMAND_HISTORY)
         .argument(this.cloudArgumentFactory.banUser("target", true))
-        .argument(StringArgument.optional("reason", StringArgument.StringMode.GREEDY))
         .handler(this::execute));
   }
 
   private void execute(final @NonNull CommandContext<CommandSource> ctx) {
     final BanUser target = ctx.get("target");
-    final @Nullable String reason = ctx.getOrDefault("reason", null);
 
-    // TODO: Broadcast
-    this.punishmentService.savePunishment(
-        new PunishmentBuilder()
-            .type(PunishmentType.MUTE)
-            .punisher(CommandUtils.getSourceUuid(ctx.getSender()))
-            .target(target.getUuid())
-            .reason(reason)
-            .build()
-    );
+    this.punishmentService.getPunishments(target.getUuid())
+        .thenAccept(punishments -> {
+          // TODO: Customisable messages
+          ctx.getSender().sendMessage(Component.text()
+              .append(Component.text("Found ", NamedTextColor.YELLOW))
+              .append(Component.text(punishments.size(), NamedTextColor.GOLD))
+              .append(Component.text(" punishments for ", NamedTextColor.YELLOW))
+              .append(Component.text(target.getUsername(), NamedTextColor.GOLD))
+              .append(Component.text(".", NamedTextColor.YELLOW)));
+          for (final Punishment punishment : punishments) {
+            // TODO: Proper message
+            ctx.getSender().sendMessage(Component.text(punishment.toString()));
+          }
+        });
   }
 }

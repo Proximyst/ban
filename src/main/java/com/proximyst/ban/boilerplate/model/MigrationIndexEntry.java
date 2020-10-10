@@ -25,16 +25,15 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 /**
  * A migration entry with the data version and path to its SQL file.
  */
+@SuppressWarnings("unused") // They're assigned with Gson.
 public final class MigrationIndexEntry {
   private @NonNegative int version;
-
   private @MonotonicNonNull String path;
 
-  public MigrationIndexEntry(final int version, final @NonNull String path) {
-    this.version = version;
-    this.path = path;
-  }
-
+  /**
+   * @deprecated This is only supposed to be constructed by Gson.
+   */
+  @Deprecated
   public MigrationIndexEntry() {
   }
 

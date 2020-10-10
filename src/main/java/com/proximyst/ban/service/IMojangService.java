@@ -16,22 +16,23 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-package com.proximyst.ban.data;
+package com.proximyst.ban.service;
 
 import com.proximyst.ban.model.BanUser;
 import com.proximyst.ban.model.UsernameHistory;
-import com.proximyst.sewer.loadable.Loadable;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
-public interface IMojangApi {
+public interface IMojangService {
   /**
    * Get the UUID of an identifier.
    *
    * @param identifier The identifier to get the UUID of.
    * @return The UUID of the identifier.
    */
-  @NonNull Loadable<UUID> getUuid(final @NonNull String identifier);
+  @NonNull CompletableFuture<@NonNull Optional<@NonNull UUID>> getUuid(final @NonNull String identifier);
 
   /**
    * Get the username of a UUID.
@@ -39,7 +40,7 @@ public interface IMojangApi {
    * @param uuid The UUID to get the username of.
    * @return The username of the UUID.
    */
-  @NonNull Loadable<String> getUsername(final @NonNull UUID uuid);
+  @NonNull CompletableFuture<@NonNull Optional<@NonNull String>> getUsername(final @NonNull UUID uuid);
 
   /**
    * Get the username history of a UUID.
@@ -47,7 +48,7 @@ public interface IMojangApi {
    * @param uuid The UUID to get the username history of.
    * @return The username history of the UUID, unsorted.
    */
-  @NonNull Loadable<UsernameHistory> getUsernameHistory(final @NonNull UUID uuid);
+  @NonNull CompletableFuture<@NonNull Optional<@NonNull UsernameHistory>> getUsernameHistory(final @NonNull UUID uuid);
 
   /**
    * Get a populated {@link BanUser} for the user given.
@@ -55,7 +56,7 @@ public interface IMojangApi {
    * @param identifier Either the UUID of the user in string form (with or without hyphens), or their username.
    * @return Data about the user, fully populated with known data.
    */
-  @NonNull Loadable<BanUser> getUser(final @NonNull String identifier);
+  @NonNull CompletableFuture<@NonNull Optional<@NonNull BanUser>> getUser(final @NonNull String identifier);
 
   /**
    * Get a populated {@link BanUser} from the user given.
@@ -63,5 +64,5 @@ public interface IMojangApi {
    * @param uuid The UUID of the user.
    * @return Data about the user, fully populated with known data.
    */
-  @NonNull Loadable<BanUser> getUser(final @NonNull UUID uuid);
+  @NonNull CompletableFuture<@NonNull Optional<@NonNull BanUser>> getUser(final @NonNull UUID uuid);
 }

@@ -16,30 +16,26 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-package com.proximyst.ban.boilerplate;
+package com.proximyst.ban.service;
 
-import com.google.inject.Inject;
-import com.proximyst.ban.BanPlugin;
-import com.velocitypowered.api.proxy.ProxyServer;
-import java.util.concurrent.Executor;
+import com.proximyst.ban.model.BanUser;
+import com.proximyst.ban.model.Punishment;
+import java.util.concurrent.CompletableFuture;
+import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
-/**
- * A {@link Executor} that just defers to the Velocity scheduler using the plugin instance.
- */
-public final class VelocityBanSchedulerExecutor implements Executor {
-  private final @NonNull BanPlugin main;
-  private final @NonNull ProxyServer proxyServer;
+public interface IMessageService {
+  @NonNull Component errorNoBan(final @NonNull BanUser user);
 
-  @Inject
-  public VelocityBanSchedulerExecutor(final @NonNull BanPlugin main,
-      final @NonNull ProxyServer proxyServer) {
-    this.main = main;
-    this.proxyServer = proxyServer;
-  }
+  @NonNull Component errorNoMute(final @NonNull BanUser user);
 
-  @Override
-  public void execute(final @NonNull Runnable command) {
-    this.proxyServer.getScheduler().buildTask(this.main, command).schedule();
-  }
+  @NonNull CompletableFuture<@NonNull Component> formatMessageWith(
+      final @NonNull String message,
+      final @NonNull Punishment punishment);
+
+  @NonNull Component formatMessageWith(
+      final @NonNull Punishment punishment,
+      final @NonNull String message,
+      final @NonNull BanUser punisher,
+      final @NonNull BanUser target);
 }

@@ -16,23 +16,16 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-package com.proximyst.ban.utils;
+package com.proximyst.ban.inject.annotation;
 
-import java.util.function.Supplier;
-import org.checkerframework.checker.nullness.qual.NonNull;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import javax.inject.Qualifier;
 
-@FunctionalInterface
-public interface ThrowingSupplier<T, E extends Exception> {
-  T get() throws E;
-
-  default @NonNull Supplier<T> toSupplier() {
-    return () -> {
-      try {
-        return this.get();
-      } catch (final Exception ex) {
-        ThrowableUtils.sneakyThrow(ex);
-        throw new RuntimeException();
-      }
-    };
-  }
+@Qualifier
+@Target({ElementType.FIELD, ElementType.PARAMETER, ElementType.METHOD})
+@Retention(RetentionPolicy.RUNTIME)
+public @interface VelocityExecutor {
 }

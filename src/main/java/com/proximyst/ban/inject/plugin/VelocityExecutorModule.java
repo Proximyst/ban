@@ -16,30 +16,21 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-package com.proximyst.ban.boilerplate;
+package com.proximyst.ban.inject.plugin;
 
-import com.google.inject.Inject;
-import com.proximyst.ban.BanPlugin;
-import com.velocitypowered.api.proxy.ProxyServer;
+import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.proximyst.ban.boilerplate.VelocityBanSchedulerExecutor;
+import com.proximyst.ban.inject.annotation.VelocityExecutor;
 import java.util.concurrent.Executor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
-/**
- * A {@link Executor} that just defers to the Velocity scheduler using the plugin instance.
- */
-public final class VelocityBanSchedulerExecutor implements Executor {
-  private final @NonNull BanPlugin main;
-  private final @NonNull ProxyServer proxyServer;
-
-  @Inject
-  public VelocityBanSchedulerExecutor(final @NonNull BanPlugin main,
-      final @NonNull ProxyServer proxyServer) {
-    this.main = main;
-    this.proxyServer = proxyServer;
-  }
-
-  @Override
-  public void execute(final @NonNull Runnable command) {
-    this.proxyServer.getScheduler().buildTask(this.main, command).schedule();
+public class VelocityExecutorModule extends AbstractModule {
+  @Singleton
+  @Provides
+  @VelocityExecutor
+  @NonNull Executor provideVelocityExecutor(final @NonNull VelocityBanSchedulerExecutor executorImpl) {
+    return executorImpl;
   }
 }
