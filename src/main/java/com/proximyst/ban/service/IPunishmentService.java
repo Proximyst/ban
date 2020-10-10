@@ -47,7 +47,7 @@ public interface IPunishmentService {
    */
   default @NonNull CompletableFuture<@NonNull ImmutableList<@NonNull Punishment>> getPunishments(
       final @NonNull BanUser target) {
-    return getPunishments(target.getUuid());
+    return this.getPunishments(target.getUuid());
   }
 
   /**
