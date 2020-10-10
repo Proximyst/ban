@@ -16,24 +16,15 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-package com.proximyst.ban.event.subscriber;
+package com.proximyst.ban.inject.service;
 
-import com.google.inject.Inject;
+import com.google.inject.AbstractModule;
 import com.proximyst.ban.service.IUserService;
-import com.velocitypowered.api.event.Subscribe;
-import com.velocitypowered.api.event.connection.LoginEvent;
-import org.checkerframework.checker.nullness.qual.NonNull;
+import com.proximyst.ban.service.impl.ImplUserService;
 
-public class CacheUpdatePlayerJoinSubscriber {
-  private final @NonNull IUserService userService;
-
-  @Inject
-  public CacheUpdatePlayerJoinSubscriber(final @NonNull IUserService userService) {
-    this.userService = userService;
-  }
-
-  @Subscribe
-  public void onJoinServer(final @NonNull LoginEvent event) {
-    this.userService.getUserUpdated(event.getPlayer().getUniqueId());
+public class UserServiceModule extends AbstractModule {
+  @Override
+  protected void configure() {
+    bind(IUserService.class).to(ImplUserService.class);
   }
 }

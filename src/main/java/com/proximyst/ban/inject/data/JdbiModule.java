@@ -16,32 +16,17 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-package com.proximyst.ban.inject;
+package com.proximyst.ban.inject.data;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
 import com.proximyst.ban.BanPlugin;
-import com.proximyst.ban.data.IDataInterface;
-import com.proximyst.ban.data.IMojangApi;
-import com.proximyst.ban.manager.MessageManager;
-import com.proximyst.ban.manager.PunishmentManager;
-import com.proximyst.ban.manager.UserManager;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jdbi.v3.core.Jdbi;
 
-public final class DataModule extends AbstractModule {
-  private final @NonNull BanPlugin main;
-
-  public DataModule(final @NonNull BanPlugin main) {
-    this.main = main;
-  }
-
-  @Override
-  protected void configure() {
-    this.bind(IDataInterface.class).toProvider(this.main::getDataInterface);
-    this.bind(PunishmentManager.class).toProvider(this.main::getPunishmentManager);
-    this.bind(MessageManager.class).toProvider(this.main::getMessageManager);
-    this.bind(UserManager.class).toProvider(this.main::getUserManager);
-    this.bind(IMojangApi.class).toProvider(this.main::getMojangApi);
-    this.bind(Jdbi.class).toProvider(this.main::getJdbi);
+public class JdbiModule extends AbstractModule {
+  @Provides
+  @NonNull Jdbi provideJdbi(final @NonNull BanPlugin plugin) {
+    return plugin.getJdbi();
   }
 }

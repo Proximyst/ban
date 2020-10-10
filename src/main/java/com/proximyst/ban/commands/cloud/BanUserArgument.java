@@ -23,96 +23,47 @@ import cloud.commandframework.arguments.parser.ArgumentParseResult;
 import cloud.commandframework.arguments.parser.ArgumentParser;
 import cloud.commandframework.context.CommandContext;
 import com.google.common.collect.ImmutableList;
-import com.proximyst.ban.BanPlugin;
-import com.proximyst.ban.manager.UserManager;
+import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
 import com.proximyst.ban.model.BanUser;
+import com.proximyst.ban.service.IUserService;
+import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
-import io.leangen.geantyref.TypeToken;
 import java.util.List;
 import java.util.Locale;
 import java.util.Queue;
 import java.util.UUID;
-import java.util.function.BiFunction;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
-public final class BanUserArgument<C> extends CommandArgument<C, @NonNull BanUser> {
-  private static final @NonNull TypeToken<BanUser> BAN_USER_TYPE_TOKEN = TypeToken.get(BanUser.class);
-
-  private BanUserArgument(
-      final boolean required,
-      final @NonNull String name,
-      final @NonNull String defaultValue,
-      final @Nullable BiFunction<CommandContext<C>, String, List<String>> suggestionsProvider,
-      final @NonNull BanPlugin banPlugin
+public final class BanUserArgument extends CommandArgument<@NonNull CommandSource, @NonNull BanUser> {
+  @Inject
+  public BanUserArgument(
+      final @NonNull IUserService userService,
+      final @NonNull ProxyServer proxyServer,
+      final @Assisted("required") boolean required,
+      final @Assisted("name") @NonNull String name
   ) {
     super(
         required,
         name,
-        new BanUserParser<>(banPlugin.getUserManager(), banPlugin.getProxyServer()),
-        defaultValue,
-        BAN_USER_TYPE_TOKEN,
-        suggestionsProvider
+        new BanUserParser(userService, proxyServer),
+        BanUser.class
     );
   }
 
-  public static <@NonNull C> @NonNull Builder<C> newBuilder(
-      final @NonNull String name,
-      final @NonNull BanPlugin banPlugin
-  ) {
-    return new BanUserArgument.Builder<>(name, banPlugin);
-  }
-
-  public static <@NonNull C> @NonNull CommandArgument<C, @NonNull BanUser> of(
-      final @NonNull String name,
-      final @NonNull BanPlugin plugin
-  ) {
-    return BanUserArgument.<C>newBuilder(name, plugin).asRequired().build();
-  }
-
-  public static <@NonNull C> @NonNull CommandArgument<C, @NonNull BanUser> optional(
-      final @NonNull String name,
-      final @NonNull BanPlugin plugin
-  ) {
-    return BanUserArgument.<C>newBuilder(name, plugin).asOptional().build();
-  }
-
-  public static final class Builder<C> extends CommandArgument.Builder<C, @NonNull BanUser> {
-    private final @NonNull BanPlugin banPlugin;
-
-    public Builder(
-        final @NonNull String name,
-        final @NonNull BanPlugin banPlugin
-    ) {
-      super(BAN_USER_TYPE_TOKEN, name);
-      this.banPlugin = banPlugin;
-    }
-
-    @Override
-    public @NonNull BanUserArgument<C> build() {
-      return new BanUserArgument<>(
-          this.isRequired(),
-          this.getName(),
-          this.getDefaultValue(),
-          this.getSuggestionsProvider(),
-          this.banPlugin
-      );
-    }
-  }
-
-  public static final class BanUserParser<C> implements ArgumentParser<C, BanUser> {
-    private final @NonNull UserManager userManager;
+  public static final class BanUserParser implements ArgumentParser<@NonNull CommandSource, BanUser> {
+    private final @NonNull IUserService userService;
     private final @NonNull ProxyServer proxyServer;
 
-    public BanUserParser(final @NonNull UserManager userManager, final @NonNull ProxyServer proxyServer) {
-      this.userManager = userManager;
+    public BanUserParser(final @NonNull IUserService userService, final @NonNull ProxyServer proxyServer) {
+      this.userService = userService;
       this.proxyServer = proxyServer;
     }
 
     @Override
     public @NonNull ArgumentParseResult<BanUser> parse(
-        final @NonNull CommandContext<C> commandContext,
+        final @NonNull CommandContext<CommandSource> commandContext,
         final @NonNull Queue<String> inputQueue
     ) {
       final String input = inputQueue.peek();
@@ -140,7 +91,7 @@ public final class BanUserArgument<C> extends CommandArgument<C, @NonNull BanUse
         }
       }
 
-      return this.userManager.getUser(input).join()
+      return this.userService.getUser(input).join()
           .map(user -> {
             inputQueue.remove();
             return ArgumentParseResult.success(user);
@@ -152,7 +103,7 @@ public final class BanUserArgument<C> extends CommandArgument<C, @NonNull BanUse
 
     @Override
     public @NonNull List<String> suggestions(
-        final @NonNull CommandContext<C> commandContext,
+        final @NonNull CommandContext<CommandSource> commandContext,
         final @NonNull String input
     ) {
       final String lowercaseInput = input.toLowerCase(Locale.ENGLISH).trim();

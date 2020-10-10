@@ -19,37 +19,35 @@
 package com.proximyst.ban.event.subscriber;
 
 import com.google.inject.Inject;
-import com.proximyst.ban.BanPlugin;
 import com.proximyst.ban.config.MessagesConfig;
-import com.proximyst.ban.manager.PunishmentManager;
+import com.proximyst.ban.service.IMessageService;
+import com.proximyst.ban.service.IPunishmentService;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.player.PlayerChatEvent;
 import com.velocitypowered.api.event.player.PlayerChatEvent.ChatResult;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class MutedPlayerChatSubscriber {
-  private final @NonNull BanPlugin main;
-  private final @NonNull PunishmentManager manager;
+  private final @NonNull IPunishmentService punishmentService;
+  private final @NonNull IMessageService messageService;
   private final @NonNull MessagesConfig messagesConfig;
 
   @Inject
-  public MutedPlayerChatSubscriber(
-      final @NonNull BanPlugin main,
-      final @NonNull PunishmentManager manager,
-      final @NonNull MessagesConfig messagesConfig
-  ) {
-    this.main = main;
-    this.manager = manager;
+  public MutedPlayerChatSubscriber(final @NonNull IPunishmentService punishmentService,
+      final @NonNull IMessageService messageService,
+      final @NonNull MessagesConfig messagesConfig) {
+    this.punishmentService = punishmentService;
+    this.messageService = messageService;
     this.messagesConfig = messagesConfig;
   }
 
   @Subscribe
   public void onChat(final @NonNull PlayerChatEvent event) {
-    this.manager.getActiveMute(event.getPlayer().getUniqueId())
+    this.punishmentService.getActiveMute(event.getPlayer().getUniqueId())
         .join() // This *should* be fast, and only on one player's connection thread
         .ifPresent(mute -> {
           event.setResult(ChatResult.denied());
-          this.main.getMessageManager().formatMessageWith(
+          this.messageService.formatMessageWith(
               mute.getReason().isPresent()
                   ? this.messagesConfig.applications.muteReason
                   : this.messagesConfig.applications.muteReasonless,

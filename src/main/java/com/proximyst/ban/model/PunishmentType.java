@@ -18,6 +18,7 @@
 
 package com.proximyst.ban.model;
 
+import com.proximyst.ban.BanPermissions;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -144,5 +145,27 @@ public enum PunishmentType {
    */
   public boolean isApplicable() {
     return this.isApplicable;
+  }
+
+  /**
+   * @return The permission to view the notification of a punishment of this type. This returns an {@link
+   * Optional#empty() empty Optional} if it's not eligible for notifications.
+   */
+  public @NonNull Optional<@NonNull String> getNotificationPermission() {
+    switch (this) {
+      case BAN:
+        return Optional.of(BanPermissions.NOTIFY_BAN);
+      case KICK:
+        return Optional.of(BanPermissions.NOTIFY_KICK);
+      case MUTE:
+        return Optional.of(BanPermissions.NOTIFY_MUTE);
+      case WARNING:
+        return Optional.of(BanPermissions.NOTIFY_WARN);
+
+      case NOTE:
+        // Fall through
+      default:
+        return Optional.empty();
+    }
   }
 }

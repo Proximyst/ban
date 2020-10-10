@@ -19,20 +19,9 @@
 package com.proximyst.ban.commands.cloud;
 
 import cloud.commandframework.velocity.VelocityCommandManager;
-import com.proximyst.ban.BanPlugin;
 import com.velocitypowered.api.command.CommandSource;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public abstract class BaseCommand {
-  private final @NonNull BanPlugin main;
-
-  public BaseCommand(final @NonNull BanPlugin main) {
-    this.main = main;
-  }
-
   public abstract void register(final @NonNull VelocityCommandManager<@NonNull CommandSource> commandManager);
-
-  protected @NonNull BanPlugin getMain() {
-    return this.main;
-  }
 }

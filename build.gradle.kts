@@ -63,6 +63,12 @@ dependencies {
     implementation("org.apache.commons:commons-lang3:3.11")
 
     implementation("cloud.commandframework:cloud-velocity:1.0.0-SNAPSHOT")
+
+    implementation("com.google.inject.extensions:guice-assistedinject:4.2.3") { // Velocity uses Guice 4.2.3
+        // Only the deps provided by the artifact directly are wanted;
+        // Guice already exists in Velocity.
+        isTransitive = false
+    }
 }
 
 tasks {
@@ -84,7 +90,8 @@ tasks {
             "com.github.benmanes.caffeine",
             "org.antlr",
             "io.leangen.geantyref",
-            "cloud.commandframework"
+            "cloud.commandframework",
+            "com.google.inject.extensions.assistedinject"
         )
         mergeServiceFiles()
     }

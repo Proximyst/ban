@@ -16,20 +16,22 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-package com.proximyst.ban.data.impl;
+package com.proximyst.ban.service.impl;
 
 import com.google.gson.reflect.TypeToken;
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.proximyst.ban.BanPlugin;
 import com.proximyst.ban.boilerplate.model.MigrationIndexEntry;
 import com.proximyst.ban.boilerplate.model.Pair;
-import com.proximyst.ban.data.IDataInterface;
 import com.proximyst.ban.model.BanUser;
 import com.proximyst.ban.model.Punishment;
 import com.proximyst.ban.model.UsernameHistory;
 import com.proximyst.ban.model.UsernameHistory.Entry;
+import com.proximyst.ban.service.IDataService;
 import com.proximyst.ban.utils.ResourceReader;
 import com.proximyst.ban.utils.ThrowableUtils;
+import com.proximyst.ban.utils.ThrowingConsumer;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -37,30 +39,26 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.result.RowView;
 import org.slf4j.Logger;
 
-/**
- * A MySQL based interface to the data of this plugin.
- */
 @Singleton
-public class MySqlInterface implements IDataInterface {
+public final class ImplMySqlDataService implements IDataService {
   private static final @NonNull String PATH = "sql/mysql/";
 
-  private final @NonNull Logger logger;
   private final @NonNull Jdbi jdbi;
 
-  public MySqlInterface(final @NonNull Logger logger, final @NonNull Jdbi jdbi) {
-    this.logger = logger;
+  @Inject
+  public ImplMySqlDataService(final @NonNull Jdbi jdbi, final @NonNull Logger logger) {
     this.jdbi = jdbi;
+
+    applyMigrations(logger);
   }
 
-  @Override
-  public void applyMigrations() {
+  private void applyMigrations(final @NonNull Logger logger) {
     final String migrationsIndexJson = ResourceReader.readResource(PATH + "migrations/migrations-index.json");
     final List<MigrationIndexEntry> migrations = BanPlugin.COMPACT_GSON
         .fromJson(
@@ -81,7 +79,7 @@ public class MySqlInterface implements IDataInterface {
           .filter(mig -> mig.getVersion() > version)
           .sorted(Comparator.comparingInt(MigrationIndexEntry::getVersion))
           .forEach(mig -> {
-            this.logger.info("Migrating database to version " + mig.getVersion() + "...");
+            logger.info("Migrating database to version " + mig.getVersion() + "...");
             final String queries = ResourceReader.readResource(PATH + "migrations/" + mig.getPath());
             for (final String query : queries.split(";")) {
               if (query.trim().isEmpty()) {
@@ -108,7 +106,7 @@ public class MySqlInterface implements IDataInterface {
   }
 
   @Override
-  public void addPunishment(final @NonNull Punishment punishment) {
+  public void savePunishment(final @NonNull Punishment punishment) {
     this.jdbi.useHandle(handle -> {
       handle.execute(
           SqlQueries.CREATE_PUNISHMENT.getQuery(),
@@ -131,21 +129,6 @@ public class MySqlInterface implements IDataInterface {
           handle.createQuery("SELECT LAST_INSERT_ID()")
               .mapTo(long.class)
               .one()
-      );
-    });
-  }
-
-  @Override
-  public void liftPunishment(final @NonNull Punishment punishment) {
-    // Stay boxed to avoid an allocation.
-    final Long id = punishment.getId()
-        .orElseThrow(() -> new IllegalArgumentException("Punishment must be in DB before lifting"));
-    this.jdbi.useHandle(handle -> {
-      handle.execute(
-          SqlQueries.LIFT_PUNISHMENT.getQuery(),
-          punishment.isLifted(),
-          punishment.getLiftedBy(),
-          id
       );
     });
   }
@@ -243,7 +226,7 @@ public class MySqlInterface implements IDataInterface {
     });
   }
 
-  public enum SqlQueries {
+  private enum SqlQueries {
     SELECT_VERSION("select-version"),
     CREATE_VERSION_TABLE("create-version-table"),
     UPDATE_VERSION("update-version"),
@@ -282,32 +265,22 @@ public class MySqlInterface implements IDataInterface {
     }
 
     /**
-     * Apply a {@link SqlConsumer} to each query gotten from {@link #getQueries()}.
+     * Apply a {@link ThrowingConsumer} to each query gotten from {@link #getQueries()}.
      *
-     * @param consumer The {@link SqlConsumer} to apply to each query.
+     * @param consumer The {@link ThrowingConsumer} to apply to each query.
      */
-    public void forEachQuery(final @NonNull SqlConsumer consumer) {
+    public void forEachQuery(final @NonNull ThrowingConsumer<@NonNull String, SQLException> consumer) {
       for (final String query : this.getQueries()) {
         if (query.trim().isEmpty()) {
           continue;
         }
 
-        consumer.accept(query);
-      }
-    }
-
-    @FunctionalInterface
-    public interface SqlConsumer extends Consumer<@NonNull String> {
-      @Override
-      default void accept(final @NonNull String s) {
         try {
-          this.apply(s);
-        } catch (SQLException ex) {
+          consumer.accept(query);
+        } catch (final SQLException ex) {
           ThrowableUtils.sneakyThrow(ex);
         }
       }
-
-      void apply(final @NonNull String query) throws SQLException;
     }
   }
 }

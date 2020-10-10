@@ -16,7 +16,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-package com.proximyst.ban.data;
+package com.proximyst.ban.service;
 
 import com.proximyst.ban.model.BanUser;
 import com.proximyst.ban.model.Punishment;
@@ -25,15 +25,7 @@ import java.util.Optional;
 import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
-/**
- * An interface to the data storage.
- */
-public interface IDataInterface {
-  /**
-   * Apply all migrations to the database.
-   */
-  void applyMigrations();
-
+public interface IDataService {
   /**
    * Get all current punishments where the given {@link UUID} is the target.
    *
@@ -43,24 +35,44 @@ public interface IDataInterface {
   @NonNull List<@NonNull Punishment> getPunishmentsForTarget(final @NonNull UUID target);
 
   /**
-   * Add a punishment to the database.
+   * Save a punishment in the database.
    *
-   * @param punishment The punishment to add.
+   * @param punishment The punishment to save.
    */
-  void addPunishment(final @NonNull Punishment punishment);
+  void savePunishment(final @NonNull Punishment punishment);
 
   /**
-   * Lift a punishment in the database.
+   * Get a {@link BanUser} from the database.
+   * <p>
+   * This will not fetch the user's data if they are not in the database.
    *
-   * @param punishment The punishment to lift.
+   * @param uuid The user to get.
+   * @return The user found, if any.
    */
-  void liftPunishment(final @NonNull Punishment punishment);
-
   @NonNull Optional<@NonNull BanUser> getUser(final @NonNull UUID uuid);
 
+  /**
+   * Get a {@link BanUser} from the database.
+   * <p>
+   * This will not fetch the user's data if they are not in the database.
+   *
+   * @param username The user to get.
+   * @return The user found, if any.
+   */
   @NonNull Optional<@NonNull BanUser> getUser(final @NonNull String username);
 
+  /**
+   * Get the date at which the user was cached, if they are cached.
+   *
+   * @param uuid The user to get the cache time of.
+   * @return The cache time, if any.
+   */
   @NonNull Optional<@NonNull Long> getUserCacheDate(final @NonNull UUID uuid);
 
+  /**
+   * Update the database with the user information.
+   *
+   * @param user The user to update the database with.
+   */
   void saveUser(final @NonNull BanUser user);
 }
