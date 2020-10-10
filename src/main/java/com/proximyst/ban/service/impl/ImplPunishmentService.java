@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.proximyst.ban.BanPermissions;
 import com.proximyst.ban.inject.annotation.VelocityExecutor;
 import com.proximyst.ban.model.Punishment;
 import com.proximyst.ban.service.IDataService;
@@ -117,6 +118,24 @@ public final class ImplPunishmentService implements IPunishmentService {
         .orElse(null);
     if (target == null) {
       // We have no-one to apply the punishment on.
+      return CompletableFuture.completedFuture(null);
+    }
+
+    @SuppressWarnings("checkstyle:FinalLocalVariable")
+    String bypassPermission = null;
+    switch (punishment.getPunishmentType()) {
+      case MUTE:
+        bypassPermission = BanPermissions.BYPASS_MUTE;
+        break;
+      case BAN:
+        bypassPermission = BanPermissions.BYPASS_BAN;
+        break;
+      case KICK:
+        bypassPermission = BanPermissions.BYPASS_KICK;
+        break;
+    }
+    if (bypassPermission != null && target.hasPermission(bypassPermission)) {
+      // Don't apply the punishment; they can bypass it.
       return CompletableFuture.completedFuture(null);
     }
 
