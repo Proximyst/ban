@@ -113,6 +113,11 @@ public final class PlayerArgument extends CommandArgument<@NonNull CommandSource
 
       return builder.build();
     }
+
+    @Override
+    public boolean isContextFree() {
+      return true;
+    }
   }
 
   public static final class InvalidPlayerIdentifierException extends IllegalArgumentException {
