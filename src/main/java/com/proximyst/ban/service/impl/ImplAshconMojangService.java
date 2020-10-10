@@ -78,12 +78,12 @@ public final class ImplAshconMojangService implements IMojangService {
           new IllegalArgumentException("UUID \"" + uuid + "\" is not an online-mode UUID"));
     }
 
-    final BanUser cachedUser = banUserCache.getIfPresent(uuid);
+    final BanUser cachedUser = this.banUserCache.getIfPresent(uuid);
     if (cachedUser != null) {
       return CompletableFuture.completedFuture(Optional.of(cachedUser));
     }
 
-    return fetchFromIdentifier(uuid.toString());
+    return this.fetchFromIdentifier(uuid.toString());
   }
 
   @Override
@@ -119,25 +119,25 @@ public final class ImplAshconMojangService implements IMojangService {
       }
     }
 
-    return fetchFromIdentifier(identifier);
+    return this.fetchFromIdentifier(identifier);
   }
 
   @Override
   public @NonNull CompletableFuture<@NonNull Optional<@NonNull UUID>> getUuid(final @NonNull String identifier) {
-    return getUser(identifier)
+    return this.getUser(identifier)
         .thenApply(opt -> opt.map(BanUser::getUuid));
   }
 
   @Override
   public @NonNull CompletableFuture<@NonNull Optional<@NonNull String>> getUsername(final @NonNull UUID uuid) {
-    return getUser(uuid)
+    return this.getUser(uuid)
         .thenApply(opt -> opt.map(BanUser::getUsername));
   }
 
   @Override
   public @NonNull CompletableFuture<@NonNull Optional<@NonNull UsernameHistory>> getUsernameHistory(
       final @NonNull UUID uuid) {
-    return getUser(uuid)
+    return this.getUser(uuid)
         .thenApply(opt -> opt.map(BanUser::getUsernameHistory));
   }
 

@@ -55,7 +55,7 @@ public final class ImplMySqlDataService implements IDataService {
   public ImplMySqlDataService(final @NonNull Jdbi jdbi, final @NonNull Logger logger) {
     this.jdbi = jdbi;
 
-    applyMigrations(logger);
+    this.applyMigrations(logger);
   }
 
   private void applyMigrations(final @NonNull Logger logger) {

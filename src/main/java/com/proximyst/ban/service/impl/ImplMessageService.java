@@ -56,8 +56,8 @@ public final class ImplMessageService implements IMessageService {
 
   @Override
   public @NonNull CompletableFuture<@NonNull Component> formatMessageWith(
-      @NonNull String message,
-      @NonNull Punishment punishment) {
+      final @NonNull String message,
+      final @NonNull Punishment punishment) {
     return this.userService.getUser(punishment.getTarget())
         .thenApply(opt ->
             opt.orElseThrow(() -> new IllegalArgumentException("Target of punishment cannot be unknown."))
@@ -77,10 +77,10 @@ public final class ImplMessageService implements IMessageService {
 
   @Override
   public @NonNull Component formatMessageWith(
-      @NonNull Punishment punishment,
-      @NonNull String message,
-      @NonNull BanUser punisher,
-      @NonNull BanUser target) {
+      final @NonNull Punishment punishment,
+      final @NonNull String message,
+      final @NonNull BanUser punisher,
+      final @NonNull BanUser target) {
     return MiniMessage.get()
         .parse(
             message,
