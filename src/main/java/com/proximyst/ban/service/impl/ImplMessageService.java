@@ -212,6 +212,7 @@ public final class ImplMessageService implements IMessageService {
       case NOTE:
         punishmentVerb = this.cfg.formatting.noteVerb;
         break;
+      default:
     }
 
     return MiniMessage.get()
