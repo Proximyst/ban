@@ -31,12 +31,22 @@ public final class BanPermissions {
   public static final String COMMAND_MUTE = BASE_COMMANDS + "mute";
   public static final String COMMAND_UNMUTE = BASE_COMMANDS + "unmute";
   public static final String COMMAND_HISTORY = BASE_COMMANDS + "history";
+  public static final String COMMAND_WARN = BASE_COMMANDS + "warn";
+  public static final String COMMAND_UNWARN = BASE_COMMANDS + "unwarn";
+  public static final String COMMAND_NOTE = BASE_COMMANDS + "note";
+  public static final String COMMAND_LOCKDOWN = BASE_COMMANDS + "lockdown";
 
   private static final String BASE_NOTIFY = BASE + "notify.";
   public static final String NOTIFY_BAN = BASE_NOTIFY + "ban";
   public static final String NOTIFY_KICK = BASE_NOTIFY + "kick";
   public static final String NOTIFY_MUTE = BASE_NOTIFY + "mute";
   public static final String NOTIFY_WARN = BASE_NOTIFY + "warn";
+  public static final String NOTIFY_LOCKDOWN = BASE_NOTIFY + "lockdown";
+
+  private static final String BASE_BYPASS = BASE + "bypass.";
+  public static final String BYPASS_LOCKDOWN = BASE_BYPASS + "lockdown";
+  public static final String BYPASS_BAN = BASE_BYPASS + "ban";
+  public static final String BYPASS_KICK = BASE_BYPASS + "kick";
 
   private BanPermissions() throws IllegalAccessException {
     throw new IllegalAccessException(getClass().getSimpleName() + " cannot be instantiated.");
