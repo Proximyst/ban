@@ -43,7 +43,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 @Singleton
 public final class ImplPunishmentService implements IPunishmentService {
-  private static final int MAXIMUM_PUNISHMENT_CACHE_CAPACITY = 1024;
+  private static final int MAXIMUM_PUNISHMENT_CACHE_CAPACITY =
+      Integer.getInteger("ban.maximumPunishmentCacheCapacity", 512);
 
   private final @NonNull IDataService dataService;
   private final @NonNull IMessageService messageService;
@@ -143,6 +144,7 @@ public final class ImplPunishmentService implements IPunishmentService {
       final @NonNull RemovalNotification<@NonNull UUID, @NonNull List<@NonNull Punishment>> notification) {
     if (this.proxyServer.getPlayerCount() >= MAXIMUM_PUNISHMENT_CACHE_CAPACITY) {
       // We can't afford to recache the player's punishments!
+      // At this point, perhaps they should change the capacity?
       return;
     }
 
