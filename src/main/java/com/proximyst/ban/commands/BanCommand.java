@@ -63,15 +63,24 @@ public final class BanCommand extends BaseCommand {
     final BanUser target = ctx.get("target");
     final @Nullable String reason = ctx.getOrDefault("reason", null);
 
-    final Punishment punishment =
-        new PunishmentBuilder()
-            .type(PunishmentType.BAN)
-            .punisher(CommandUtils.getSourceUuid(ctx.getSender()))
-            .target(target.getUuid())
-            .reason(reason)
-            .build();
-    this.punishmentService.savePunishment(punishment);
-    this.punishmentService.applyPunishment(punishment);
-    this.messageService.announceNewPunishment(punishment);
+    // We have to lift their previous punishment.
+    this.punishmentService.getActiveBan(target.getUuid())
+        .thenAccept(optExisting -> {
+          optExisting.ifPresent(existing -> {
+            existing.setLiftedBy(CommandUtils.getSourceUuid(ctx.getSender()));
+            this.punishmentService.savePunishment(existing);
+          });
+
+          final Punishment punishment =
+              new PunishmentBuilder()
+                  .type(PunishmentType.BAN)
+                  .punisher(CommandUtils.getSourceUuid(ctx.getSender()))
+                  .target(target.getUuid())
+                  .reason(reason)
+                  .build();
+          this.punishmentService.savePunishment(punishment);
+          this.punishmentService.applyPunishment(punishment);
+          this.messageService.announceNewPunishment(punishment);
+        });
   }
 }
