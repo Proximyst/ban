@@ -59,7 +59,7 @@ public final class HistoryCommand extends BaseCommand {
     this.punishmentService.getPunishments(target.getUuid())
         .thenCompose(punishments -> this.messageService.formatHistory(punishments, target))
         .thenAccept(messages -> {
-          for (Component message : messages) {
+          for (final Component message : messages) {
             ctx.getSender().sendMessage(message);
           }
         });
