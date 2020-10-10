@@ -20,6 +20,7 @@ package com.proximyst.ban.service.impl;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.RemovalNotification;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -42,6 +43,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 @Singleton
 public final class ImplPunishmentService implements IPunishmentService {
+  private static final int MAXIMUM_PUNISHMENT_CACHE_CAPACITY = 1024;
+
   private final @NonNull IDataService dataService;
   private final @NonNull IMessageService messageService;
   private final @NonNull Executor executor;
@@ -50,8 +53,9 @@ public final class ImplPunishmentService implements IPunishmentService {
   private final @NonNull Cache<@NonNull UUID, @NonNull List<@NonNull Punishment>> punishmentCache =
       CacheBuilder.newBuilder()
           .initialCapacity(512)
-          .maximumSize(1024)
+          .maximumSize(MAXIMUM_PUNISHMENT_CACHE_CAPACITY)
           .expireAfterAccess(5, TimeUnit.MINUTES)
+          .removalListener(this::punishmentCacheRemovalCallback)
           .build();
 
   @Inject
@@ -133,5 +137,17 @@ public final class ImplPunishmentService implements IPunishmentService {
 
           return null;
         });
+  }
+
+  private void punishmentCacheRemovalCallback(
+      final @NonNull RemovalNotification<@NonNull UUID, @NonNull List<@NonNull Punishment>> notification) {
+    if (this.proxyServer.getPlayerCount() >= MAXIMUM_PUNISHMENT_CACHE_CAPACITY) {
+      // We can't afford to recache the player's punishments!
+      return;
+    }
+
+    if (this.proxyServer.getPlayer(notification.getKey()).isPresent()) {
+      this.punishmentCache.put(notification.getKey(), notification.getValue());
+    }
   }
 }
