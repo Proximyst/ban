@@ -266,6 +266,7 @@ public final class ImplMessageService implements IMessageService {
     final String permission = punishment.getPunishmentType().getNotificationPermission().orElse(null);
     return this.formatMessageWith(message, punishment)
         .thenApply(component -> {
+          this.proxyServer.getConsoleCommandSource().sendMessage(component);
           for (final Player player : this.proxyServer.getAllPlayers()) {
             if (permission != null && !player.hasPermission(permission)) {
               continue;
