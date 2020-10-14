@@ -39,6 +39,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
+import net.kyori.adventure.identity.Identity;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -152,7 +153,7 @@ public final class ImplPunishmentService implements IPunishmentService {
             case MUTE:
               // Fall through.
             default:
-              target.sendMessage(component);
+              target.sendMessage(Identity.nil(), component);
               break;
           }
 

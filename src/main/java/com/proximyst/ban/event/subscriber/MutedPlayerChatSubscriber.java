@@ -26,6 +26,7 @@ import com.proximyst.ban.service.IPunishmentService;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.player.PlayerChatEvent;
 import com.velocitypowered.api.event.player.PlayerChatEvent.ChatResult;
+import net.kyori.adventure.identity.Identity;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class MutedPlayerChatSubscriber {
@@ -58,7 +59,7 @@ public class MutedPlayerChatSubscriber {
                   ? this.messagesConfig.applications.muteReason
                   : this.messagesConfig.applications.muteReasonless,
               mute
-          ).thenAccept(event.getPlayer()::sendMessage);
+          ).thenAccept(msg -> event.getPlayer().sendMessage(Identity.nil(), msg));
         });
   }
 }

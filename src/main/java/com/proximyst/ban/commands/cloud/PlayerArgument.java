@@ -121,6 +121,8 @@ public final class PlayerArgument extends CommandArgument<@NonNull CommandSource
   }
 
   public static final class InvalidPlayerIdentifierException extends IllegalArgumentException {
+    private static final long serialVersionUID = 294074806408913903L;
+
     public InvalidPlayerIdentifierException(final @NonNull String message) {
       super(message);
     }

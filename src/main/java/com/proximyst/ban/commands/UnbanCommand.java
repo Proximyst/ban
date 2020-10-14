@@ -31,6 +31,7 @@ import com.proximyst.ban.service.IMessageService;
 import com.proximyst.ban.service.IPunishmentService;
 import com.proximyst.ban.utils.CommandUtils;
 import com.velocitypowered.api.command.CommandSource;
+import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
@@ -62,7 +63,7 @@ public final class UnbanCommand extends BaseCommand {
   private void execute(final @NonNull CommandContext<CommandSource> ctx) {
     final @NonNull BanUser target = ctx.get("target");
 
-    ctx.getSender().sendMessage(MiniMessage.get().parse(
+    ctx.getSender().sendMessage(Identity.nil(), MiniMessage.get().parse(
         this.messagesConfig.commands.banFeedback,
 
         "targetName", target.getUsername(),
@@ -73,7 +74,7 @@ public final class UnbanCommand extends BaseCommand {
         .thenAccept(punishmentOptional -> {
           final Punishment punishment = punishmentOptional.orElse(null);
           if (punishment == null) {
-            ctx.getSender().sendMessage(this.messageService.errorNoBan(target));
+            ctx.getSender().sendMessage(Identity.nil(), this.messageService.errorNoBan(target));
             return;
           }
 

@@ -29,6 +29,7 @@ import com.proximyst.ban.model.BanUser;
 import com.proximyst.ban.service.IMessageService;
 import com.proximyst.ban.service.IPunishmentService;
 import com.velocitypowered.api.command.CommandSource;
+import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -61,7 +62,7 @@ public final class HistoryCommand extends BaseCommand {
   private void execute(final @NonNull CommandContext<CommandSource> ctx) {
     final BanUser target = ctx.get("target");
 
-    ctx.getSender().sendMessage(MiniMessage.get().parse(
+    ctx.getSender().sendMessage(Identity.nil(), MiniMessage.get().parse(
         this.messagesConfig.commands.historyFeedback,
 
         "targetName", target.getUsername(),
@@ -72,7 +73,7 @@ public final class HistoryCommand extends BaseCommand {
         .thenCompose(punishments -> this.messageService.formatHistory(punishments, target))
         .thenAccept(messages -> {
           for (final Component message : messages) {
-            ctx.getSender().sendMessage(message);
+            ctx.getSender().sendMessage(Identity.nil(), message);
           }
         });
   }

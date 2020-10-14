@@ -34,6 +34,7 @@ import com.proximyst.ban.service.IPunishmentService;
 import com.proximyst.ban.utils.CommandUtils;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
+import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -68,7 +69,7 @@ public class KickCommand extends BaseCommand {
     final Player target = ctx.get("target");
     final @Nullable String reason = ctx.getOrDefault("reason", null);
 
-    ctx.getSender().sendMessage(MiniMessage.get().parse(
+    ctx.getSender().sendMessage(Identity.nil(), MiniMessage.get().parse(
         this.messagesConfig.commands.kickFeedback,
 
         "targetName", target.getUsername(),

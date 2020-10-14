@@ -128,6 +128,8 @@ public final class BanUserArgument extends CommandArgument<@NonNull CommandSourc
   }
 
   public static final class InvalidPlayerIdentifierException extends IllegalArgumentException {
+    private static final long serialVersionUID = -6500019324607183855L;
+
     public InvalidPlayerIdentifierException(final @NonNull String message) {
       super(message);
     }

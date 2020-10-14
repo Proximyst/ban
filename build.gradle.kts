@@ -19,7 +19,6 @@ repositories {
 
         content {
             includeGroup("net.kyori")
-            includeGroup("cloud.commandframework")
         }
     }
 
@@ -51,7 +50,7 @@ dependencies {
 
     implementation("org.apache.commons:commons-lang3:3.11")
 
-    implementation("cloud.commandframework:cloud-velocity:1.0.0-SNAPSHOT")
+    implementation("cloud.commandframework:cloud-velocity:1.0.1")
 
     implementation("com.google.inject.extensions:guice-assistedinject:4.2.3") { // Velocity uses Guice 4.2.3
         // Only the deps provided by the artifact directly are wanted;
@@ -85,6 +84,14 @@ tasks {
     }
 
     named("build").get().dependsOn(withType<ShadowJar>())
+
+    compileJava {
+        this.options.apply {
+            isFork = true
+            compilerArgs.add("-Xlint:all")
+            compilerArgs.add("-parameters")
+        }
+    }
 }
 
 configure<JavaPluginConvention> {

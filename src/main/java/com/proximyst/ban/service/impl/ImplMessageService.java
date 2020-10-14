@@ -32,6 +32,7 @@ import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import java.text.SimpleDateFormat;
 import java.util.concurrent.CompletableFuture;
+import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.apache.commons.lang3.time.DurationFormatUtils;
@@ -267,13 +268,13 @@ public final class ImplMessageService implements IMessageService {
     final String permission = punishment.getPunishmentType().getNotificationPermission().orElse(null);
     return this.formatMessageWith(message, punishment)
         .thenApply(component -> {
-          this.proxyServer.getConsoleCommandSource().sendMessage(component);
+          this.proxyServer.getConsoleCommandSource().sendMessage(Identity.nil(), component);
           for (final Player player : this.proxyServer.getAllPlayers()) {
             if (permission != null && !player.hasPermission(permission)) {
               continue;
             }
 
-            player.sendMessage(component);
+            player.sendMessage(Identity.nil(), component);
           }
 
           return null;
