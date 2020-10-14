@@ -67,7 +67,7 @@ public interface IPunishmentService {
    */
   @NonNull CompletableFuture<@Nullable Void> applyPunishment(final @NonNull Punishment punishment);
 
-  default @NonNull CompletableFuture<@NonNull Optional<@NonNull Punishment>> getActiveBan(@NonNull final UUID target) {
+  default @NonNull CompletableFuture<@NonNull Optional<@NonNull Punishment>> getActiveBan(final @NonNull UUID target) {
     return this.getPunishments(target)
         .thenApply(list -> list.stream()
             .filter(punishment -> punishment.getPunishmentType() == PunishmentType.BAN
@@ -76,12 +76,22 @@ public interface IPunishmentService {
         );
   }
 
-  default @NonNull CompletableFuture<@NonNull Optional<@NonNull Punishment>> getActiveMute(@NonNull final UUID target) {
+  default @NonNull CompletableFuture<@NonNull Optional<@NonNull Punishment>> getActiveMute(final @NonNull UUID target) {
     return this.getPunishments(target)
         .thenApply(list -> list.stream()
             .filter(punishment -> punishment.getPunishmentType() == PunishmentType.MUTE
                 && punishment.currentlyApplies())
             .max(Comparator.comparingLong(Punishment::getTime))
+        );
+  }
+
+  default @NonNull CompletableFuture<@NonNull ImmutableList<@NonNull Punishment>> getNotes(final @NonNull UUID target) {
+    return this.getPunishments(target)
+        .thenApply(list -> list.stream()
+            .filter(punishment -> punishment.getPunishmentType() == PunishmentType.MUTE
+                && punishment.currentlyApplies())
+            .sorted(Comparator.comparingLong(Punishment::getTime))
+            .collect(ImmutableList.toImmutableList())
         );
   }
 }
