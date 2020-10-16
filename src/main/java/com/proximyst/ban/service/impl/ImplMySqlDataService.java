@@ -18,12 +18,12 @@
 
 package com.proximyst.ban.service.impl;
 
+import cloud.commandframework.types.tuples.Pair;
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.proximyst.ban.BanPlugin;
 import com.proximyst.ban.boilerplate.model.MigrationIndexEntry;
-import com.proximyst.ban.boilerplate.model.Pair;
 import com.proximyst.ban.model.BanUser;
 import com.proximyst.ban.model.Punishment;
 import com.proximyst.ban.model.UsernameHistory;
@@ -162,7 +162,7 @@ public final class ImplMySqlDataService implements IDataService {
       final Pair<UUID, String> user = handle.createQuery(SqlQueries.SELECT_USER_BY_USERNAME.getQuery())
           .bind(0, username)
           .setMaxRows(1)
-          .map((RowView rowView) -> new Pair<>(
+          .map((RowView rowView) -> Pair.of(
               rowView.getColumn("uuid", UUID.class),
               rowView.getColumn("username", String.class)
           ))
