@@ -154,11 +154,11 @@ public class BanPlugin {
 
       // Loading...
       this.rawConfigurationNode = loader.load();
-      this.configuration = ConfigUtil.loadConfiguration(this.getRawConfigurationNode());
+      this.configuration = ConfigUtil.loadConfiguration(this.rawConfigurationNode);
 
       // Saving...
-      ConfigUtil.saveConfiguration(this.getConfiguration(), this.getRawConfigurationNode());
-      loader.save(this.getRawConfigurationNode());
+      ConfigUtil.saveConfiguration(this.getConfiguration(), this.rawConfigurationNode);
+      loader.save(this.rawConfigurationNode);
     } catch (IOException | ObjectMappingException ex) {
       this.logger.error("Cannot read configuration", ex);
       return;
@@ -250,10 +250,6 @@ public class BanPlugin {
 
   public @NonNull Configuration getConfiguration() {
     return this.configuration;
-  }
-
-  public @NonNull ConfigurationNode getRawConfigurationNode() {
-    return this.rawConfigurationNode;
   }
 
   public @NonNull Jdbi getJdbi() {
