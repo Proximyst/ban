@@ -137,7 +137,7 @@ public class BanPlugin {
     }
 
     final long start = System.nanoTime();
-    final TimeMeasurer tm = new TimeMeasurer(this.logger);
+    final TimeMeasurer tm = this.injector.getInstance(TimeMeasurer.class);
 
     tm.start("Reading configuration file");
     // Just to ensure the parents exist.
@@ -185,7 +185,7 @@ public class BanPlugin {
             BanPlugin.this.logger.warn("Could not execute JDBI statement.", ex);
           }
         })
-        .registerArgument(new UuidJdbiFactory());
+        .registerArgument(this.injector.getInstance(UuidJdbiFactory.class));
 
     tm.start("Preparing database");
     try {
@@ -232,7 +232,7 @@ public class BanPlugin {
   @Subscribe
   public void onProxyShutdown(final @NonNull ProxyShutdownEvent event) {
     final long start = System.nanoTime();
-    final TimeMeasurer tm = new TimeMeasurer(this.logger);
+    final TimeMeasurer tm = this.injector.getInstance(TimeMeasurer.class);
 
     tm.start("Unregistering listeners");
     this.proxyServer.getEventManager().unregisterListeners(this);
@@ -265,6 +265,7 @@ public class BanPlugin {
     private @NonNegative long start;
     private @MonotonicNonNull String current;
 
+    @Inject
     private TimeMeasurer(final @NonNull Logger logger) {
       this.logger = logger;
     }
