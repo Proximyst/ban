@@ -121,7 +121,7 @@ public final class Punishment {
       throw new IllegalArgumentException("liftedBy must be null if lifted is false");
     }
 
-    this.id = id < 0 ? -1 : id;
+    this.id = Math.max(id, -1);
     this.punishmentType = Objects.requireNonNull(punishmentType, "type must be specified");
     this.target = Objects.requireNonNull(target, "target must be specified");
     this.punisher = Objects.requireNonNull(punisher, "punisher must be specified");

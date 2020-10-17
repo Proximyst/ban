@@ -28,6 +28,12 @@ public final class BanUser {
    */
   private static final @NonNull UUID CONSOLE_UUID = new UUID(0, 0);
 
+  /**
+   * The user for a console.
+   * <p>
+   * Its {@link UUID} is {@code null} with its {@link UUID#getMostSignificantBits() most significant bits} and {@link
+   * UUID#getLeastSignificantBits() least significant bits} being {@code 0}.
+   */
   public static final @NonNull BanUser CONSOLE = new BanUser(
       CONSOLE_UUID,
       "CONSOLE",
@@ -48,14 +54,23 @@ public final class BanUser {
     this.usernameHistory = usernameHistory;
   }
 
+  /**
+   * @return This user's {@link UUID}.
+   */
   public @NonNull UUID getUuid() {
     return this.uuid;
   }
 
+  /**
+   * @return This user's username.
+   */
   public @NonNull String getUsername() {
     return this.username;
   }
 
+  /**
+   * @return This user's {@link UsernameHistory}.
+   */
   public @NonNull UsernameHistory getUsernameHistory() {
     return this.usernameHistory;
   }

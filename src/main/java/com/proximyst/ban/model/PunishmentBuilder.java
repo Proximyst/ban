@@ -36,59 +36,95 @@ public final class PunishmentBuilder {
   private long time = System.currentTimeMillis();
   private long duration = 0;
 
+  /**
+   * @param id The ID of the punishment. If no ID is set, use {@code -1}.
+   * @return This {@link PunishmentBuilder} for chaining.
+   */
   public @NonNull @This PunishmentBuilder id(final long id) {
-    this.id = id;
+    this.id = Math.max(id, -1);
     return this;
   }
 
+  /**
+   * @param punishmentType The {@link PunishmentType} of this punishment.
+   * @return This {@link PunishmentBuilder} for chaining.
+   */
   public @NonNull @This PunishmentBuilder type(final @NonNull PunishmentType punishmentType) {
     this.punishmentType = punishmentType;
     return this;
   }
 
+  /**
+   * @param target The target of this punishment.
+   * @return This {@link PunishmentBuilder} for chaining.
+   */
   public @NonNull @This PunishmentBuilder target(final @NonNull UUID target) {
     this.target = target;
     return this;
   }
 
+  /**
+   * @param punisher The punisher of this punishment.
+   * @return This {@link PunishmentBuilder} for chaining.
+   */
   public @NonNull @This PunishmentBuilder punisher(final @NonNull UUID punisher) {
     this.punisher = punisher;
     return this;
   }
 
+  /**
+   * @param reason The reason for this punishment.
+   * @return This {@link PunishmentBuilder} for chaining.
+   */
   public @NonNull @This PunishmentBuilder reason(final @Nullable String reason) {
     this.reason = reason;
     return this;
   }
 
+  /**
+   * @param lifted Whether this punishment is already lifted.
+   * @return This {@link PunishmentBuilder} for chaining.
+   */
   public @NonNull @This PunishmentBuilder lifted(final boolean lifted) {
     this.lifted = lifted;
+    this.liftedBy = null;
     return this;
   }
 
+  /**
+   * @param liftedBy Who lifted the punishment.
+   * @return This {@link PunishmentBuilder} for chaining.
+   */
   public @NonNull @This PunishmentBuilder liftedBy(final @Nullable UUID liftedBy) {
     this.liftedBy = liftedBy;
     return this;
   }
 
+  /**
+   * @param time The time of the punishment.
+   * @return This {@link PunishmentBuilder} for chaining.
+   */
   public @NonNull @This PunishmentBuilder time(final long time) {
     this.time = time;
     return this;
   }
 
+  /**
+   * @param duration The duration of the punishment.
+   * @return This {@link PunishmentBuilder} for chaining.
+   */
   public @NonNull @This PunishmentBuilder duration(final long duration) {
-    if (duration == 0L) {
-      return this.duration(-1L);
-    }
-
     this.duration = duration;
     return this;
   }
 
+  /**
+   * @return A new {@link Punishment} derived from {@link PunishmentBuilder this builder}.
+   */
   @RequiresNonNull({"target", "punisher", "punishmentType"})
   public @NonNull Punishment build() {
     return new Punishment(
-        this.id,
+        Math.max(this.id, -1),
         this.punishmentType,
         this.target,
         this.punisher,

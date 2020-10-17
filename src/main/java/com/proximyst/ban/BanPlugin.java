@@ -91,6 +91,9 @@ public class BanPlugin {
   public static final @NonNull String PLUGIN_VERSION = "0.1.0";
   public static final @NonNull String PLUGIN_DESCRIPTION = "A simple punishment suite for Velocity.";
 
+  /**
+   * A {@link Gson} instance with no leniency in compact mode.
+   */
   public static final @NonNull Gson COMPACT_GSON = new Gson();
 
   private final @NonNull ProxyServer proxyServer;
@@ -98,13 +101,12 @@ public class BanPlugin {
   private final @NonNull Path dataDirectory;
   private final @NonNull Injector injector;
 
-  private @MonotonicNonNull ConfigurationNode rawConfigurationNode;
   private @MonotonicNonNull Configuration configuration;
   private @MonotonicNonNull HikariDataSource hikariDataSource;
   private @MonotonicNonNull Jdbi jdbi;
 
   @Inject
-  public BanPlugin(
+  private BanPlugin(
       final @NonNull ProxyServer proxyServer,
       final @NonNull Logger logger,
       final @NonNull @DataDirectory Path dataDirectory,
@@ -153,12 +155,12 @@ public class BanPlugin {
           .build();
 
       // Loading...
-      this.rawConfigurationNode = loader.load();
-      this.configuration = ConfigUtil.loadConfiguration(this.rawConfigurationNode);
+      final ConfigurationNode rawConfigurationNode = loader.load();
+      this.configuration = ConfigUtil.loadConfiguration(rawConfigurationNode);
 
       // Saving...
-      ConfigUtil.saveConfiguration(this.getConfiguration(), this.rawConfigurationNode);
-      loader.save(this.rawConfigurationNode);
+      ConfigUtil.saveConfiguration(this.getConfiguration(), rawConfigurationNode);
+      loader.save(rawConfigurationNode);
     } catch (IOException | ObjectMappingException ex) {
       this.logger.error("Cannot read configuration", ex);
       return;
