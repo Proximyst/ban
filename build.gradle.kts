@@ -25,6 +25,10 @@ repositories {
     maven {
         name = "velocity"
         url = uri("https://repo.velocitypowered.com/snapshots/")
+
+        content {
+            includeGroup("com.velocitypowered")
+        }
     }
 
     jcenter()
