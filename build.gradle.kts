@@ -31,6 +31,15 @@ repositories {
         }
     }
 
+    maven {
+        name = "mojang"
+        url = uri("https://libraries.minecraft.net")
+
+        content {
+            includeGroup("com.mojang")
+        }
+    }
+
     jcenter()
     mavenCentral()
 }
