@@ -40,15 +40,16 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
+import org.checkerframework.checker.index.qual.NonNegative;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 @Singleton
 public final class ImplAshconMojangService implements IMojangService {
   private static final @NonNull String API_BASE = "https://api.ashcon.app/mojang/v2/";
-  private static final int MAXIMUM_BAN_USER_CACHE_CAPACITY =
+  private static final @NonNegative int MAXIMUM_BAN_USER_CACHE_CAPACITY =
       Integer.getInteger("ban.maxBanUserCacheCapacity", 512);
-  private static final int MAXIMUM_USERNAME_TO_UUID_CACHE_CAPACITY =
+  private static final @NonNegative int MAXIMUM_USERNAME_TO_UUID_CACHE_CAPACITY =
       Integer.getInteger("ban.maxUsernameToUuidCacheCapacity", 512);
   private static final @NonNull CompletableFuture<@NonNull Optional<@NonNull BanUser>> CONSOLE_USER =
       CompletableFuture.completedFuture(Optional.of(BanUser.CONSOLE));
