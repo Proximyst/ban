@@ -74,8 +74,8 @@ dependencies {
 
 tasks {
     withType<ShadowJar> {
-		// Make this the default jar
-		this.archiveClassifier.set(null as String?)
+        // Make this the default jar
+        this.archiveClassifier.set(null as String?)
 
         dependencies {
             exclude(dependency("org.checkerframework:checker-qual"))
@@ -117,13 +117,13 @@ tasks {
         opt.charSet("UTF-8")
         opt.source("8")
         opt.links(
-			"https://docs.oracle.com/javase/8/docs/api/",
-			"http://www.slf4j.org/apidocs/",
-			"https://google.github.io/guava/releases/25.1-jre/api/docs/",
-			"https://google.github.io/guice/api-docs/4.2/javadoc/",
-			"https://jd.adventure.kyori.net/api/4.0.0/",
-			"https://jd.velocitypowered.com/1.1.0/"
-		)
+            "https://docs.oracle.com/javase/8/docs/api/",
+            "http://www.slf4j.org/apidocs/",
+            "https://google.github.io/guava/releases/25.1-jre/api/docs/",
+            "https://google.github.io/guice/api-docs/4.2/javadoc/",
+            "https://jd.adventure.kyori.net/api/4.0.0/",
+            "https://jd.velocitypowered.com/1.1.0/"
+        )
     }
 }
 
