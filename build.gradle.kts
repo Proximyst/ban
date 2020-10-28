@@ -45,13 +45,13 @@ repositories {
 }
 
 dependencies {
-    compileOnly("com.velocitypowered:velocity-api:1.1.0-SNAPSHOT")
-    annotationProcessor("com.velocitypowered:velocity-api:1.1.0-SNAPSHOT")
+    compileOnly("com.velocitypowered:velocity-api:1.1.0")
+    annotationProcessor("com.velocitypowered:velocity-api:1.1.0")
 
-    implementation("org.jdbi:jdbi3-core:3.14.1") {
+    implementation("org.jdbi:jdbi3-core:3.17.0") {
         exclude("org.slf4j")
     }
-    implementation("org.mariadb.jdbc:mariadb-java-client:2.6.1")
+    implementation("org.mariadb.jdbc:mariadb-java-client:2.7.0")
     implementation("com.zaxxer:HikariCP:3.4.5") {
         exclude("org.slf4j")
     }
@@ -94,7 +94,8 @@ tasks {
             "org.antlr",
             "io.leangen.geantyref",
             "cloud.commandframework",
-            "com.google.inject.extensions.assistedinject"
+            "com.google.inject.extensions.assistedinject",
+            "com.google.inject.assistedinject"
         )
         mergeServiceFiles()
     }
