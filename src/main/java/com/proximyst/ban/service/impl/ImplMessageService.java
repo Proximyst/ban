@@ -56,26 +56,10 @@ public final class ImplMessageService implements IMessageService {
 
   @Override
   public @NonNull CompletableFuture<@Nullable Void> announceNewPunishment(final @NonNull Punishment punishment) {
-    final boolean hasReason = punishment.getReason().isPresent();
-    @SuppressWarnings("checkstyle:FinalLocalVariable")
-    String message;
-    switch (punishment.getPunishmentType()) {
-      case BAN:
-        message = hasReason ? this.cfg.broadcasts.banReason : this.cfg.broadcasts.banReasonless;
-        break;
-      case MUTE:
-        message = hasReason ? this.cfg.broadcasts.muteReason : this.cfg.broadcasts.muteReasonless;
-        break;
-      case KICK:
-        message = hasReason ? this.cfg.broadcasts.kickReason : this.cfg.broadcasts.kickReasonless;
-        break;
-      case WARNING:
-        message = hasReason ? this.cfg.broadcasts.warnReason : this.cfg.broadcasts.warnReasonless;
-        break;
-
-      default:
-        // The type is not announcable upon placing.
-        return CompletableFuture.completedFuture(null);
+    final String message = punishment.getPunishmentType().getBroadcastMessage(
+        punishment.getReason().isPresent()).map(key -> key.map(this.cfg)).orElse(null);
+    if (message == null) {
+      return CompletableFuture.completedFuture(null);
     }
 
     return this.announcePunishmentMessage(punishment, message);
@@ -83,19 +67,10 @@ public final class ImplMessageService implements IMessageService {
 
   @Override
   public @NonNull CompletableFuture<@Nullable Void> announceLiftedPunishment(final @NonNull Punishment punishment) {
-    @SuppressWarnings("checkstyle:FinalLocalVariable")
-    String message;
-    switch (punishment.getPunishmentType()) {
-      case BAN:
-        message = this.cfg.broadcasts.unban;
-        break;
-      case MUTE:
-        message = this.cfg.broadcasts.unmute;
-        break;
-
-      default:
-        // The type is not announcable upon lifting.
-        return CompletableFuture.completedFuture(null);
+    final String message = punishment.getPunishmentType().getBroadcastLiftMessage()
+        .map(key -> key.map(this.cfg)).orElse(null);
+    if (message == null) {
+      return CompletableFuture.completedFuture(null);
     }
 
     return this.announcePunishmentMessage(punishment, message);
@@ -149,22 +124,10 @@ public final class ImplMessageService implements IMessageService {
 
   @Override
   public @NonNull CompletableFuture<@NonNull Component> formatApplication(final @NonNull Punishment punishment) {
-    final boolean hasReason = punishment.getReason().isPresent();
-    @SuppressWarnings("checkstyle:FinalLocalVariable")
-    String message;
-    switch (punishment.getPunishmentType()) {
-      case KICK:
-        message = hasReason ? this.cfg.applications.kickReason : this.cfg.applications.kickReasonless;
-        break;
-      case BAN:
-        message = hasReason ? this.cfg.applications.banReason : this.cfg.applications.banReasonless;
-        break;
-      case MUTE:
-        message = hasReason ? this.cfg.applications.muteReason : this.cfg.applications.muteReasonless;
-        break;
-
-      default:
-        return CompletableFuture.completedFuture(Component.empty());
+    final String message = punishment.getPunishmentType().getApplicationMessage(
+        punishment.getReason().isPresent()).map(key -> key.map(this.cfg)).orElse(null);
+    if (message == null) {
+      return CompletableFuture.completedFuture(Component.empty());
     }
 
     return this.formatMessageWith(message, punishment);
@@ -195,26 +158,7 @@ public final class ImplMessageService implements IMessageService {
       final @NonNull String message,
       final @NonNull BanUser punisher,
       final @NonNull BanUser target) {
-    @SuppressWarnings("checkstyle:FinalLocalVariable")
-    String punishmentVerb = "UNKNOWN VERB, REPORT TO BAN";
-    switch (punishment.getPunishmentType()) {
-      case KICK:
-        punishmentVerb = this.cfg.formatting.kickVerb;
-        break;
-      case BAN:
-        punishmentVerb = this.cfg.formatting.banVerb;
-        break;
-      case WARNING:
-        punishmentVerb = this.cfg.formatting.warnVerb;
-        break;
-      case MUTE:
-        punishmentVerb = this.cfg.formatting.muteVerb;
-        break;
-      case NOTE:
-        punishmentVerb = this.cfg.formatting.noteVerb;
-        break;
-      default:
-    }
+    final String punishmentVerb = punishment.getPunishmentType().getVerbPastTense().map(this.cfg);
 
     return MiniMessage.get()
         .parse(
