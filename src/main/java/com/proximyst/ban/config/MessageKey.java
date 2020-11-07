@@ -70,6 +70,15 @@ public enum MessageKey {
   FORMATTING_VERB_PAST_MUTE(cfg -> cfg.formatting.muteVerb),
   FORMATTING_VERB_PAST_WARN(cfg -> cfg.formatting.warnVerb),
   FORMATTING_VERB_PAST_NOTE(cfg -> cfg.formatting.noteVerb),
+
+  COMMANDS_FEEDBACK_BAN(cfg -> cfg.commands.banFeedback),
+  COMMANDS_FEEDBACK_KICK(cfg -> cfg.commands.kickFeedback),
+  COMMANDS_FEEDBACK_HISTORY(cfg -> cfg.commands.historyFeedback),
+  COMMANDS_FEEDBACK_MUTE(cfg -> cfg.commands.muteFeedback),
+  COMMANDS_FEEDBACK_UNMUTE(cfg -> cfg.commands.unmuteFeedback),
+  COMMANDS_FEEDBACK_UNBAN(cfg -> cfg.commands.unbanFeedback),
+  COMMANDS_HISTORY_HEADER(cfg -> cfg.commands.historyHeader),
+  COMMANDS_HISTORY_ENTRY(cfg -> cfg.commands.historyEntry),
   ;
 
   private final @NonNull Function<@NonNull MessagesConfig, @NonNull String> mapper;
