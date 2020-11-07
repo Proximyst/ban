@@ -18,7 +18,7 @@
 
 package com.proximyst.ban;
 
-import cloud.commandframework.execution.CommandExecutionCoordinator;
+import cloud.commandframework.execution.AsynchronousCommandExecutionCoordinator;
 import cloud.commandframework.velocity.VelocityCommandManager;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
@@ -31,7 +31,6 @@ import com.proximyst.ban.commands.KickCommand;
 import com.proximyst.ban.commands.MuteCommand;
 import com.proximyst.ban.commands.UnbanCommand;
 import com.proximyst.ban.commands.UnmuteCommand;
-import com.proximyst.ban.commands.cloud.ScheduledCommandExecutionCoordinator;
 import com.proximyst.ban.config.ConfigUtil;
 import com.proximyst.ban.config.Configuration;
 import com.proximyst.ban.data.jdbi.UuidJdbiFactory;
@@ -201,10 +200,10 @@ public class BanPlugin {
     tm.start("Initialising plugin essentials");
     final VelocityCommandManager<CommandSource> velocityCommandManager = new VelocityCommandManager<>(
         this.proxyServer,
-        tree -> new ScheduledCommandExecutionCoordinator(
-            tree,
-            this.injector.getInstance(Key.get(Executor.class, VelocityExecutor.class)),
-            CommandExecutionCoordinator.<CommandSource>simpleCoordinator().apply(tree)),
+        AsynchronousCommandExecutionCoordinator.<CommandSource>newBuilder()
+            .withAsynchronousParsing()
+            .withExecutor(this.injector.getInstance(Key.get(Executor.class, VelocityExecutor.class)))
+            .build(),
         Function.identity(),
         Function.identity()
     );
