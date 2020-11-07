@@ -143,7 +143,7 @@ license {
 
 checkstyle {
     toolVersion = "8.36.2"
-    val configRoot = rootProject.projectDir.resolve(".checkstyle")
+    val configRoot = rootProject.projectDir
     configDirectory.set(configRoot)
     configProperties["basedir"] = configRoot.absolutePath
 }
