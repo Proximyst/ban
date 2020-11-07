@@ -18,10 +18,12 @@
 
 package com.proximyst.ban.service.impl;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.proximyst.ban.config.MessageKey;
 import com.proximyst.ban.config.MessagesConfig;
 import com.proximyst.ban.model.BanUser;
 import com.proximyst.ban.model.Punishment;
@@ -36,6 +38,7 @@ import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.apache.commons.lang3.time.DurationFormatUtils;
+import org.checkerframework.checker.index.qual.Positive;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -193,6 +196,84 @@ public final class ImplMessageService implements IMessageService {
                             false
                         ))
         );
+  }
+
+  @Override
+  public @NonNull CompletableFuture<Component> formatMessage(final @NonNull MessageKey messageKey,
+      final @Nullable Object @NonNull ... placeholders) {
+    Preconditions.checkArgument(placeholders.length % 2 == 0, "There must be an event length for `placeholders`");
+
+    final String message = messageKey.map(this.cfg);
+    if (message.isEmpty()) {
+      return CompletableFuture.completedFuture(Component.empty());
+    }
+
+    for (int i = 0; i < placeholders.length; ++i) {
+      final Object obj = placeholders[i];
+      if (obj instanceof CompletableFuture) {
+        // Alright, we have some placeholder that must be awaited!
+
+        // First off, let's finish the resting placeholder string-ification.
+        // We start with j = i+1 because we don't want the current object,
+        // then we work our way up from there.
+        // We also count the amount of futures we have, for use in #formatMessageFuture.
+        int futures = 1;
+        for (int j = i + 1; j < placeholders.length; ++j) {
+          final Object rest = placeholders[j];
+          if (!(rest instanceof CompletableFuture)) {
+            placeholders[j] = String.valueOf(rest);
+          } else {
+            ++futures;
+          }
+        }
+
+        //noinspection NullableProblems -- This is fine because we just ensured all nulls are turned into "null" strings
+        return this.formatMessageFuture(message, futures, placeholders);
+      }
+
+      placeholders[i] = String.valueOf(obj);
+    }
+
+    // No placeholders must be awaited.
+
+    // The String[] cast is safe because we set every placeholder in the Object[] to become a String.
+    return CompletableFuture.completedFuture(MiniMessage.get().parse(message, (String[]) placeholders));
+  }
+
+  private @NonNull CompletableFuture<@NonNull Component> formatMessageFuture(final @NonNull String message,
+      final @Positive int futureCount, final @NonNull Object @NonNull ... placeholders) {
+    final CompletableFuture<?>[] futures = new CompletableFuture<?>[futureCount];
+
+    // We know how many futures there are, but we also need to actually find them.
+    int futureIdx = 0;
+    for (final Object placeholder : placeholders) {
+      if (placeholder instanceof CompletableFuture) {
+        futures[futureIdx++] = (CompletableFuture<?>) placeholder;
+      }
+    }
+
+    // We now need to know when all the futures are done.
+    // Luckily, we can do that with helper methods in CompletableFuture.
+    final CompletableFuture<?> allDone = CompletableFuture.allOf(futures);
+
+    return allDone.thenApply($ -> {
+      // We now know all the futures are done.
+      // We'll need to unwrap them, then pass to MiniMessage.
+      int found = 0;
+      for (int i = 0; i < placeholders.length; ++i) {
+        final Object obj = placeholders[i];
+        if (obj instanceof CompletableFuture) {
+          ++found;
+          placeholders[i] = String.valueOf(((CompletableFuture<?>) obj).join());
+        }
+
+        if (found == futureCount) {
+          break;
+        }
+      }
+
+      return MiniMessage.get().parse(message, (String[]) placeholders);
+    });
   }
 
   private @NonNull Component parseWithTarget(
