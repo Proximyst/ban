@@ -86,13 +86,14 @@ public final class ImplMessageService implements IMessageService {
       final @NonNull ImmutableCollection<@NonNull Punishment> punishments,
       final @NonNull BanUser target) {
     final ImmutableList.Builder<Component> builder = ImmutableList.builderWithExpectedSize(punishments.size());
-    builder.add(MiniMessage.get().parse(
-        this.cfg.commands.historyHeader,
-
+    builder.add(this.formatMessage(MessageKey.COMMANDS_HISTORY_HEADER,
         "targetName", target.getUsername(),
-        "targetUuid", target.getUuid().toString(),
-
-        "amount", Integer.toString(punishments.size())));
+        "targetUuid", target.getUuid(),
+        "amount", punishments.size())
+        // We know there are only constant values here, no futures.
+        // The future is therefore instantly finished, and we don't actually need to wait for it.
+        // TODO(Proximyst): Make an internal function for formatting methods which are constant values?
+        .join());
     if (punishments.isEmpty()) {
       // Don't do wasteful allocations.
       return CompletableFuture.completedFuture(builder.build());
@@ -106,7 +107,7 @@ public final class ImplMessageService implements IMessageService {
       }
 
       future = future.thenCombine(
-          this.formatMessageWith(this.cfg.commands.historyEntry, punishment),
+          this.formatMessage(MessageKey.COMMANDS_HISTORY_ENTRY, punishment),
           (first, second) -> {
             builder.add(second);
             return null;
@@ -114,68 +115,6 @@ public final class ImplMessageService implements IMessageService {
     }
 
     return future.thenApply($ -> builder.build());
-  }
-
-  @Override
-  @Deprecated
-  public @NonNull CompletableFuture<@NonNull Component> formatMessageWith(
-      final @NonNull String message,
-      final @NonNull Punishment punishment) {
-    return this.userService.getUser(punishment.getTarget())
-        .thenApply(opt ->
-            opt.orElseThrow(() -> new IllegalArgumentException("Target of punishment cannot be unknown."))
-        )
-        .thenCombine(
-            this.userService.getUser(punishment.getPunisher()),
-            (target, punisher) -> this.formatMessageWith(
-                punishment,
-                message,
-                punisher.orElseThrow(() -> new IllegalArgumentException("Punisher of punishment cannot be unknown")),
-                target
-            )
-        );
-  }
-
-  private @NonNull Component formatMessageWith(
-      final @NonNull Punishment punishment,
-      final @NonNull String message,
-      final @NonNull BanUser punisher,
-      final @NonNull BanUser target) {
-    final String punishmentVerb = punishment.getPunishmentType().getVerbPastTense().map(this.cfg);
-
-    return MiniMessage.get()
-        .parse(
-            message,
-
-            "targetName", target.getUsername(),
-            "targetUuid", target.getUuid().toString(),
-
-            "punisherName", punisher.getUsername(),
-            "punisherUuid", punisher.getUuid().toString(),
-
-            "punishmentId", punishment.getId().orElse(-1L).toString(),
-            "punishmentDate", SimpleDateFormat.getDateInstance().format(punishment.getDate()),
-            "reason", punishment.getReason()
-                .map(MiniMessage.get()::escapeTokens)
-                .orElse("No reason specified"),
-            "punishmentType", punishment.getPunishmentType().name(),
-            "punishmentVerb", punishmentVerb,
-
-            "expiry", !punishment.currentlyApplies()
-                ? this.cfg.formatting.isLifted
-                : punishment.isPermanent()
-                    ? this.cfg.formatting.never
-                    : DurationFormatUtils.formatDurationHMS(punishment.getExpiration() - System.currentTimeMillis()),
-            "duration", punishment.isPermanent()
-                ? this.cfg.formatting.permanently
-                : this.cfg.formatting.durationFormat
-                    .replace("<duration>",
-                        DurationFormatUtils.formatDurationWords(
-                            punishment.getExpiration() - System.currentTimeMillis(),
-                            false,
-                            false
-                        ))
-        );
   }
 
   @Override

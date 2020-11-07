@@ -48,14 +48,17 @@ public interface IMessageService {
    */
   @NonNull CompletableFuture<@Nullable Void> announceLiftedPunishment(final @NonNull Punishment punishment);
 
+  /**
+   * Formats the punishment history of a {@link BanUser}.
+   *
+   * @param punishments The punishments the {@link BanUser} has.
+   * @param target      The {@link BanUser} whose history is being formatted.
+   * @return The entire formatted history of the {@code target}. If all the data of the punishments is already loaded,
+   * the future will be complete pretty much instantly.
+   */
   @NonNull CompletableFuture<@NonNull ImmutableList<@NonNull Component>> formatHistory(
       final @NonNull ImmutableCollection<@NonNull Punishment> punishments,
       final @NonNull BanUser target);
-
-  @Deprecated
-  @NonNull CompletableFuture<@NonNull Component> formatMessageWith(
-      final @NonNull String message,
-      final @NonNull Punishment punishment);
 
   /**
    * Format a {@link MessageKey} with given placeholders.
