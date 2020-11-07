@@ -80,16 +80,6 @@ public final class ImplMessageService implements IMessageService {
     return this.announcePunishmentMessage(punishment, message);
   }
 
-  @Override
-  public @NonNull Component errorNoBan(final @NonNull BanUser user) {
-    return this.parseWithTarget(this.cfg.errors.noBan, user);
-  }
-
-  @Override
-  public @NonNull Component errorNoMute(final @NonNull BanUser user) {
-    return this.parseWithTarget(this.cfg.errors.noMute, user);
-  }
-
   @SuppressWarnings("UnstableApiUsage")
   @Override
   public @NonNull CompletableFuture<@NonNull ImmutableList<@NonNull Component>> formatHistory(
@@ -316,17 +306,6 @@ public final class ImplMessageService implements IMessageService {
                             )))
         )
         .thenCompose(p -> this.formatMessage(messageKey, p));
-  }
-
-  private @NonNull Component parseWithTarget(
-      final @NonNull String msg,
-      final @NonNull BanUser target) {
-    return MiniMessage.get().parse(
-        msg,
-
-        "targetName", target.getUsername(),
-        "targetUuid", target.getUuid().toString()
-    );
   }
 
   private @NonNull CompletableFuture<@Nullable Void> announcePunishmentMessage(

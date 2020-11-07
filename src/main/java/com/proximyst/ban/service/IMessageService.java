@@ -38,12 +38,6 @@ public interface IMessageService {
   @Deprecated
   @NonNull CompletableFuture<@Nullable Void> announceLiftedPunishment(final @NonNull Punishment punishment);
 
-  @Deprecated
-  @NonNull Component errorNoBan(final @NonNull BanUser user);
-
-  @Deprecated
-  @NonNull Component errorNoMute(final @NonNull BanUser user);
-
   @NonNull CompletableFuture<@NonNull ImmutableList<@NonNull Component>> formatHistory(
       final @NonNull ImmutableCollection<@NonNull Punishment> punishments,
       final @NonNull BanUser target);

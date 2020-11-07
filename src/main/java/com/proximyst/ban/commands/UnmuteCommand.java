@@ -67,7 +67,9 @@ public final class UnmuteCommand extends BaseCommand {
         .thenAccept(punishmentOptional -> {
           final Punishment punishment = punishmentOptional.orElse(null);
           if (punishment == null) {
-            ctx.getSender().sendMessage(Identity.nil(), this.messageService.errorNoMute(target));
+            this.messageService.sendFormattedMessage(ctx.getSender(), Identity.nil(), MessageKey.ERROR_NO_ACTIVE_MUTE,
+                "targetName", target.getUsername(),
+                "targetUuid", target.getUuid());
             return;
           }
 

@@ -67,7 +67,9 @@ public final class UnbanCommand extends BaseCommand {
         .thenAccept(punishmentOptional -> {
           final Punishment punishment = punishmentOptional.orElse(null);
           if (punishment == null) {
-            ctx.getSender().sendMessage(Identity.nil(), this.messageService.errorNoBan(target));
+            this.messageService.sendFormattedMessage(ctx.getSender(), Identity.nil(), MessageKey.ERROR_NO_ACTIVE_BAN,
+                "targetName", target.getUsername(),
+                "targetUuid", target.getUuid());
             return;
           }
 
