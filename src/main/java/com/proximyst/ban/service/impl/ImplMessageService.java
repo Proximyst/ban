@@ -162,43 +162,6 @@ public final class ImplMessageService implements IMessageService {
     // The String[] cast is safe because we set every placeholder in the Object[] to become a String.
     return CompletableFuture.completedFuture(MiniMessage.get().parse(message, (String[]) placeholders));
   }
-
-  private @NonNull CompletableFuture<@NonNull Component> formatMessageFuture(final @NonNull String message,
-      final @Positive int futureCount, final @NonNull Object @NonNull ... placeholders) {
-    final CompletableFuture<?>[] futures = new CompletableFuture<?>[futureCount];
-
-    // We know how many futures there are, but we also need to actually find them.
-    int futureIdx = 0;
-    for (final Object placeholder : placeholders) {
-      if (placeholder instanceof CompletableFuture) {
-        futures[futureIdx++] = (CompletableFuture<?>) placeholder;
-      }
-    }
-
-    // We now need to know when all the futures are done.
-    // Luckily, we can do that with helper methods in CompletableFuture.
-    final CompletableFuture<?> allDone = CompletableFuture.allOf(futures);
-
-    return allDone.thenApply($ -> {
-      // We now know all the futures are done.
-      // We'll need to unwrap them, then pass to MiniMessage.
-      int found = 0;
-      for (int i = 0; i < placeholders.length; ++i) {
-        final Object obj = placeholders[i];
-        if (obj instanceof CompletableFuture) {
-          ++found;
-          placeholders[i] = String.valueOf(((CompletableFuture<?>) obj).join());
-        }
-
-        if (found == futureCount) {
-          break;
-        }
-      }
-
-      return MiniMessage.get().parse(message, (String[]) placeholders);
-    });
-  }
-
   @Override
   public @NonNull CompletableFuture<Component> formatMessage(final @Nullable MessageKey messageKey,
       final @NonNull Punishment punishment,
@@ -246,6 +209,42 @@ public final class ImplMessageService implements IMessageService {
                             )))
         )
         .thenCompose(p -> this.formatMessage(messageKey, p));
+  }
+
+  private @NonNull CompletableFuture<@NonNull Component> formatMessageFuture(final @NonNull String message,
+      final @Positive int futureCount, final @NonNull Object @NonNull ... placeholders) {
+    final CompletableFuture<?>[] futures = new CompletableFuture<?>[futureCount];
+
+    // We know how many futures there are, but we also need to actually find them.
+    int futureIdx = 0;
+    for (final Object placeholder : placeholders) {
+      if (placeholder instanceof CompletableFuture) {
+        futures[futureIdx++] = (CompletableFuture<?>) placeholder;
+      }
+    }
+
+    // We now need to know when all the futures are done.
+    // Luckily, we can do that with helper methods in CompletableFuture.
+    final CompletableFuture<?> allDone = CompletableFuture.allOf(futures);
+
+    return allDone.thenApply($ -> {
+      // We now know all the futures are done.
+      // We'll need to unwrap them, then pass to MiniMessage.
+      int found = 0;
+      for (int i = 0; i < placeholders.length; ++i) {
+        final Object obj = placeholders[i];
+        if (obj instanceof CompletableFuture) {
+          ++found;
+          placeholders[i] = String.valueOf(((CompletableFuture<?>) obj).join());
+        }
+
+        if (found == futureCount) {
+          break;
+        }
+      }
+
+      return MiniMessage.get().parse(message, (String[]) placeholders);
+    });
   }
 
   private @NonNull CompletableFuture<@Nullable Void> announcePunishmentMessage(
