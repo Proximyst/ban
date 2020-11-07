@@ -20,7 +20,6 @@ package com.proximyst.ban.event.subscriber;
 
 import com.google.inject.Inject;
 import com.proximyst.ban.BanPermissions;
-import com.proximyst.ban.config.MessageKey;
 import com.proximyst.ban.service.IMessageService;
 import com.proximyst.ban.service.IPunishmentService;
 import com.velocitypowered.api.event.Subscribe;
@@ -51,13 +50,9 @@ public class MutedPlayerChatSubscriber {
         .ifPresent(mute -> {
           event.setResult(ChatResult.denied());
 
-          final MessageKey applicationMessage = mute.getPunishmentType()
+          mute.getPunishmentType()
               .getApplicationMessage(mute.getReason().isPresent())
-              .orElse(null);
-          if (applicationMessage == null) {
-            return;
-          }
-          this.messageService.sendFormattedMessage(event.getPlayer(), event.getPlayer(), applicationMessage);
+              .ifPresent(key -> this.messageService.sendFormattedMessage(event.getPlayer(), event.getPlayer(), key));
         });
   }
 }
