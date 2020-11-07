@@ -32,10 +32,20 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public interface IMessageService {
-  @Deprecated
+  /**
+   * Announces a newly placed {@link Punishment} to all players who are eligible to see the event, as well as console.
+   *
+   * @param punishment The punishment to announce the addition of.
+   * @return A {@link CompletableFuture} which indicates when the announcement has been sent.
+   */
   @NonNull CompletableFuture<@Nullable Void> announceNewPunishment(final @NonNull Punishment punishment);
 
-  @Deprecated
+  /**
+   * Announces a newly lifted {@link Punishment} to all players who are eligible to see the event, as well as console.
+   *
+   * @param punishment The punishment to announce the removal of.
+   * @return A {@link CompletableFuture} which indicates when the announcement has been sent.
+   */
   @NonNull CompletableFuture<@Nullable Void> announceLiftedPunishment(final @NonNull Punishment punishment);
 
   @NonNull CompletableFuture<@NonNull ImmutableList<@NonNull Component>> formatHistory(

@@ -60,24 +60,24 @@ public final class ImplMessageService implements IMessageService {
 
   @Override
   public @NonNull CompletableFuture<@Nullable Void> announceNewPunishment(final @NonNull Punishment punishment) {
-    final String message = punishment.getPunishmentType().getBroadcastMessage(
-        punishment.getReason().isPresent()).map(key -> key.map(this.cfg)).orElse(null);
-    if (message == null) {
+    final MessageKey messageKey = punishment.getPunishmentType()
+        .getBroadcastMessage(punishment.getReason().isPresent())
+        .orElse(null);
+    if (messageKey == null) {
       return CompletableFuture.completedFuture(null);
     }
 
-    return this.announcePunishmentMessage(punishment, message);
+    return this.announcePunishmentMessage(punishment, messageKey);
   }
 
   @Override
   public @NonNull CompletableFuture<@Nullable Void> announceLiftedPunishment(final @NonNull Punishment punishment) {
-    final String message = punishment.getPunishmentType().getBroadcastLiftMessage()
-        .map(key -> key.map(this.cfg)).orElse(null);
-    if (message == null) {
+    final MessageKey messageKey = punishment.getPunishmentType().getBroadcastLiftMessage().orElse(null);
+    if (messageKey == null) {
       return CompletableFuture.completedFuture(null);
     }
 
-    return this.announcePunishmentMessage(punishment, message);
+    return this.announcePunishmentMessage(punishment, messageKey);
   }
 
   @SuppressWarnings("UnstableApiUsage")
@@ -117,6 +117,7 @@ public final class ImplMessageService implements IMessageService {
   }
 
   @Override
+  @Deprecated
   public @NonNull CompletableFuture<@NonNull Component> formatMessageWith(
       final @NonNull String message,
       final @NonNull Punishment punishment) {
@@ -310,9 +311,9 @@ public final class ImplMessageService implements IMessageService {
 
   private @NonNull CompletableFuture<@Nullable Void> announcePunishmentMessage(
       final @NonNull Punishment punishment,
-      final @NonNull String message) {
+      final @NonNull MessageKey messageKey) {
     final String permission = punishment.getPunishmentType().getNotificationPermission().orElse(null);
-    return this.formatMessageWith(message, punishment)
+    return this.formatMessage(messageKey, punishment)
         .thenApply(component -> {
           this.proxyServer.getConsoleCommandSource().sendMessage(Identity.nil(), component);
           for (final Player player : this.proxyServer.getAllPlayers()) {
