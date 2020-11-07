@@ -83,6 +83,8 @@ public interface IMessageService {
    * <p>
    * {@link CompletableFuture}s inside other {@link CompletableFuture}s will not be awaited; passing objects of this
    * type may result in unexpected although defined behaviour.
+   * <p>
+   * This will not send empty messages. If a message is however only a space, it will still be sent.
    *
    * @param audience     The audience to receive the formatted message.
    * @param identity     The identity of the message's sender.
@@ -91,6 +93,7 @@ public interface IMessageService {
    * @return A {@link CompletableFuture} indicating its completion state. If there are no futures in the {@code
    * placeholders}, the future will be completed. If there is a future in the {@code placeholders}, the future will only
    * be completed once all the futures in {@code placeholders} are completed.
+   * @see #formatMessage(MessageKey, Object...)
    */
   default @NonNull CompletableFuture<Void> sendFormattedMessage(
       final @NonNull Audience audience,
@@ -98,7 +101,11 @@ public interface IMessageService {
       final @NonNull MessageKey messageKey,
       final @Nullable Object @NonNull ... placeholders) {
     return this.formatMessage(messageKey, placeholders)
-        .thenAccept(component -> audience.sendMessage(identity, component));
+        .thenAccept(component -> {
+          if (component != Component.empty()) {
+            audience.sendMessage(identity, component);
+          }
+        });
   }
 
   /**
@@ -109,6 +116,8 @@ public interface IMessageService {
    * <p>
    * {@link CompletableFuture}s inside other {@link CompletableFuture}s will not be awaited; passing objects of this
    * type may result in unexpected although defined behaviour.
+   * <p>
+   * This will not send empty messages. If a message is however only a space, it will still be sent.
    *
    * @param audience     The audience to receive the formatted message.
    * @param identity     The identity of the message's sender.
@@ -117,13 +126,14 @@ public interface IMessageService {
    * @return A {@link CompletableFuture} indicating its completion state. If there are no futures in the {@code
    * placeholders}, the future will be completed. If there is a future in the {@code placeholders}, the future will only
    * be completed once all the futures in {@code placeholders} are completed.
+   * @see #sendFormattedMessage(Audience, Identity, MessageKey, Object...)
+   * @see #formatMessage(MessageKey, Object...)
    */
   default @NonNull CompletableFuture<Void> sendFormattedMessage(
       final @NonNull Audience audience,
       final @NonNull Identified identity,
       final @NonNull MessageKey messageKey,
       final @Nullable Object @NonNull ... placeholders) {
-    return this.formatMessage(messageKey, placeholders)
-        .thenAccept(component -> audience.sendMessage(identity, component));
+    return this.sendFormattedMessage(audience, identity.identity(), messageKey, placeholders);
   }
 }
