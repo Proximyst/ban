@@ -30,6 +30,7 @@ import com.proximyst.ban.model.Punishment;
 import com.proximyst.ban.model.PunishmentType;
 import com.proximyst.ban.service.IMessageService;
 import com.proximyst.ban.service.IUserService;
+import com.proximyst.ban.utils.ArrayUtils;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import java.text.SimpleDateFormat;
@@ -126,17 +127,6 @@ public final class ImplMessageService implements IMessageService {
   }
 
   @Override
-  public @NonNull CompletableFuture<@NonNull Component> formatApplication(final @NonNull Punishment punishment) {
-    final String message = punishment.getPunishmentType().getApplicationMessage(
-        punishment.getReason().isPresent()).map(key -> key.map(this.cfg)).orElse(null);
-    if (message == null) {
-      return CompletableFuture.completedFuture(Component.empty());
-    }
-
-    return this.formatMessageWith(message, punishment);
-  }
-
-  @Override
   public @NonNull CompletableFuture<@NonNull Component> formatMessageWith(
       final @NonNull String message,
       final @NonNull Punishment punishment) {
@@ -155,8 +145,7 @@ public final class ImplMessageService implements IMessageService {
         );
   }
 
-  @Override
-  public @NonNull Component formatMessageWith(
+  private @NonNull Component formatMessageWith(
       final @NonNull Punishment punishment,
       final @NonNull String message,
       final @NonNull BanUser punisher,
@@ -199,9 +188,13 @@ public final class ImplMessageService implements IMessageService {
   }
 
   @Override
-  public @NonNull CompletableFuture<Component> formatMessage(final @NonNull MessageKey messageKey,
+  public @NonNull CompletableFuture<Component> formatMessage(final @Nullable MessageKey messageKey,
       final @Nullable Object @NonNull ... placeholders) {
     Preconditions.checkArgument(placeholders.length % 2 == 0, "There must be an event length for `placeholders`");
+
+    if (messageKey == null) {
+      return CompletableFuture.completedFuture(Component.empty());
+    }
 
     final String message = messageKey.map(this.cfg);
     if (message.isEmpty()) {
@@ -274,6 +267,55 @@ public final class ImplMessageService implements IMessageService {
 
       return MiniMessage.get().parse(message, (String[]) placeholders);
     });
+  }
+
+  @Override
+  public @NonNull CompletableFuture<Component> formatMessage(final @Nullable MessageKey messageKey,
+      final @NonNull Punishment punishment,
+      final @Nullable Object @NonNull ... placeholders) {
+    if (messageKey == null) {
+      return CompletableFuture.completedFuture(Component.empty());
+    }
+
+    return this.userService.getUser(punishment.getTarget())
+        .thenApply(
+            opt -> opt.orElseThrow(() -> new IllegalArgumentException("Target of punishment cannot be unknown.")))
+        .thenCombine(
+            this.userService.getUser(punishment.getPunisher())
+                .thenApply(opt ->
+                    opt.orElseThrow(() -> new IllegalArgumentException("Punisher of punishment cannot be unknown."))),
+            (target, punisher) -> ArrayUtils.append(placeholders,
+                "targetName", target.getUsername(),
+                "targetUuid", target.getUuid().toString(),
+
+                "punisherName", punisher.getUsername(),
+                "punisherUuid", punisher.getUuid().toString(),
+
+                "punishmentId", punishment.getId().orElse(-1L).toString(),
+                "punishmentDate", SimpleDateFormat.getDateInstance().format(punishment.getDate()),
+                "reason", punishment.getReason()
+                    .map(MiniMessage.get()::escapeTokens)
+                    .orElse("No reason specified"),
+                "punishmentType", punishment.getPunishmentType().name(),
+                "punishmentVerb", punishment.getPunishmentType().getVerbPastTense().map(this.cfg),
+
+                "expiry", !punishment.currentlyApplies()
+                    ? this.cfg.formatting.isLifted
+                    : punishment.isPermanent()
+                        ? this.cfg.formatting.never
+                        : DurationFormatUtils
+                            .formatDurationHMS(punishment.getExpiration() - System.currentTimeMillis()),
+                "duration", punishment.isPermanent()
+                    ? this.cfg.formatting.permanently
+                    : this.cfg.formatting.durationFormat
+                        .replace("<duration>",
+                            DurationFormatUtils.formatDurationWords(
+                                punishment.getExpiration() - System.currentTimeMillis(),
+                                false,
+                                false
+                            )))
+        )
+        .thenCompose(p -> this.formatMessage(messageKey, p));
   }
 
   private @NonNull Component parseWithTarget(

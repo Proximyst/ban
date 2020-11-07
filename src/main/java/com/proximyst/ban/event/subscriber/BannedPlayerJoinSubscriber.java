@@ -20,7 +20,6 @@ package com.proximyst.ban.event.subscriber;
 
 import com.google.inject.Inject;
 import com.proximyst.ban.BanPermissions;
-import com.proximyst.ban.config.MessagesConfig;
 import com.proximyst.ban.service.IMessageService;
 import com.proximyst.ban.service.IPunishmentService;
 import com.velocitypowered.api.event.ResultedEvent.ComponentResult;
@@ -31,15 +30,12 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 public class BannedPlayerJoinSubscriber {
   private final @NonNull IPunishmentService punishmentService;
   private final @NonNull IMessageService messageService;
-  private final @NonNull MessagesConfig messagesConfig;
 
   @Inject
   public BannedPlayerJoinSubscriber(final @NonNull IPunishmentService punishmentService,
-      final @NonNull IMessageService messageService,
-      final @NonNull MessagesConfig messagesConfig) {
+      final @NonNull IMessageService messageService) {
     this.punishmentService = punishmentService;
     this.messageService = messageService;
-    this.messagesConfig = messagesConfig;
   }
 
   @Subscribe
@@ -53,12 +49,10 @@ public class BannedPlayerJoinSubscriber {
         .join() // This *should* be fast, and only on one player's connection thread
         .ifPresent(ban -> {
           event.setResult(ComponentResult.denied(
-              this.messageService.formatMessageWith(
-                  ban.getReason().isPresent()
-                      ? this.messagesConfig.applications.banReason
-                      : this.messagesConfig.applications.banReasonless,
-                  ban
-              )
+              this.messageService
+                  .formatMessage(
+                      ban.getPunishmentType().getApplicationMessage(ban.getReason().isPresent()).orElse(null),
+                      ban)
                   // We're about to deny them access; the time it takes to fetch the data doesn't matter.
                   .join()
           ));

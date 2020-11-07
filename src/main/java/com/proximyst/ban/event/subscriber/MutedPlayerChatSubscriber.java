@@ -20,27 +20,23 @@ package com.proximyst.ban.event.subscriber;
 
 import com.google.inject.Inject;
 import com.proximyst.ban.BanPermissions;
-import com.proximyst.ban.config.MessagesConfig;
+import com.proximyst.ban.config.MessageKey;
 import com.proximyst.ban.service.IMessageService;
 import com.proximyst.ban.service.IPunishmentService;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.player.PlayerChatEvent;
 import com.velocitypowered.api.event.player.PlayerChatEvent.ChatResult;
-import net.kyori.adventure.identity.Identity;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class MutedPlayerChatSubscriber {
   private final @NonNull IPunishmentService punishmentService;
   private final @NonNull IMessageService messageService;
-  private final @NonNull MessagesConfig messagesConfig;
 
   @Inject
   public MutedPlayerChatSubscriber(final @NonNull IPunishmentService punishmentService,
-      final @NonNull IMessageService messageService,
-      final @NonNull MessagesConfig messagesConfig) {
+      final @NonNull IMessageService messageService) {
     this.punishmentService = punishmentService;
     this.messageService = messageService;
-    this.messagesConfig = messagesConfig;
   }
 
   @Subscribe
@@ -54,12 +50,14 @@ public class MutedPlayerChatSubscriber {
         .join() // This *should* be fast, and only on one player's connection thread
         .ifPresent(mute -> {
           event.setResult(ChatResult.denied());
-          this.messageService.formatMessageWith(
-              mute.getReason().isPresent()
-                  ? this.messagesConfig.applications.muteReason
-                  : this.messagesConfig.applications.muteReasonless,
-              mute
-          ).thenAccept(msg -> event.getPlayer().sendMessage(Identity.nil(), msg));
+
+          final MessageKey applicationMessage = mute.getPunishmentType()
+              .getApplicationMessage(mute.getReason().isPresent())
+              .orElse(null);
+          if (applicationMessage == null) {
+            return;
+          }
+          this.messageService.sendFormattedMessage(event.getPlayer(), event.getPlayer(), applicationMessage);
         });
   }
 }
