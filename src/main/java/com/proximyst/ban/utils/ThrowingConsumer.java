@@ -18,9 +18,9 @@
 
 package com.proximyst.ban.utils;
 
-import java.util.Objects;
 import java.util.function.Consumer;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.dataflow.qual.SideEffectFree;
 
 /**
  * Represents an operation that accepts a single input argument and returns no result, optionally throwing an {@link
@@ -49,8 +49,8 @@ public interface ThrowingConsumer<T, E extends Exception> {
    * operation.
    * @throws NullPointerException If {@code after} is null.
    */
-  default ThrowingConsumer<T, E> andThen(ThrowingConsumer<? super T, ? extends E> after) {
-    Objects.requireNonNull(after);
+  @SideEffectFree
+  default @NonNull ThrowingConsumer<T, E> andThen(final @NonNull ThrowingConsumer<? super T, ? extends E> after) {
     return (T t) -> {
       this.accept(t);
       after.accept(t);
@@ -64,6 +64,7 @@ public interface ThrowingConsumer<T, E extends Exception> {
    *
    * @return A {@link Consumer} calling this {@link #accept(Object)}.
    */
+  @SideEffectFree
   default @NonNull Consumer<T> toConsumer() {
     return input -> {
       try {
