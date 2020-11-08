@@ -173,35 +173,7 @@ public final class ImplMessageService implements IMessageService {
                 .thenApply(opt ->
                     opt.orElseThrow(() -> new IllegalArgumentException("Punisher of punishment cannot be unknown."))),
             (target, punisher) -> ObjectArrays.concat(placeholders,
-                new Object[]{
-                    "targetName", target.getUsername(),
-                    "targetUuid", target.getUuid().toString(),
-
-                    "punisherName", punisher.getUsername(),
-                    "punisherUuid", punisher.getUuid().toString(),
-
-                    "punishmentId", punishment.getId().orElse(-1L).toString(),
-                    "punishmentDate", SimpleDateFormat.getDateInstance().format(punishment.getDate()),
-                    "reason", punishment.getReason().map(MiniMessage.get()::escapeTokens).orElse("No reason specified"),
-                    "punishmentType", punishment.getPunishmentType().name(),
-                    "punishmentVerb", punishment.getPunishmentType().getVerbPastTense().map(this.cfg),
-
-                    "expiry", !punishment.currentlyApplies()
-                    ? this.cfg.formatting.isLifted
-                    : punishment.isPermanent()
-                        ? this.cfg.formatting.never
-                        : DurationFormatUtils
-                            .formatDurationHMS(punishment.getExpiration() - System.currentTimeMillis()),
-                    "duration", punishment.isPermanent()
-                    ? this.cfg.formatting.permanently
-                    : this.cfg.formatting.durationFormat
-                        .replace("<duration>",
-                            DurationFormatUtils.formatDurationWords(
-                                punishment.getExpiration() - System.currentTimeMillis(),
-                                false,
-                                false
-                            ))},
-                Object.class))
+                this.createPlaceholders(punishment, target, punisher), Object.class))
         .thenCompose(p -> this.formatMessage(messageKey, p));
   }
 
@@ -258,5 +230,37 @@ public final class ImplMessageService implements IMessageService {
 
           return null;
         });
+  }
+
+  private @Nullable Object @NonNull [] createPlaceholders(final @NonNull Punishment punishment,
+      final @NonNull BanUser target, final @NonNull BanUser punisher) {
+    return new Object[]{
+        "targetName", target.getUsername(),
+        "targetUuid", target.getUuid().toString(),
+
+        "punisherName", punisher.getUsername(),
+        "punisherUuid", punisher.getUuid().toString(),
+
+        "punishmentId", punishment.getId().orElse(-1L).toString(),
+        "punishmentDate", SimpleDateFormat.getDateInstance().format(punishment.getDate()),
+        "reason", punishment.getReason().map(MiniMessage.get()::escapeTokens).orElse("No reason specified"),
+        "punishmentType", punishment.getPunishmentType().name(),
+        "punishmentVerb", punishment.getPunishmentType().getVerbPastTense().map(this.cfg),
+
+        "expiry", !punishment.currentlyApplies()
+        ? this.cfg.formatting.isLifted
+        : punishment.isPermanent()
+            ? this.cfg.formatting.never
+            : DurationFormatUtils
+                .formatDurationHMS(punishment.getExpiration() - System.currentTimeMillis()),
+        "duration", punishment.isPermanent()
+        ? this.cfg.formatting.permanently
+        : this.cfg.formatting.durationFormat
+            .replace("<duration>",
+                DurationFormatUtils.formatDurationWords(
+                    punishment.getExpiration() - System.currentTimeMillis(),
+                    false,
+                    false
+                ))};
   }
 }
