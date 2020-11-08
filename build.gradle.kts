@@ -55,6 +55,7 @@ dependencies {
     implementation("com.zaxxer:HikariCP:3.4.5") {
         exclude("org.slf4j")
     }
+    implementation("org.flywaydb:flyway-core:7.1.1")
 
     implementation("net.kyori:adventure-text-minimessage:4.0.0-SNAPSHOT") {
         // We get adventure through velocity-api
@@ -95,7 +96,8 @@ tasks {
             "io.leangen.geantyref",
             "cloud.commandframework",
             "com.google.inject.extensions.assistedinject",
-            "com.google.inject.assistedinject"
+            "com.google.inject.assistedinject",
+            "org.flyway"
         )
         mergeServiceFiles()
     }
