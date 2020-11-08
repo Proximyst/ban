@@ -60,24 +60,18 @@ public final class ImplMessageService implements IMessageService {
 
   @Override
   public @NonNull CompletableFuture<@Nullable Void> announceNewPunishment(final @NonNull Punishment punishment) {
-    final MessageKey messageKey = punishment.getPunishmentType()
+    return punishment.getPunishmentType()
         .getBroadcastMessage(punishment.getReason().isPresent())
-        .orElse(null);
-    if (messageKey == null) {
-      return CompletableFuture.completedFuture(null);
-    }
-
-    return this.announcePunishmentMessage(punishment, messageKey);
+        .map(msg -> this.announcePunishmentMessage(punishment, msg))
+        .orElseGet(() -> CompletableFuture.completedFuture(null));
   }
 
   @Override
   public @NonNull CompletableFuture<@Nullable Void> announceLiftedPunishment(final @NonNull Punishment punishment) {
-    final MessageKey messageKey = punishment.getPunishmentType().getBroadcastLiftMessage().orElse(null);
-    if (messageKey == null) {
-      return CompletableFuture.completedFuture(null);
-    }
-
-    return this.announcePunishmentMessage(punishment, messageKey);
+    return punishment.getPunishmentType()
+        .getBroadcastLiftMessage()
+        .map(msg -> this.announcePunishmentMessage(punishment, msg))
+        .orElseGet(() -> CompletableFuture.completedFuture(null));
   }
 
   @SuppressWarnings("UnstableApiUsage")
