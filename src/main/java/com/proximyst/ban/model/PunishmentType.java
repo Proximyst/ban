@@ -23,8 +23,11 @@ import com.proximyst.ban.config.MessageKey;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.common.returnsreceiver.qual.This;
+import org.checkerframework.dataflow.qual.Pure;
 
 /**
  * A form of punishment against a player.
@@ -36,50 +39,75 @@ public enum PunishmentType {
   /**
    * A warning on the player.
    */
-  WARNING(0, false, false, BanPermissions.NOTIFY_WARN,
-      MessageKey.BROADCAST_REASONLESS_WARN, MessageKey.BROADCAST_REASONED_WARN, null,
-      null, null,
-      MessageKey.FORMATTING_VERB_PAST_WARN),
+  WARNING(new PunishmentTypeBuilder()
+      .setId(0)
+      .setCanLift(false)
+      .setIsApplicable(false)
+      .setNotificationPermission(BanPermissions.NOTIFY_WARN)
+      .setBroadcastReasonless(MessageKey.BROADCAST_REASONLESS_WARN)
+      .setBroadcastReasoned(MessageKey.BROADCAST_REASONED_WARN)
+      .setVerbPastTense(MessageKey.FORMATTING_VERB_PAST_WARN)),
 
   /**
    * A mute on the player.
    * <p>
    * This means the player cannot communicate with other players.
    */
-  MUTE(1, true, false, BanPermissions.NOTIFY_MUTE,
-      MessageKey.BROADCAST_REASONLESS_MUTE, MessageKey.BROADCAST_REASONED_MUTE, MessageKey.BROADCAST_UNMUTE,
-      MessageKey.APPLICATION_REASONLESS_MUTE, MessageKey.APPLICATION_REASONED_MUTE,
-      MessageKey.FORMATTING_VERB_PAST_MUTE),
+  MUTE(new PunishmentTypeBuilder()
+      .setId(1)
+      .setCanLift(true)
+      .setIsApplicable(false)
+      .setNotificationPermission(BanPermissions.NOTIFY_MUTE)
+      .setBroadcastReasonless(MessageKey.BROADCAST_REASONLESS_MUTE)
+      .setBroadcastReasoned(MessageKey.BROADCAST_REASONED_MUTE)
+      .setBroadcastLift(MessageKey.BROADCAST_UNMUTE)
+      .setApplicationReasonless(MessageKey.APPLICATION_REASONLESS_MUTE)
+      .setApplicationReasoned(MessageKey.APPLICATION_REASONED_MUTE)
+      .setVerbPastTense(MessageKey.FORMATTING_VERB_PAST_MUTE)),
 
   /**
    * A kick on the player.
    * <p>
    * This means the player was forcefully disconnected once.
    */
-  KICK(2, false, true, BanPermissions.NOTIFY_KICK,
-      MessageKey.BROADCAST_REASONLESS_KICK, MessageKey.BROADCAST_REASONED_KICK, null,
-      MessageKey.APPLICATION_REASONLESS_KICK, MessageKey.APPLICATION_REASONED_KICK,
-      MessageKey.FORMATTING_VERB_PAST_KICK),
+  KICK(new PunishmentTypeBuilder()
+      .setId(2)
+      .setCanLift(false)
+      .setIsApplicable(true)
+      .setNotificationPermission(BanPermissions.NOTIFY_KICK)
+      .setBroadcastReasonless(MessageKey.BROADCAST_REASONLESS_KICK)
+      .setBroadcastReasoned(MessageKey.BROADCAST_REASONED_KICK)
+      .setApplicationReasonless(MessageKey.APPLICATION_REASONLESS_KICK)
+      .setApplicationReasoned(MessageKey.APPLICATION_REASONED_KICK)
+      .setVerbPastTense(MessageKey.FORMATTING_VERB_PAST_KICK)),
 
   /**
    * A ban on the player.
    * <p>
    * This means the player was forcefully removed from the server for a period of time.
    */
-  BAN(3, true, true, BanPermissions.NOTIFY_BAN,
-      MessageKey.BROADCAST_REASONLESS_BAN, MessageKey.BROADCAST_REASONED_BAN, MessageKey.BROADCAST_UNBAN,
-      MessageKey.APPLICATION_REASONLESS_BAN, MessageKey.APPLICATION_REASONED_BAN,
-      MessageKey.FORMATTING_VERB_PAST_BAN),
+  BAN(new PunishmentTypeBuilder()
+      .setId(3)
+      .setCanLift(true)
+      .setIsApplicable(true)
+      .setNotificationPermission(BanPermissions.NOTIFY_BAN)
+      .setBroadcastReasonless(MessageKey.BROADCAST_REASONLESS_BAN)
+      .setBroadcastReasoned(MessageKey.BROADCAST_REASONED_BAN)
+      .setBroadcastLift(MessageKey.BROADCAST_UNBAN)
+      .setApplicationReasonless(MessageKey.APPLICATION_REASONLESS_BAN)
+      .setApplicationReasoned(MessageKey.APPLICATION_REASONED_BAN)
+      .setVerbPastTense(MessageKey.FORMATTING_VERB_PAST_BAN)),
 
   /**
    * A note on the player.
    * <p>
    * This is not visible to the player in any way and is only used for the history.
    */
-  NOTE(4, false, false, null,
-      null, null, null,
-      null, null,
-      MessageKey.FORMATTING_VERB_PAST_NOTE),
+  NOTE(new PunishmentTypeBuilder()
+      .setId(4)
+      .setCanLift(false)
+      .setIsApplicable(false)
+      .setVerbPastTense(MessageKey.FORMATTING_VERB_PAST_NOTE)),
   ;
 
   /**
@@ -120,22 +148,17 @@ public enum PunishmentType {
   private final @Nullable MessageKey applicationReasoned;
   private final @NonNull MessageKey verbPastTense;
 
-  PunishmentType(final int id, final boolean canLift, final boolean isApplicable,
-      final @Nullable String notificationPermission,
-      final @Nullable MessageKey broadcastReasonless, final @Nullable MessageKey broadcastReasoned,
-      final @Nullable MessageKey broadcastLift,
-      final @Nullable MessageKey applicationReasonless, final @Nullable MessageKey applicationReasoned,
-      final @NonNull MessageKey verbPastTense) {
-    this.id = (byte) id;
-    this.canLift = canLift;
-    this.isApplicable = isApplicable;
-    this.notificationPermission = notificationPermission;
-    this.broadcastReasonless = broadcastReasonless;
-    this.broadcastReasoned = broadcastReasoned;
-    this.broadcastLift = broadcastLift;
-    this.applicationReasonless = applicationReasonless;
-    this.applicationReasoned = applicationReasoned;
-    this.verbPastTense = verbPastTense;
+  PunishmentType(final @NonNull PunishmentTypeBuilder builder) {
+    this.id = builder.id;
+    this.canLift = builder.canLift;
+    this.isApplicable = builder.isApplicable;
+    this.notificationPermission = builder.notificationPermission;
+    this.broadcastReasonless = builder.broadcastReasonless;
+    this.broadcastReasoned = builder.broadcastReasoned;
+    this.broadcastLift = builder.broadcastLift;
+    this.applicationReasonless = builder.applicationReasonless;
+    this.applicationReasoned = builder.applicationReasoned;
+    this.verbPastTense = builder.verbPastTense;
   }
 
   /**
@@ -203,5 +226,88 @@ public enum PunishmentType {
    */
   public @NonNull MessageKey getVerbPastTense() {
     return this.verbPastTense;
+  }
+
+  private static class PunishmentTypeBuilder {
+    private byte id;
+    private boolean canLift;
+    private boolean isApplicable;
+    private @Nullable String notificationPermission;
+    private @Nullable MessageKey broadcastReasonless;
+    private @Nullable MessageKey broadcastReasoned;
+    private @Nullable MessageKey broadcastLift;
+    private @Nullable MessageKey applicationReasonless;
+    private @Nullable MessageKey applicationReasoned;
+    private @MonotonicNonNull MessageKey verbPastTense;
+
+    @This
+    @Pure
+    public PunishmentTypeBuilder setId(final int id) {
+      this.id = (byte) id;
+      return this;
+    }
+
+    @This
+    @Pure
+    public PunishmentTypeBuilder setCanLift(final boolean canLift) {
+      this.canLift = canLift;
+      return this;
+    }
+
+    @This
+    @Pure
+    public PunishmentTypeBuilder setIsApplicable(final boolean isApplicable) {
+      this.isApplicable = isApplicable;
+      return this;
+    }
+
+    @This
+    @Pure
+    public PunishmentTypeBuilder setNotificationPermission(final @Nullable String notificationPermission) {
+      this.notificationPermission = notificationPermission;
+      return this;
+    }
+
+    @This
+    @Pure
+    public PunishmentTypeBuilder setBroadcastReasonless(final @Nullable MessageKey broadcastReasonless) {
+      this.broadcastReasonless = broadcastReasonless;
+      return this;
+    }
+
+    @This
+    @Pure
+    public PunishmentTypeBuilder setBroadcastReasoned(final @Nullable MessageKey broadcastReasoned) {
+      this.broadcastReasoned = broadcastReasoned;
+      return this;
+    }
+
+    @This
+    @Pure
+    public PunishmentTypeBuilder setBroadcastLift(final @Nullable MessageKey broadcastLift) {
+      this.broadcastLift = broadcastLift;
+      return this;
+    }
+
+    @This
+    @Pure
+    public PunishmentTypeBuilder setApplicationReasonless(final @Nullable MessageKey applicationReasonless) {
+      this.applicationReasonless = applicationReasonless;
+      return this;
+    }
+
+    @This
+    @Pure
+    public PunishmentTypeBuilder setApplicationReasoned(final @Nullable MessageKey applicationReasoned) {
+      this.applicationReasoned = applicationReasoned;
+      return this;
+    }
+
+    @This
+    @Pure
+    public PunishmentTypeBuilder setVerbPastTense(final @MonotonicNonNull MessageKey verbPastTense) {
+      this.verbPastTense = verbPastTense;
+      return this;
+    }
   }
 }
