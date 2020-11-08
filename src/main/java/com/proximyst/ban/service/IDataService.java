@@ -27,6 +27,11 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 
 public interface IDataService {
   /**
+   * @return The prefix for the SQL files on the classpath for this service.
+   */
+  @NonNull String getClassPathPrefix();
+
+  /**
    * Get all current punishments where the given {@link UUID} is the target.
    *
    * @param target The target of the punishments.

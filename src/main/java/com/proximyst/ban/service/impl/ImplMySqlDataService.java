@@ -19,11 +19,8 @@
 package com.proximyst.ban.service.impl;
 
 import cloud.commandframework.types.tuples.Pair;
-import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.proximyst.ban.BanPlugin;
-import com.proximyst.ban.boilerplate.model.MigrationIndexEntry;
 import com.proximyst.ban.model.BanUser;
 import com.proximyst.ban.model.Punishment;
 import com.proximyst.ban.model.UsernameHistory;
@@ -54,43 +51,11 @@ public final class ImplMySqlDataService implements IDataService {
   @Inject
   public ImplMySqlDataService(final @NonNull Jdbi jdbi, final @NonNull Logger logger) {
     this.jdbi = jdbi;
-
-    this.applyMigrations(logger);
   }
 
-  private void applyMigrations(final @NonNull Logger logger) {
-    final String migrationsIndexJson = ResourceReader.readResource(PATH + "migrations/migrations-index.json");
-    final List<MigrationIndexEntry> migrations = BanPlugin.COMPACT_GSON
-        .fromJson(
-            migrationsIndexJson,
-            new TypeToken<List<MigrationIndexEntry>>() {
-            }.getType()
-        );
-
-    this.jdbi.useTransaction(handle -> {
-      // Ensure the table exists first.
-      SqlQueries.CREATE_VERSION_TABLE.forEachQuery(handle::execute);
-
-      final int version = handle.createQuery(SqlQueries.SELECT_VERSION.getQuery())
-          .mapTo(int.class)
-          .findOne()
-          .orElse(0);
-      migrations.stream()
-          .filter(mig -> mig.getVersion() > version)
-          .sorted(Comparator.comparingInt(MigrationIndexEntry::getVersion))
-          .forEach(mig -> {
-            logger.info("Migrating database to version " + mig.getVersion() + "...");
-            final String queries = ResourceReader.readResource(PATH + "migrations/" + mig.getPath());
-            for (final String query : queries.split(";")) {
-              if (query.trim().isEmpty()) {
-                continue;
-              }
-
-              handle.execute(query);
-            }
-            handle.execute(SqlQueries.UPDATE_VERSION.getQuery(), mig.getVersion());
-          });
-    });
+  @Override
+  public @NonNull String getClassPathPrefix() {
+    return PATH;
   }
 
   @Override

@@ -71,6 +71,7 @@ import org.checkerframework.checker.index.qual.NonNegative;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.flywaydb.core.Flyway;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.statement.SqlLogger;
 import org.jdbi.v3.core.statement.StatementContext;
@@ -190,8 +191,13 @@ public class BanPlugin {
 
     tm.start("Preparing database");
     try {
-      // This should run any kind of migrations and preparations necessary.
-      this.injector.getInstance(IDataService.class);
+      final IDataService service = this.injector.getInstance(IDataService.class);
+      final Flyway flyway = Flyway.configure(this.getClass().getClassLoader())
+          .baselineOnMigrate(true)
+          .locations("classpath:" + service.getClassPathPrefix() + "migrations")
+          .dataSource(this.hikariDataSource)
+          .load();
+      flyway.migrate();
     } catch (final Exception ex) {
       this.logger.error("Could not prepare database", ex);
       return;
