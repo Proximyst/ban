@@ -21,6 +21,7 @@ package com.proximyst.ban.service.impl;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ObjectArrays;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.proximyst.ban.config.MessageKey;
@@ -30,7 +31,6 @@ import com.proximyst.ban.model.Punishment;
 import com.proximyst.ban.model.PunishmentType;
 import com.proximyst.ban.service.IMessageService;
 import com.proximyst.ban.service.IUserService;
-import com.proximyst.ban.utils.ArrayUtils;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import java.text.SimpleDateFormat;
@@ -162,6 +162,7 @@ public final class ImplMessageService implements IMessageService {
     // The String[] cast is safe because we set every placeholder in the Object[] to become a String.
     return CompletableFuture.completedFuture(MiniMessage.get().parse(message, (String[]) placeholders));
   }
+
   @Override
   public @NonNull CompletableFuture<Component> formatMessage(final @Nullable MessageKey messageKey,
       final @NonNull Punishment punishment,
@@ -177,28 +178,27 @@ public final class ImplMessageService implements IMessageService {
             this.userService.getUser(punishment.getPunisher())
                 .thenApply(opt ->
                     opt.orElseThrow(() -> new IllegalArgumentException("Punisher of punishment cannot be unknown."))),
-            (target, punisher) -> ArrayUtils.append(placeholders,
-                "targetName", target.getUsername(),
-                "targetUuid", target.getUuid().toString(),
+            (target, punisher) -> ObjectArrays.concat(placeholders,
+                new Object[]{
+                    "targetName", target.getUsername(),
+                    "targetUuid", target.getUuid().toString(),
 
-                "punisherName", punisher.getUsername(),
-                "punisherUuid", punisher.getUuid().toString(),
+                    "punisherName", punisher.getUsername(),
+                    "punisherUuid", punisher.getUuid().toString(),
 
-                "punishmentId", punishment.getId().orElse(-1L).toString(),
-                "punishmentDate", SimpleDateFormat.getDateInstance().format(punishment.getDate()),
-                "reason", punishment.getReason()
-                    .map(MiniMessage.get()::escapeTokens)
-                    .orElse("No reason specified"),
-                "punishmentType", punishment.getPunishmentType().name(),
-                "punishmentVerb", punishment.getPunishmentType().getVerbPastTense().map(this.cfg),
+                    "punishmentId", punishment.getId().orElse(-1L).toString(),
+                    "punishmentDate", SimpleDateFormat.getDateInstance().format(punishment.getDate()),
+                    "reason", punishment.getReason().map(MiniMessage.get()::escapeTokens).orElse("No reason specified"),
+                    "punishmentType", punishment.getPunishmentType().name(),
+                    "punishmentVerb", punishment.getPunishmentType().getVerbPastTense().map(this.cfg),
 
-                "expiry", !punishment.currentlyApplies()
+                    "expiry", !punishment.currentlyApplies()
                     ? this.cfg.formatting.isLifted
                     : punishment.isPermanent()
                         ? this.cfg.formatting.never
                         : DurationFormatUtils
                             .formatDurationHMS(punishment.getExpiration() - System.currentTimeMillis()),
-                "duration", punishment.isPermanent()
+                    "duration", punishment.isPermanent()
                     ? this.cfg.formatting.permanently
                     : this.cfg.formatting.durationFormat
                         .replace("<duration>",
@@ -206,8 +206,8 @@ public final class ImplMessageService implements IMessageService {
                                 punishment.getExpiration() - System.currentTimeMillis(),
                                 false,
                                 false
-                            )))
-        )
+                            ))},
+                Object.class))
         .thenCompose(p -> this.formatMessage(messageKey, p));
   }
 
