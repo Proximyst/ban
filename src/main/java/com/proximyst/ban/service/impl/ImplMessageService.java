@@ -177,6 +177,12 @@ public final class ImplMessageService implements IMessageService {
         .thenCompose(p -> this.formatMessage(messageKey, p));
   }
 
+  /**
+   * @param message The message to pass to MiniMessage.
+   * @param futureCount The amount of futures in the placeholders array.
+   * @param placeholders The placeholders in an array which is equivalent to {@code (String, String|CompletableFuture)[]}.
+   * @return The finished component.
+   */
   private @NonNull CompletableFuture<@NonNull Component> formatMessageFuture(final @NonNull String message,
       final @Positive int futureCount, final @NonNull Object @NonNull ... placeholders) {
     final CompletableFuture<?>[] futures = new CompletableFuture<?>[futureCount];
@@ -209,6 +215,9 @@ public final class ImplMessageService implements IMessageService {
         }
       }
 
+      // The method has an expectation (as described in its javadoc) that placeholders must all be
+      // String|CompletableFuture. The futures were converted to strings in the loop right above this,
+      // so the entire array must now be strings.
       return MiniMessage.get().parse(message, (String[]) placeholders);
     });
   }
