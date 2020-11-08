@@ -24,7 +24,7 @@ import cloud.commandframework.velocity.VelocityCommandManager;
 import com.google.inject.Inject;
 import com.proximyst.ban.BanPermissions;
 import com.proximyst.ban.commands.cloud.BaseCommand;
-import com.proximyst.ban.config.MessagesConfig;
+import com.proximyst.ban.config.MessageKey;
 import com.proximyst.ban.factory.ICloudArgumentFactory;
 import com.proximyst.ban.model.BanUser;
 import com.proximyst.ban.model.Punishment;
@@ -35,7 +35,6 @@ import com.proximyst.ban.service.IPunishmentService;
 import com.proximyst.ban.utils.CommandUtils;
 import com.velocitypowered.api.command.CommandSource;
 import net.kyori.adventure.identity.Identity;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -43,17 +42,14 @@ public final class BanCommand extends BaseCommand {
   private final @NonNull ICloudArgumentFactory cloudArgumentFactory;
   private final @NonNull IPunishmentService punishmentService;
   private final @NonNull IMessageService messageService;
-  private final @NonNull MessagesConfig messagesConfig;
 
   @Inject
   public BanCommand(final @NonNull ICloudArgumentFactory cloudArgumentFactory,
       final @NonNull IPunishmentService punishmentService,
-      final @NonNull IMessageService messageService,
-      final @NonNull MessagesConfig messagesConfig) {
+      final @NonNull IMessageService messageService) {
     this.cloudArgumentFactory = cloudArgumentFactory;
     this.punishmentService = punishmentService;
     this.messageService = messageService;
-    this.messagesConfig = messagesConfig;
   }
 
   @Override
@@ -69,12 +65,9 @@ public final class BanCommand extends BaseCommand {
     final BanUser target = ctx.get("target");
     final @Nullable String reason = ctx.getOrDefault("reason", null);
 
-    ctx.getSender().sendMessage(Identity.nil(), MiniMessage.get().parse(
-        this.messagesConfig.commands.banFeedback,
-
+    this.messageService.sendFormattedMessage(ctx.getSender(), Identity.nil(), MessageKey.COMMANDS_FEEDBACK_BAN,
         "targetName", target.getUsername(),
-        "targetUuid", target.getUuid().toString()
-    ));
+        "targetUuid", target.getUuid());
 
     // We have to lift their previous punishment.
     this.punishmentService.getActiveBan(target.getUuid())

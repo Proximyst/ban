@@ -18,10 +18,13 @@
 
 package com.proximyst.ban.service.impl;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ObjectArrays;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.proximyst.ban.config.MessageKey;
 import com.proximyst.ban.config.MessagesConfig;
 import com.proximyst.ban.model.BanUser;
 import com.proximyst.ban.model.Punishment;
@@ -36,6 +39,7 @@ import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.apache.commons.lang3.time.DurationFormatUtils;
+import org.checkerframework.checker.index.qual.Positive;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -56,59 +60,18 @@ public final class ImplMessageService implements IMessageService {
 
   @Override
   public @NonNull CompletableFuture<@Nullable Void> announceNewPunishment(final @NonNull Punishment punishment) {
-    final boolean hasReason = punishment.getReason().isPresent();
-    @SuppressWarnings("checkstyle:FinalLocalVariable")
-    String message;
-    switch (punishment.getPunishmentType()) {
-      case BAN:
-        message = hasReason ? this.cfg.broadcasts.banReason : this.cfg.broadcasts.banReasonless;
-        break;
-      case MUTE:
-        message = hasReason ? this.cfg.broadcasts.muteReason : this.cfg.broadcasts.muteReasonless;
-        break;
-      case KICK:
-        message = hasReason ? this.cfg.broadcasts.kickReason : this.cfg.broadcasts.kickReasonless;
-        break;
-      case WARNING:
-        message = hasReason ? this.cfg.broadcasts.warnReason : this.cfg.broadcasts.warnReasonless;
-        break;
-
-      default:
-        // The type is not announcable upon placing.
-        return CompletableFuture.completedFuture(null);
-    }
-
-    return this.announcePunishmentMessage(punishment, message);
+    return punishment.getPunishmentType()
+        .getBroadcastMessage(punishment.getReason().isPresent())
+        .map(msg -> this.announcePunishmentMessage(punishment, msg))
+        .orElseGet(() -> CompletableFuture.completedFuture(null));
   }
 
   @Override
   public @NonNull CompletableFuture<@Nullable Void> announceLiftedPunishment(final @NonNull Punishment punishment) {
-    @SuppressWarnings("checkstyle:FinalLocalVariable")
-    String message;
-    switch (punishment.getPunishmentType()) {
-      case BAN:
-        message = this.cfg.broadcasts.unban;
-        break;
-      case MUTE:
-        message = this.cfg.broadcasts.unmute;
-        break;
-
-      default:
-        // The type is not announcable upon lifting.
-        return CompletableFuture.completedFuture(null);
-    }
-
-    return this.announcePunishmentMessage(punishment, message);
-  }
-
-  @Override
-  public @NonNull Component errorNoBan(final @NonNull BanUser user) {
-    return this.parseWithTarget(this.cfg.errors.noBan, user);
-  }
-
-  @Override
-  public @NonNull Component errorNoMute(final @NonNull BanUser user) {
-    return this.parseWithTarget(this.cfg.errors.noMute, user);
+    return punishment.getPunishmentType()
+        .getBroadcastLiftMessage()
+        .map(msg -> this.announcePunishmentMessage(punishment, msg))
+        .orElseGet(() -> CompletableFuture.completedFuture(null));
   }
 
   @SuppressWarnings("UnstableApiUsage")
@@ -117,13 +80,14 @@ public final class ImplMessageService implements IMessageService {
       final @NonNull ImmutableCollection<@NonNull Punishment> punishments,
       final @NonNull BanUser target) {
     final ImmutableList.Builder<Component> builder = ImmutableList.builderWithExpectedSize(punishments.size());
-    builder.add(MiniMessage.get().parse(
-        this.cfg.commands.historyHeader,
-
+    builder.add(this.formatMessage(MessageKey.COMMANDS_HISTORY_HEADER,
         "targetName", target.getUsername(),
-        "targetUuid", target.getUuid().toString(),
-
-        "amount", Integer.toString(punishments.size())));
+        "targetUuid", target.getUuid(),
+        "amount", punishments.size())
+        // We know there are only constant values here, no futures.
+        // The future is therefore instantly finished, and we don't actually need to wait for it.
+        // TODO(Proximyst): Make an internal function for formatting methods which are constant values?
+        .join());
     if (punishments.isEmpty()) {
       // Don't do wasteful allocations.
       return CompletableFuture.completedFuture(builder.build());
@@ -137,7 +101,7 @@ public final class ImplMessageService implements IMessageService {
       }
 
       future = future.thenCombine(
-          this.formatMessageWith(this.cfg.commands.historyEntry, punishment),
+          this.formatMessage(MessageKey.COMMANDS_HISTORY_ENTRY, punishment),
           (first, second) -> {
             builder.add(second);
             return null;
@@ -148,125 +112,121 @@ public final class ImplMessageService implements IMessageService {
   }
 
   @Override
-  public @NonNull CompletableFuture<@NonNull Component> formatApplication(final @NonNull Punishment punishment) {
-    final boolean hasReason = punishment.getReason().isPresent();
-    @SuppressWarnings("checkstyle:FinalLocalVariable")
-    String message;
-    switch (punishment.getPunishmentType()) {
-      case KICK:
-        message = hasReason ? this.cfg.applications.kickReason : this.cfg.applications.kickReasonless;
-        break;
-      case BAN:
-        message = hasReason ? this.cfg.applications.banReason : this.cfg.applications.banReasonless;
-        break;
-      case MUTE:
-        message = hasReason ? this.cfg.applications.muteReason : this.cfg.applications.muteReasonless;
-        break;
+  public @NonNull CompletableFuture<Component> formatMessage(final @Nullable MessageKey messageKey,
+      final @Nullable Object @NonNull ... placeholders) {
+    Preconditions.checkArgument(placeholders.length % 2 == 0, "There must be an event length for `placeholders`");
 
-      default:
-        return CompletableFuture.completedFuture(Component.empty());
+    if (messageKey == null) {
+      return CompletableFuture.completedFuture(Component.empty());
     }
 
-    return this.formatMessageWith(message, punishment);
+    final String message = messageKey.map(this.cfg);
+    if (message.isEmpty()) {
+      return CompletableFuture.completedFuture(Component.empty());
+    }
+
+    for (int i = 0; i < placeholders.length; ++i) {
+      final Object obj = placeholders[i];
+      if (obj instanceof CompletableFuture) {
+        // Alright, we have some placeholder that must be awaited!
+
+        // First off, let's finish the resting placeholder string-ification.
+        // We start with j = i+1 because we don't want the current object,
+        // then we work our way up from there.
+        // We also count the amount of futures we have, for use in #formatMessageFuture.
+        int futures = 1;
+        for (int j = i + 1; j < placeholders.length; ++j) {
+          final Object rest = placeholders[j];
+          if (!(rest instanceof CompletableFuture)) {
+            placeholders[j] = String.valueOf(rest);
+          } else {
+            ++futures;
+          }
+        }
+
+        //noinspection NullableProblems -- This is fine because we just ensured all nulls are turned into "null" strings
+        return this.formatMessageFuture(message, futures, placeholders);
+      }
+
+      placeholders[i] = String.valueOf(obj);
+    }
+
+    // No placeholders must be awaited.
+
+    // The String[] cast is safe because we set every placeholder in the Object[] to become a String.
+    return CompletableFuture.completedFuture(MiniMessage.get().parse(message, (String[]) placeholders));
   }
 
   @Override
-  public @NonNull CompletableFuture<@NonNull Component> formatMessageWith(
-      final @NonNull String message,
-      final @NonNull Punishment punishment) {
-    return this.userService.getUser(punishment.getTarget())
-        .thenApply(opt ->
-            opt.orElseThrow(() -> new IllegalArgumentException("Target of punishment cannot be unknown."))
-        )
-        .thenCombine(
-            this.userService.getUser(punishment.getPunisher()),
-            (target, punisher) -> this.formatMessageWith(
-                punishment,
-                message,
-                punisher.orElseThrow(() -> new IllegalArgumentException("Punisher of punishment cannot be unknown")),
-                target
-            )
-        );
-  }
-
-  @Override
-  public @NonNull Component formatMessageWith(
+  public @NonNull CompletableFuture<Component> formatMessage(final @Nullable MessageKey messageKey,
       final @NonNull Punishment punishment,
-      final @NonNull String message,
-      final @NonNull BanUser punisher,
-      final @NonNull BanUser target) {
-    @SuppressWarnings("checkstyle:FinalLocalVariable")
-    String punishmentVerb = "UNKNOWN VERB, REPORT TO BAN";
-    switch (punishment.getPunishmentType()) {
-      case KICK:
-        punishmentVerb = this.cfg.formatting.kickVerb;
-        break;
-      case BAN:
-        punishmentVerb = this.cfg.formatting.banVerb;
-        break;
-      case WARNING:
-        punishmentVerb = this.cfg.formatting.warnVerb;
-        break;
-      case MUTE:
-        punishmentVerb = this.cfg.formatting.muteVerb;
-        break;
-      case NOTE:
-        punishmentVerb = this.cfg.formatting.noteVerb;
-        break;
-      default:
+      final @Nullable Object @NonNull ... placeholders) {
+    if (messageKey == null) {
+      return CompletableFuture.completedFuture(Component.empty());
     }
 
-    return MiniMessage.get()
-        .parse(
-            message,
-
-            "targetName", target.getUsername(),
-            "targetUuid", target.getUuid().toString(),
-
-            "punisherName", punisher.getUsername(),
-            "punisherUuid", punisher.getUuid().toString(),
-
-            "punishmentId", punishment.getId().orElse(-1L).toString(),
-            "punishmentDate", SimpleDateFormat.getDateInstance().format(punishment.getDate()),
-            "reason", punishment.getReason()
-                .map(MiniMessage.get()::escapeTokens)
-                .orElse("No reason specified"),
-            "punishmentType", punishment.getPunishmentType().name(),
-            "punishmentVerb", punishmentVerb,
-
-            "expiry", !punishment.currentlyApplies()
-                ? this.cfg.formatting.isLifted
-                : punishment.isPermanent()
-                    ? this.cfg.formatting.never
-                    : DurationFormatUtils.formatDurationHMS(punishment.getExpiration() - System.currentTimeMillis()),
-            "duration", punishment.isPermanent()
-                ? this.cfg.formatting.permanently
-                : this.cfg.formatting.durationFormat
-                    .replace("<duration>",
-                        DurationFormatUtils.formatDurationWords(
-                            punishment.getExpiration() - System.currentTimeMillis(),
-                            false,
-                            false
-                        ))
-        );
+    return this.userService.getUser(punishment.getTarget())
+        .thenApply(
+            opt -> opt.orElseThrow(() -> new IllegalArgumentException("Target of punishment cannot be unknown.")))
+        .thenCombine(
+            this.userService.getUser(punishment.getPunisher())
+                .thenApply(opt ->
+                    opt.orElseThrow(() -> new IllegalArgumentException("Punisher of punishment cannot be unknown."))),
+            (target, punisher) -> ObjectArrays.concat(placeholders,
+                this.createPlaceholders(punishment, target, punisher), Object.class))
+        .thenCompose(p -> this.formatMessage(messageKey, p));
   }
 
-  private @NonNull Component parseWithTarget(
-      final @NonNull String msg,
-      final @NonNull BanUser target) {
-    return MiniMessage.get().parse(
-        msg,
+  /**
+   * @param message The message to pass to MiniMessage.
+   * @param futureCount The amount of futures in the placeholders array.
+   * @param placeholders The placeholders in an array which is equivalent to {@code (String, String|CompletableFuture)[]}.
+   * @return The finished component.
+   */
+  private @NonNull CompletableFuture<@NonNull Component> formatMessageFuture(final @NonNull String message,
+      final @Positive int futureCount, final @NonNull Object @NonNull ... placeholders) {
+    final CompletableFuture<?>[] futures = new CompletableFuture<?>[futureCount];
 
-        "targetName", target.getUsername(),
-        "targetUuid", target.getUuid().toString()
-    );
+    // We know how many futures there are, but we also need to actually find them.
+    int futureIdx = 0;
+    for (final Object placeholder : placeholders) {
+      if (placeholder instanceof CompletableFuture) {
+        futures[futureIdx++] = (CompletableFuture<?>) placeholder;
+      }
+    }
+
+    // We now need to know when all the futures are done.
+    // Luckily, we can do that with helper methods in CompletableFuture.
+    final CompletableFuture<?> allDone = CompletableFuture.allOf(futures);
+
+    return allDone.thenApply($ -> {
+      // We now know all the futures are done.
+      // We'll need to unwrap them, then pass to MiniMessage.
+      int found = 0;
+      for (int i = 0; i < placeholders.length; ++i) {
+        final Object obj = placeholders[i];
+        if (obj instanceof CompletableFuture) {
+          ++found;
+          placeholders[i] = String.valueOf(((CompletableFuture<?>) obj).join());
+        }
+
+        if (found == futureCount) {
+          break;
+        }
+      }
+
+      // The method has an expectation (as described in its javadoc) that placeholders must all be
+      // String|CompletableFuture. The futures were converted to strings in the loop right above this,
+      // so the entire array must now be strings.
+      return MiniMessage.get().parse(message, (String[]) placeholders);
+    });
   }
 
   private @NonNull CompletableFuture<@Nullable Void> announcePunishmentMessage(
       final @NonNull Punishment punishment,
-      final @NonNull String message) {
+      final @NonNull MessageKey messageKey) {
     final String permission = punishment.getPunishmentType().getNotificationPermission().orElse(null);
-    return this.formatMessageWith(message, punishment)
+    return this.formatMessage(messageKey, punishment)
         .thenApply(component -> {
           this.proxyServer.getConsoleCommandSource().sendMessage(Identity.nil(), component);
           for (final Player player : this.proxyServer.getAllPlayers()) {
@@ -279,5 +239,37 @@ public final class ImplMessageService implements IMessageService {
 
           return null;
         });
+  }
+
+  private @Nullable Object @NonNull [] createPlaceholders(final @NonNull Punishment punishment,
+      final @NonNull BanUser target, final @NonNull BanUser punisher) {
+    return new Object[]{
+        "targetName", target.getUsername(),
+        "targetUuid", target.getUuid().toString(),
+
+        "punisherName", punisher.getUsername(),
+        "punisherUuid", punisher.getUuid().toString(),
+
+        "punishmentId", punishment.getId().orElse(-1L).toString(),
+        "punishmentDate", SimpleDateFormat.getDateInstance().format(punishment.getDate()),
+        "reason", punishment.getReason().map(MiniMessage.get()::escapeTokens).orElse("No reason specified"),
+        "punishmentType", punishment.getPunishmentType().name(),
+        "punishmentVerb", punishment.getPunishmentType().getVerbPastTense().map(this.cfg),
+
+        "expiry", !punishment.currentlyApplies()
+        ? this.cfg.formatting.isLifted
+        : punishment.isPermanent()
+            ? this.cfg.formatting.never
+            : DurationFormatUtils
+                .formatDurationHMS(punishment.getExpiration() - System.currentTimeMillis()),
+        "duration", punishment.isPermanent()
+        ? this.cfg.formatting.permanently
+        : this.cfg.formatting.durationFormat
+            .replace("<duration>",
+                DurationFormatUtils.formatDurationWords(
+                    punishment.getExpiration() - System.currentTimeMillis(),
+                    false,
+                    false
+                ))};
   }
 }

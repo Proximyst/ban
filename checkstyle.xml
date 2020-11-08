@@ -65,8 +65,7 @@
     <module name="EmptyLineSeparator">
       <!-- No new line after the license header -->
       <property name="tokens"
-        value="IMPORT, STATIC_IMPORT, INTERFACE_DEF, ENUM_DEF,
-                    STATIC_INIT, INSTANCE_INIT, METHOD_DEF, CTOR_DEF, VARIABLE_DEF"/>
+        value="IMPORT, STATIC_IMPORT"/>
       <property name="allowNoEmptyLineBetweenFields" value="true"/>
       <property name="allowMultipleEmptyLines" value="false"/>
       <property name="allowMultipleEmptyLinesInsideClassMembers" value="false"/>
@@ -81,7 +80,6 @@
     <module name="UnnecessaryParentheses"/>
 
     <!-- field and method access qualified with `this` -->
-
     <module name="FinalLocalVariable">
       <property name="validateEnhancedForLoopVariable" value="true"/>
       <property name="tokens" value="VARIABLE_DEF, PARAMETER_DEF"/>
@@ -99,6 +97,7 @@
     </module>
     <module name="UnusedImports"/>
     <module name="HideUtilityClassConstructor"/>
+    <module name="OverloadMethodsDeclarationOrder"/>
 
     <!-- braces and parentheses on block statements on same line -->
     <module name="LeftCurly"/>
@@ -123,7 +122,7 @@
       <property name="caseIndent" value="2"/>
       <property name="throwsIndent" value="2"/>
       <property name="lineWrappingIndentation" value="0"/>
-      <property name="arrayInitIndent" value="2"/>
+      <property name="arrayInitIndent" value="4"/>
     </module>
     <module name="CommentsIndentation"/>
 

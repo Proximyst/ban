@@ -141,8 +141,10 @@ public final class ImplPunishmentService implements IPunishmentService {
       return CompletableFuture.completedFuture(null);
     }
 
-    return this.messageService.formatApplication(punishment)
-        .thenApply(component -> {
+    return this.messageService.formatMessage(
+        punishment.getPunishmentType().getApplicationMessage(punishment.getReason().isPresent()).orElse(null),
+        punishment)
+        .thenAccept(component -> {
           switch (punishment.getPunishmentType()) {
             case BAN:
               // Fall through.
@@ -156,8 +158,6 @@ public final class ImplPunishmentService implements IPunishmentService {
               target.sendMessage(Identity.nil(), component);
               break;
           }
-
-          return null;
         });
   }
 
