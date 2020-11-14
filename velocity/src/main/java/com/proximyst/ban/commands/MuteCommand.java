@@ -30,10 +30,9 @@ import com.proximyst.ban.model.BanUser;
 import com.proximyst.ban.model.Punishment;
 import com.proximyst.ban.model.PunishmentBuilder;
 import com.proximyst.ban.model.PunishmentType;
+import com.proximyst.ban.platform.BanAudience;
 import com.proximyst.ban.service.IMessageService;
 import com.proximyst.ban.service.IPunishmentService;
-import com.proximyst.ban.utils.CommandUtils;
-import com.velocitypowered.api.command.CommandSource;
 import net.kyori.adventure.identity.Identity;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -53,7 +52,7 @@ public final class MuteCommand extends BaseCommand {
   }
 
   @Override
-  public void register(final @NonNull CommandManager<@NonNull CommandSource> commandManager) {
+  public void register(final @NonNull CommandManager<@NonNull BanAudience> commandManager) {
     commandManager.command(commandManager.commandBuilder("mute")
         .permission(BanPermissions.COMMAND_MUTE)
         .argument(this.cloudArgumentFactory.banUser("target", true))
@@ -61,7 +60,7 @@ public final class MuteCommand extends BaseCommand {
         .handler(this::execute));
   }
 
-  private void execute(final @NonNull CommandContext<CommandSource> ctx) {
+  private void execute(final @NonNull CommandContext<BanAudience> ctx) {
     final BanUser target = ctx.get("target");
     final @Nullable String reason = ctx.getOrDefault("reason", null);
 
@@ -72,7 +71,7 @@ public final class MuteCommand extends BaseCommand {
     final Punishment punishment =
         new PunishmentBuilder()
             .type(PunishmentType.MUTE)
-            .punisher(CommandUtils.getSourceUuid(ctx.getSender()))
+            .punisher(ctx.getSender().uuid())
             .target(target.getUuid())
             .reason(reason)
             .build();

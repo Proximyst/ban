@@ -16,34 +16,12 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-package com.proximyst.ban.platform;
+package com.proximyst.ban.commands.cloud;
 
-import java.util.UUID;
-import net.kyori.adventure.audience.Audience;
-import net.kyori.adventure.identity.Identified;
-import net.kyori.adventure.identity.Identity;
+import cloud.commandframework.CommandManager;
+import com.proximyst.ban.platform.BanAudience;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.dataflow.qual.Pure;
-import org.checkerframework.dataflow.qual.SideEffectFree;
 
-public interface BanAudience extends Identified, Identity, Audience {
-  @Override
-  @SideEffectFree
-  default @NonNull Identity identity() {
-    return this;
-  }
-
-  @Override
-  @Pure
-  @NonNull UUID uuid();
-
-  @SideEffectFree
-  @NonNull String username();
-
-  boolean hasPermission(@NonNull final String permission);
-
-  @SuppressWarnings("unchecked") // This is intentional.
-  default <A extends Audience> @NonNull A castAudience() {
-    return (A) this;
-  }
+public abstract class BaseCommand {
+  public abstract void register(final @NonNull CommandManager<@NonNull BanAudience> commandManager);
 }

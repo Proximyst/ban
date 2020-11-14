@@ -30,10 +30,9 @@ import com.proximyst.ban.model.BanUser;
 import com.proximyst.ban.model.Punishment;
 import com.proximyst.ban.model.PunishmentBuilder;
 import com.proximyst.ban.model.PunishmentType;
+import com.proximyst.ban.platform.BanAudience;
 import com.proximyst.ban.service.IMessageService;
 import com.proximyst.ban.service.IPunishmentService;
-import com.proximyst.ban.utils.CommandUtils;
-import com.velocitypowered.api.command.CommandSource;
 import net.kyori.adventure.identity.Identity;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -53,7 +52,7 @@ public final class BanCommand extends BaseCommand {
   }
 
   @Override
-  public void register(final @NonNull CommandManager<@NonNull CommandSource> commandManager) {
+  public void register(final @NonNull CommandManager<@NonNull BanAudience> commandManager) {
     commandManager.command(commandManager.commandBuilder("ban")
         .permission(BanPermissions.COMMAND_BAN)
         .argument(this.cloudArgumentFactory.banUser("target", true))
@@ -61,7 +60,7 @@ public final class BanCommand extends BaseCommand {
         .handler(this::execute));
   }
 
-  private void execute(final @NonNull CommandContext<CommandSource> ctx) {
+  private void execute(final @NonNull CommandContext<@NonNull ? extends BanAudience> ctx) {
     final BanUser target = ctx.get("target");
     final @Nullable String reason = ctx.getOrDefault("reason", null);
 
@@ -73,14 +72,14 @@ public final class BanCommand extends BaseCommand {
     this.punishmentService.getActiveBan(target.getUuid())
         .thenAccept(optExisting -> {
           optExisting.ifPresent(existing -> {
-            existing.setLiftedBy(CommandUtils.getSourceUuid(ctx.getSender()));
+            existing.setLiftedBy(ctx.getSender().uuid());
             this.punishmentService.savePunishment(existing);
           });
 
           final Punishment punishment =
               new PunishmentBuilder()
                   .type(PunishmentType.BAN)
-                  .punisher(CommandUtils.getSourceUuid(ctx.getSender()))
+                  .punisher(ctx.getSender().uuid())
                   .target(target.getUuid())
                   .reason(reason)
                   .build();

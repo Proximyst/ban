@@ -16,34 +16,19 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-package com.proximyst.ban.platform;
+package com.proximyst.ban.inject;
 
-import java.util.UUID;
-import net.kyori.adventure.audience.Audience;
-import net.kyori.adventure.identity.Identified;
-import net.kyori.adventure.identity.Identity;
+import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.proximyst.ban.platform.BanServer;
+import com.proximyst.ban.platform.VelocityServer;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.dataflow.qual.Pure;
-import org.checkerframework.dataflow.qual.SideEffectFree;
 
-public interface BanAudience extends Identified, Identity, Audience {
-  @Override
-  @SideEffectFree
-  default @NonNull Identity identity() {
-    return this;
-  }
-
-  @Override
-  @Pure
-  @NonNull UUID uuid();
-
-  @SideEffectFree
-  @NonNull String username();
-
-  boolean hasPermission(@NonNull final String permission);
-
-  @SuppressWarnings("unchecked") // This is intentional.
-  default <A extends Audience> @NonNull A castAudience() {
-    return (A) this;
+public class PlatformModule extends AbstractModule {
+  @Singleton
+  @Provides
+  @NonNull BanServer banServer(final @NonNull VelocityServer server) {
+    return server;
   }
 }

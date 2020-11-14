@@ -24,10 +24,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import net.kyori.adventure.audience.Audience;
+import net.kyori.adventure.audience.ForwardingAudience;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.dataflow.qual.Pure;
 
-public class VelocityAudience implements BanAudience {
+public class VelocityAudience implements BanAudience, ForwardingAudience.Single {
   public static final @NonNull Map<UUID, VelocityAudience> AUDIENCE_CACHE = new HashMap<>();
 
   private final @NonNull CommandSource commandSource;

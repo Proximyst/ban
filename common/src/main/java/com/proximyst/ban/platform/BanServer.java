@@ -16,12 +16,11 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-package com.proximyst.ban.commands.cloud;
+package com.proximyst.ban.platform;
 
-import cloud.commandframework.CommandManager;
-import com.velocitypowered.api.command.CommandSource;
+import net.kyori.adventure.audience.Audience;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
-public abstract class BaseCommand {
-  public abstract void register(final @NonNull CommandManager<@NonNull CommandSource> commandManager);
+public interface BanServer extends Audience {
+  @NonNull Iterable<? extends BanAudience> connectedAudiences();
 }

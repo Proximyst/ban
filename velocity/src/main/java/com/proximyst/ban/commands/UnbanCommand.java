@@ -27,10 +27,9 @@ import com.proximyst.ban.config.MessageKey;
 import com.proximyst.ban.factory.ICloudArgumentFactory;
 import com.proximyst.ban.model.BanUser;
 import com.proximyst.ban.model.Punishment;
+import com.proximyst.ban.platform.BanAudience;
 import com.proximyst.ban.service.IMessageService;
 import com.proximyst.ban.service.IPunishmentService;
-import com.proximyst.ban.utils.CommandUtils;
-import com.velocitypowered.api.command.CommandSource;
 import net.kyori.adventure.identity.Identity;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
@@ -49,14 +48,14 @@ public final class UnbanCommand extends BaseCommand {
   }
 
   @Override
-  public void register(final @NonNull CommandManager<@NonNull CommandSource> commandManager) {
+  public void register(final @NonNull CommandManager<@NonNull BanAudience> commandManager) {
     commandManager.command(commandManager.commandBuilder("unban")
         .permission(BanPermissions.COMMAND_UNBAN)
         .argument(this.cloudArgumentFactory.banUser("target", true))
         .handler(this::execute));
   }
 
-  private void execute(final @NonNull CommandContext<CommandSource> ctx) {
+  private void execute(final @NonNull CommandContext<BanAudience> ctx) {
     final @NonNull BanUser target = ctx.get("target");
 
     this.messageService.sendFormattedMessage(ctx.getSender(), Identity.nil(), MessageKey.COMMANDS_FEEDBACK_UNBAN,
@@ -73,7 +72,7 @@ public final class UnbanCommand extends BaseCommand {
             return;
           }
 
-          punishment.setLiftedBy(CommandUtils.getSourceUuid(ctx.getSender()));
+          punishment.setLiftedBy(ctx.getSender().uuid());
           this.punishmentService.savePunishment(punishment);
           this.messageService.announceLiftedPunishment(punishment);
         });

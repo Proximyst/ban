@@ -26,10 +26,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.proximyst.ban.model.BanUser;
+import com.proximyst.ban.platform.BanAudience;
+import com.proximyst.ban.platform.BanServer;
 import com.proximyst.ban.service.IUserService;
-import com.velocitypowered.api.command.CommandSource;
-import com.velocitypowered.api.proxy.Player;
-import com.velocitypowered.api.proxy.ProxyServer;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -37,34 +36,34 @@ import java.util.Queue;
 import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
-public final class BanUserArgument extends CommandArgument<@NonNull CommandSource, @NonNull BanUser> {
+public final class BanUserArgument extends CommandArgument<@NonNull BanAudience, @NonNull BanUser> {
   @Inject
   public BanUserArgument(
       final @NonNull IUserService userService,
-      final @NonNull ProxyServer proxyServer,
+      final @NonNull BanServer banServer,
       final @Assisted("required") boolean required,
       final @Assisted("name") @NonNull String name
   ) {
     super(
         required,
         name,
-        new BanUserParser(userService, proxyServer),
+        new BanUserParser(userService, banServer),
         BanUser.class
     );
   }
 
-  public static final class BanUserParser implements ArgumentParser<@NonNull CommandSource, BanUser> {
+  public static final class BanUserParser implements ArgumentParser<@NonNull BanAudience, BanUser> {
     private final @NonNull IUserService userService;
-    private final @NonNull ProxyServer proxyServer;
+    private final @NonNull BanServer banServer;
 
-    public BanUserParser(final @NonNull IUserService userService, final @NonNull ProxyServer proxyServer) {
+    public BanUserParser(final @NonNull IUserService userService, final @NonNull BanServer banServer) {
       this.userService = userService;
-      this.proxyServer = proxyServer;
+      this.banServer = banServer;
     }
 
     @Override
     public @NonNull ArgumentParseResult<BanUser> parse(
-        final @NonNull CommandContext<CommandSource> commandContext,
+        final @NonNull CommandContext<BanAudience> commandContext,
         final @NonNull Queue<String> inputQueue
     ) {
       final String input = inputQueue.peek();
@@ -106,15 +105,15 @@ public final class BanUserArgument extends CommandArgument<@NonNull CommandSourc
 
     @Override
     public @NonNull List<String> suggestions(
-        final @NonNull CommandContext<CommandSource> commandContext,
+        final @NonNull CommandContext<BanAudience> commandContext,
         final @NonNull String input
     ) {
       final String lowercaseInput = input.toLowerCase(Locale.ENGLISH).trim();
       final ImmutableList.Builder<String> builder = ImmutableList.builder();
 
-      for (final Player player : this.proxyServer.getAllPlayers()) {
-        if (lowercaseInput.isEmpty() || player.getUsername().toLowerCase(Locale.ENGLISH).startsWith(lowercaseInput)) {
-          builder.add(player.getUsername());
+      for (final BanAudience player : this.banServer.connectedAudiences()) {
+        if (lowercaseInput.isEmpty() || player.username().toLowerCase(Locale.ENGLISH).startsWith(lowercaseInput)) {
+          builder.add(player.username());
         }
       }
 

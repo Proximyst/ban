@@ -25,7 +25,7 @@ import cloud.commandframework.context.CommandContext;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
-import com.velocitypowered.api.command.CommandSource;
+import com.proximyst.ban.platform.BanAudience;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import java.util.List;
@@ -34,7 +34,7 @@ import java.util.Queue;
 import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
-public final class PlayerArgument extends CommandArgument<@NonNull CommandSource, @NonNull Player> {
+public final class PlayerArgument extends CommandArgument<@NonNull BanAudience, @NonNull Player> {
   @Inject
   public PlayerArgument(
       final @NonNull ProxyServer proxyServer,
@@ -49,7 +49,7 @@ public final class PlayerArgument extends CommandArgument<@NonNull CommandSource
     );
   }
 
-  public static final class PlayerParser implements ArgumentParser<@NonNull CommandSource, @NonNull Player> {
+  public static final class PlayerParser implements ArgumentParser<@NonNull BanAudience, @NonNull Player> {
     private final @NonNull ProxyServer proxyServer;
 
     public PlayerParser(final @NonNull ProxyServer proxyServer) {
@@ -58,7 +58,7 @@ public final class PlayerArgument extends CommandArgument<@NonNull CommandSource
 
     @Override
     public @NonNull ArgumentParseResult<@NonNull Player> parse(
-        final @NonNull CommandContext<CommandSource> commandContext,
+        final @NonNull CommandContext<BanAudience> commandContext,
         final @NonNull Queue<String> inputQueue
     ) {
       final String input = inputQueue.peek();
@@ -66,7 +66,7 @@ public final class PlayerArgument extends CommandArgument<@NonNull CommandSource
         return ArgumentParseResult.failure(new NullPointerException("Expected player name/UUID"));
       }
 
-      Player player = null;
+      final Player player;
       if (input.length() < 3) {
         // Too short for a player name.
         return ArgumentParseResult.failure(new InvalidPlayerIdentifierException("Expected player name/UUID"));
@@ -99,7 +99,7 @@ public final class PlayerArgument extends CommandArgument<@NonNull CommandSource
 
     @Override
     public @NonNull List<@NonNull String> suggestions(
-        final @NonNull CommandContext<CommandSource> commandContext,
+        final @NonNull CommandContext<BanAudience> commandContext,
         final @NonNull String input
     ) {
       final String lowercaseInput = input.toLowerCase(Locale.ENGLISH).trim();

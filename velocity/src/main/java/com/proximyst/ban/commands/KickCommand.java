@@ -29,10 +29,9 @@ import com.proximyst.ban.factory.ICloudArgumentFactory;
 import com.proximyst.ban.model.Punishment;
 import com.proximyst.ban.model.PunishmentBuilder;
 import com.proximyst.ban.model.PunishmentType;
+import com.proximyst.ban.platform.BanAudience;
 import com.proximyst.ban.service.IMessageService;
 import com.proximyst.ban.service.IPunishmentService;
-import com.proximyst.ban.utils.CommandUtils;
-import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
 import net.kyori.adventure.identity.Identity;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -53,7 +52,7 @@ public class KickCommand extends BaseCommand {
   }
 
   @Override
-  public void register(final @NonNull CommandManager<@NonNull CommandSource> commandManager) {
+  public void register(final @NonNull CommandManager<@NonNull BanAudience> commandManager) {
     commandManager.command(commandManager.commandBuilder("kick")
         .permission(BanPermissions.COMMAND_KICK)
         .argument(this.cloudArgumentFactory.player("target", true))
@@ -61,7 +60,7 @@ public class KickCommand extends BaseCommand {
         .handler(this::execute));
   }
 
-  private void execute(final @NonNull CommandContext<CommandSource> ctx) {
+  private void execute(final @NonNull CommandContext<BanAudience> ctx) {
     final Player target = ctx.get("target");
     final @Nullable String reason = ctx.getOrDefault("reason", null);
 
@@ -72,7 +71,7 @@ public class KickCommand extends BaseCommand {
     final Punishment punishment =
         new PunishmentBuilder()
             .type(PunishmentType.KICK)
-            .punisher(CommandUtils.getSourceUuid(ctx.getSender()))
+            .punisher(ctx.getSender().uuid())
             .target(target.getUniqueId())
             .reason(reason)
             .build();

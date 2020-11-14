@@ -26,9 +26,9 @@ import com.proximyst.ban.commands.cloud.BaseCommand;
 import com.proximyst.ban.config.MessageKey;
 import com.proximyst.ban.factory.ICloudArgumentFactory;
 import com.proximyst.ban.model.BanUser;
+import com.proximyst.ban.platform.BanAudience;
 import com.proximyst.ban.service.IMessageService;
 import com.proximyst.ban.service.IPunishmentService;
-import com.velocitypowered.api.command.CommandSource;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -48,14 +48,14 @@ public final class HistoryCommand extends BaseCommand {
   }
 
   @Override
-  public void register(final @NonNull CommandManager<@NonNull CommandSource> commandManager) {
+  public void register(final @NonNull CommandManager<@NonNull BanAudience> commandManager) {
     commandManager.command(commandManager.commandBuilder("history")
         .permission(BanPermissions.COMMAND_HISTORY)
         .argument(this.cloudArgumentFactory.banUser("target", true))
         .handler(this::execute));
   }
 
-  private void execute(final @NonNull CommandContext<CommandSource> ctx) {
+  private void execute(final @NonNull CommandContext<BanAudience> ctx) {
     final BanUser target = ctx.get("target");
 
     this.messageService.sendFormattedMessage(ctx.getSender(), Identity.nil(), MessageKey.COMMANDS_FEEDBACK_HISTORY,

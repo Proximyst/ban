@@ -38,6 +38,7 @@ import com.proximyst.ban.event.subscriber.BannedPlayerJoinSubscriber;
 import com.proximyst.ban.event.subscriber.CacheUpdatePlayerSubscriber;
 import com.proximyst.ban.event.subscriber.MutedPlayerChatSubscriber;
 import com.proximyst.ban.inject.FactoryModule;
+import com.proximyst.ban.inject.PlatformModule;
 import com.proximyst.ban.inject.annotation.BanAsyncExecutor;
 import com.proximyst.ban.inject.config.ConfigurationModule;
 import com.proximyst.ban.inject.data.JdbiModule;
@@ -48,9 +49,9 @@ import com.proximyst.ban.inject.service.MessageServiceModule;
 import com.proximyst.ban.inject.service.MojangServiceModule;
 import com.proximyst.ban.inject.service.PunishmentServiceModule;
 import com.proximyst.ban.inject.service.UserServiceModule;
+import com.proximyst.ban.platform.BanAudience;
 import com.proximyst.ban.platform.VelocityAudience;
 import com.proximyst.ban.service.IDataService;
-import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
@@ -65,7 +66,6 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
@@ -128,7 +128,8 @@ public class BanPlugin {
         new MojangServiceModule(),
         new PunishmentServiceModule(),
         new UserServiceModule(),
-        new FactoryModule()
+        new FactoryModule(),
+        new PlatformModule()
     );
   }
 
@@ -207,14 +208,14 @@ public class BanPlugin {
     }
 
     tm.start("Initialising plugin essentials");
-    final VelocityCommandManager<CommandSource> velocityCommandManager = new VelocityCommandManager<>(
+    final VelocityCommandManager<BanAudience> velocityCommandManager = new VelocityCommandManager<>(
         this.proxyServer,
-        AsynchronousCommandExecutionCoordinator.<CommandSource>newBuilder()
+        AsynchronousCommandExecutionCoordinator.<BanAudience>newBuilder()
             .withAsynchronousParsing()
             .withExecutor(this.injector.getInstance(Key.get(Executor.class, BanAsyncExecutor.class)))
             .build(),
-        Function.identity(),
-        Function.identity()
+        VelocityAudience::getAudience,
+        audience -> audience.<VelocityAudience>castAudience().getCommandSource()
     );
     // Cache the audience for the console.
     VelocityAudience.getAudience(this.proxyServer.getConsoleCommandSource());
