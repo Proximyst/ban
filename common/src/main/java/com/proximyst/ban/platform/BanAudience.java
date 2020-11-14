@@ -23,15 +23,22 @@ import net.kyori.adventure.audience.ForwardingAudience;
 import net.kyori.adventure.identity.Identified;
 import net.kyori.adventure.identity.Identity;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
 
 public interface BanAudience extends Identified, Identity, ForwardingAudience.Single {
   @Override
+  @SideEffectFree
   default @NonNull Identity identity() {
     return this;
   }
 
   @Override
+  @Pure
   @NonNull UUID uuid();
+
+  @SideEffectFree
+  @NonNull String username();
 
   boolean hasPermission(@NonNull final String permission);
 }

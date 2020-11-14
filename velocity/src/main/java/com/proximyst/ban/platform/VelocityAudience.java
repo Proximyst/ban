@@ -32,10 +32,12 @@ public class VelocityAudience implements BanAudience {
 
   private final @NonNull CommandSource commandSource;
   private final @NonNull UUID uuid;
+  private final @NonNull String username;
 
   private VelocityAudience(final @NonNull CommandSource commandSource) {
     this.commandSource = commandSource;
     this.uuid = CommandUtils.getSourceUuid(this.commandSource);
+    this.username = CommandUtils.getSourceName(this.commandSource);
   }
 
   public static @NonNull VelocityAudience getAudience(final @NonNull CommandSource source) {
@@ -51,6 +53,12 @@ public class VelocityAudience implements BanAudience {
   @Pure
   public @NonNull UUID uuid() {
     return this.uuid;
+  }
+
+  @Override
+  @Pure
+  public @NonNull String username() {
+    return this.username;
   }
 
   @Override
