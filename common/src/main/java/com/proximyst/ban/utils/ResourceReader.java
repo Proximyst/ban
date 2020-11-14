@@ -19,7 +19,6 @@
 package com.proximyst.ban.utils;
 
 import com.google.common.io.CharStreams;
-import com.proximyst.ban.BanPlugin;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -40,7 +39,9 @@ public final class ResourceReader {
    * @return The read string.
    */
   public static @NonNull String readResource(final @NonNull String path) {
-    try (final InputStream stream = BanPlugin.class.getResourceAsStream("/" + path);
+    // We use this class as the "entry point" to our jar.
+    // All classes should be loaded by the plugin's classloader anyways.
+    try (final InputStream stream = ResourceReader.class.getResourceAsStream("/" + path);
         final Reader reader = new InputStreamReader(stream)) {
       return CharStreams.toString(reader);
     } catch (final IOException ex) {

@@ -16,16 +16,19 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-package com.proximyst.ban.inject.annotation;
+package com.proximyst.ban.inject.plugin;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import javax.inject.Qualifier;
+import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.proximyst.ban.BanPlugin;
+import com.proximyst.ban.config.Configuration;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
-@Qualifier
-@Target({ElementType.FIELD, ElementType.PARAMETER, ElementType.METHOD})
-@Retention(RetentionPolicy.RUNTIME)
-public @interface VelocityExecutor {
+public class ProvideConfigurationModule extends AbstractModule {
+  @Singleton
+  @Provides
+  @NonNull Configuration provideConfiguration(final @NonNull BanPlugin banPlugin) {
+    return banPlugin.getConfiguration();
+  }
 }

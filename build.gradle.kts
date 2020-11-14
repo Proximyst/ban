@@ -94,6 +94,8 @@ subprojects {
             // Guice will be provided as shown above. Its shadowing state is set by the platform.
             isTransitive = false
         }
+
+        compileOnlyApi("org.spongepowered:configurate-core:3.7.1")
     }
 
     tasks {

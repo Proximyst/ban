@@ -25,7 +25,7 @@ import com.google.gson.annotations.SerializedName;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.proximyst.ban.BanPlugin;
-import com.proximyst.ban.inject.annotation.VelocityExecutor;
+import com.proximyst.ban.inject.annotation.BanAsyncExecutor;
 import com.proximyst.ban.model.BanUser;
 import com.proximyst.ban.model.UsernameHistory;
 import com.proximyst.ban.service.IMojangService;
@@ -72,7 +72,7 @@ public final class ImplAshconMojangService implements IMojangService {
       .build();
 
   @Inject
-  public ImplAshconMojangService(final @NonNull @VelocityExecutor Executor executor,
+  public ImplAshconMojangService(final @NonNull @BanAsyncExecutor Executor executor,
       final @NonNull ProxyServer proxyServer) {
     this.executor = executor;
     this.proxyServer = proxyServer;

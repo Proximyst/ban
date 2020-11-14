@@ -16,21 +16,26 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-package com.proximyst.ban.inject.plugin;
+package com.proximyst.ban.inject.config;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import com.proximyst.ban.boilerplate.VelocityBanSchedulerExecutor;
-import com.proximyst.ban.inject.annotation.BanAsyncExecutor;
-import java.util.concurrent.Executor;
+import com.proximyst.ban.config.Configuration;
+import com.proximyst.ban.config.MessagesConfig;
+import com.proximyst.ban.config.SqlConfig;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
-public class VelocityExecutorModule extends AbstractModule {
+public class ConfigurationModule extends AbstractModule {
   @Singleton
   @Provides
-  @BanAsyncExecutor
-  @NonNull Executor provideVelocityExecutor(final @NonNull VelocityBanSchedulerExecutor executorImpl) {
-    return executorImpl;
+  @NonNull MessagesConfig provideMessagesConfig(final @NonNull Configuration configuration) {
+    return configuration.messages;
+  }
+
+  @Singleton
+  @Provides
+  @NonNull SqlConfig provideSqlConfig(final @NonNull Configuration configuration) {
+    return configuration.sql;
   }
 }

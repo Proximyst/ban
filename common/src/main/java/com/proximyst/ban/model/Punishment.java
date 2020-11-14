@@ -19,8 +19,6 @@
 package com.proximyst.ban.model;
 
 import com.google.common.base.Preconditions;
-import com.velocitypowered.api.command.CommandSource;
-import com.velocitypowered.api.proxy.ProxyServer;
 import java.util.Date;
 import java.util.Objects;
 import java.util.Optional;
@@ -193,15 +191,6 @@ public final class Punishment {
    */
   public @NonNull UUID getPunisher() {
     return this.punisher;
-  }
-
-  @SuppressWarnings({"unchecked", "rawtypes"})
-  public @NonNull Optional<@NonNull CommandSource> getPunisherAsSource(final @NonNull ProxyServer proxyServer) {
-    if (this.getPunisher().equals(BanUser.CONSOLE.getUuid())) {
-      return Optional.of(proxyServer.getConsoleCommandSource());
-    }
-
-    return (Optional) proxyServer.getPlayer(this.getPunisher());
   }
 
   /**

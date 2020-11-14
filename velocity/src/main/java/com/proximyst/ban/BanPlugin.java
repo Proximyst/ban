@@ -38,9 +38,10 @@ import com.proximyst.ban.event.subscriber.BannedPlayerJoinSubscriber;
 import com.proximyst.ban.event.subscriber.CacheUpdatePlayerJoinSubscriber;
 import com.proximyst.ban.event.subscriber.MutedPlayerChatSubscriber;
 import com.proximyst.ban.inject.FactoryModule;
-import com.proximyst.ban.inject.annotation.VelocityExecutor;
+import com.proximyst.ban.inject.annotation.BanAsyncExecutor;
+import com.proximyst.ban.inject.config.ConfigurationModule;
 import com.proximyst.ban.inject.data.JdbiModule;
-import com.proximyst.ban.inject.plugin.ConfigurationModule;
+import com.proximyst.ban.inject.plugin.ProvideConfigurationModule;
 import com.proximyst.ban.inject.plugin.VelocityExecutorModule;
 import com.proximyst.ban.inject.service.DataServiceModule;
 import com.proximyst.ban.inject.service.MessageServiceModule;
@@ -118,6 +119,7 @@ public class BanPlugin {
 
     this.injector = pluginInjector.createChildInjector(
         new JdbiModule(),
+        new ProvideConfigurationModule(),
         new ConfigurationModule(),
         new VelocityExecutorModule(),
         new DataServiceModule(),
@@ -208,7 +210,7 @@ public class BanPlugin {
         this.proxyServer,
         AsynchronousCommandExecutionCoordinator.<CommandSource>newBuilder()
             .withAsynchronousParsing()
-            .withExecutor(this.injector.getInstance(Key.get(Executor.class, VelocityExecutor.class)))
+            .withExecutor(this.injector.getInstance(Key.get(Executor.class, BanAsyncExecutor.class)))
             .build(),
         Function.identity(),
         Function.identity()

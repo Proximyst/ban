@@ -20,7 +20,7 @@ package com.proximyst.ban.service.impl;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.proximyst.ban.inject.annotation.VelocityExecutor;
+import com.proximyst.ban.inject.annotation.BanAsyncExecutor;
 import com.proximyst.ban.model.BanUser;
 import com.proximyst.ban.service.IDataService;
 import com.proximyst.ban.service.IMojangService;
@@ -42,7 +42,7 @@ public final class ImplUserService implements IUserService {
   @Inject
   public ImplUserService(final @NonNull IMojangService mojangService,
       final @NonNull IDataService dataService,
-      final @NonNull @VelocityExecutor Executor executor) {
+      final @NonNull @BanAsyncExecutor Executor executor) {
     this.mojangService = mojangService;
     this.dataService = dataService;
     this.executor = executor;

@@ -26,7 +26,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.proximyst.ban.BanPermissions;
-import com.proximyst.ban.inject.annotation.VelocityExecutor;
+import com.proximyst.ban.inject.annotation.BanAsyncExecutor;
 import com.proximyst.ban.model.Punishment;
 import com.proximyst.ban.service.IDataService;
 import com.proximyst.ban.service.IMessageService;
@@ -65,7 +65,7 @@ public final class ImplPunishmentService implements IPunishmentService {
   public ImplPunishmentService(
       final @NonNull IDataService dataService,
       final @NonNull IMessageService messageService,
-      final @NonNull @VelocityExecutor Executor executor,
+      final @NonNull @BanAsyncExecutor Executor executor,
       final @NonNull ProxyServer proxyServer) {
     this.dataService = dataService;
     this.messageService = messageService;
