@@ -48,6 +48,7 @@ import com.proximyst.ban.inject.service.MessageServiceModule;
 import com.proximyst.ban.inject.service.MojangServiceModule;
 import com.proximyst.ban.inject.service.PunishmentServiceModule;
 import com.proximyst.ban.inject.service.UserServiceModule;
+import com.proximyst.ban.platform.VelocityAudience;
 import com.proximyst.ban.service.IDataService;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.event.Subscribe;
@@ -215,6 +216,8 @@ public class BanPlugin {
         Function.identity(),
         Function.identity()
     );
+    // Cache the audience for the console.
+    VelocityAudience.getAudience(this.proxyServer.getConsoleCommandSource());
 
     tm.start("Registering subscribers");
     this.proxyServer.getEventManager()
