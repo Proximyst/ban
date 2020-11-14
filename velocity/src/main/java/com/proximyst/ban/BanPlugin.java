@@ -35,7 +35,7 @@ import com.proximyst.ban.config.ConfigUtil;
 import com.proximyst.ban.config.Configuration;
 import com.proximyst.ban.data.jdbi.UuidJdbiFactory;
 import com.proximyst.ban.event.subscriber.BannedPlayerJoinSubscriber;
-import com.proximyst.ban.event.subscriber.CacheUpdatePlayerJoinSubscriber;
+import com.proximyst.ban.event.subscriber.CacheUpdatePlayerSubscriber;
 import com.proximyst.ban.event.subscriber.MutedPlayerChatSubscriber;
 import com.proximyst.ban.inject.FactoryModule;
 import com.proximyst.ban.inject.annotation.BanAsyncExecutor;
@@ -222,7 +222,7 @@ public class BanPlugin {
     this.proxyServer.getEventManager()
         .register(this, this.injector.getInstance(MutedPlayerChatSubscriber.class));
     this.proxyServer.getEventManager()
-        .register(this, this.injector.getInstance(CacheUpdatePlayerJoinSubscriber.class));
+        .register(this, this.injector.getInstance(CacheUpdatePlayerSubscriber.class));
 
     tm.start("Registering commands");
     this.injector.getInstance(BanCommand.class).register(velocityCommandManager);
