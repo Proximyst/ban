@@ -18,10 +18,10 @@
 
 package com.proximyst.ban.commands.cloud;
 
-import cloud.commandframework.velocity.VelocityCommandManager;
+import cloud.commandframework.CommandManager;
 import com.velocitypowered.api.command.CommandSource;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public abstract class BaseCommand {
-  public abstract void register(final @NonNull VelocityCommandManager<@NonNull CommandSource> commandManager);
+  public abstract void register(final @NonNull CommandManager<@NonNull CommandSource> commandManager);
 }

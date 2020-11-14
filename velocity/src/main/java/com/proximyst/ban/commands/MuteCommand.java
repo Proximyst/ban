@@ -18,9 +18,9 @@
 
 package com.proximyst.ban.commands;
 
+import cloud.commandframework.CommandManager;
 import cloud.commandframework.arguments.standard.StringArgument;
 import cloud.commandframework.context.CommandContext;
-import cloud.commandframework.velocity.VelocityCommandManager;
 import com.google.inject.Inject;
 import com.proximyst.ban.BanPermissions;
 import com.proximyst.ban.commands.cloud.BaseCommand;
@@ -53,7 +53,7 @@ public final class MuteCommand extends BaseCommand {
   }
 
   @Override
-  public void register(final @NonNull VelocityCommandManager<@NonNull CommandSource> commandManager) {
+  public void register(final @NonNull CommandManager<@NonNull CommandSource> commandManager) {
     commandManager.command(commandManager.commandBuilder("mute")
         .permission(BanPermissions.COMMAND_MUTE)
         .argument(this.cloudArgumentFactory.banUser("target", true))
