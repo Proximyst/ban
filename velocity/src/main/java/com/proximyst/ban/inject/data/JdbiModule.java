@@ -20,11 +20,13 @@ package com.proximyst.ban.inject.data;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.proximyst.ban.BanPlugin;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jdbi.v3.core.Jdbi;
 
 public class JdbiModule extends AbstractModule {
+  @Singleton
   @Provides
   @NonNull Jdbi provideJdbi(final @NonNull BanPlugin plugin) {
     return plugin.getJdbi();

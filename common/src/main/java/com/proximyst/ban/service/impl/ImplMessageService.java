@@ -29,10 +29,10 @@ import com.proximyst.ban.config.MessagesConfig;
 import com.proximyst.ban.model.BanUser;
 import com.proximyst.ban.model.Punishment;
 import com.proximyst.ban.model.PunishmentType;
+import com.proximyst.ban.platform.BanAudience;
+import com.proximyst.ban.platform.BanServer;
 import com.proximyst.ban.service.IMessageService;
 import com.proximyst.ban.service.IUserService;
-import com.velocitypowered.api.proxy.Player;
-import com.velocitypowered.api.proxy.ProxyServer;
 import java.text.SimpleDateFormat;
 import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.identity.Identity;
@@ -47,15 +47,15 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public final class ImplMessageService implements IMessageService {
   private final @NonNull IUserService userService;
   private final @NonNull MessagesConfig cfg;
-  private final @NonNull ProxyServer proxyServer;
+  private final @NonNull BanServer banServer;
 
   @Inject
   public ImplMessageService(final @NonNull IUserService userService,
       final @NonNull MessagesConfig messagesConfig,
-      final @NonNull ProxyServer proxyServer) {
+      final @NonNull BanServer banServer) {
     this.userService = userService;
     this.cfg = messagesConfig;
-    this.proxyServer = proxyServer;
+    this.banServer = banServer;
   }
 
   @Override
@@ -178,9 +178,10 @@ public final class ImplMessageService implements IMessageService {
   }
 
   /**
-   * @param message The message to pass to MiniMessage.
-   * @param futureCount The amount of futures in the placeholders array.
-   * @param placeholders The placeholders in an array which is equivalent to {@code (String, String|CompletableFuture)[]}.
+   * @param message      The message to pass to MiniMessage.
+   * @param futureCount  The amount of futures in the placeholders array.
+   * @param placeholders The placeholders in an array which is equivalent to {@code (String,
+   *                     String|CompletableFuture)[]}.
    * @return The finished component.
    */
   private @NonNull CompletableFuture<@NonNull Component> formatMessageFuture(final @NonNull String message,
@@ -228,13 +229,13 @@ public final class ImplMessageService implements IMessageService {
     final String permission = punishment.getPunishmentType().getNotificationPermission().orElse(null);
     return this.formatMessage(messageKey, punishment)
         .thenApply(component -> {
-          this.proxyServer.getConsoleCommandSource().sendMessage(Identity.nil(), component);
-          for (final Player player : this.proxyServer.getAllPlayers()) {
-            if (permission != null && !player.hasPermission(permission)) {
+          this.banServer.consoleAudience().sendMessage(Identity.nil(), component);
+          for (final BanAudience audience : this.banServer.onlineAudiences()) {
+            if (permission != null && !audience.hasPermission(permission)) {
               continue;
             }
 
-            player.sendMessage(Identity.nil(), component);
+            audience.sendMessage(Identity.nil(), component);
           }
 
           return null;

@@ -15,4 +15,5 @@ dependencies {
 
 ban {
     relocations = setOf("org.apache.commons.lang3")
+    javadocLinks = setOf("https://jd.velocitypowered.com/")
 }

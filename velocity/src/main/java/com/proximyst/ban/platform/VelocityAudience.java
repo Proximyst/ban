@@ -20,11 +20,13 @@ package com.proximyst.ban.platform;
 
 import com.proximyst.ban.utils.CommandUtils;
 import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.proxy.Player;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.audience.ForwardingAudience;
+import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.dataflow.qual.Pure;
 
@@ -70,5 +72,12 @@ public class VelocityAudience implements BanAudience, ForwardingAudience.Single 
   @Override
   public boolean hasPermission(final @NonNull String permission) {
     return this.commandSource.hasPermission(permission);
+  }
+
+  @Override
+  public void disconnect(final @NonNull Component reason) {
+    if (this.commandSource instanceof Player) {
+      ((Player) this.commandSource).disconnect(reason);
+    }
   }
 }

@@ -28,12 +28,12 @@ import com.google.inject.Singleton;
 import com.proximyst.ban.BanPermissions;
 import com.proximyst.ban.inject.annotation.BanAsyncExecutor;
 import com.proximyst.ban.model.Punishment;
+import com.proximyst.ban.platform.BanAudience;
+import com.proximyst.ban.platform.BanServer;
 import com.proximyst.ban.service.IDataService;
 import com.proximyst.ban.service.IMessageService;
 import com.proximyst.ban.service.IPunishmentService;
 import com.proximyst.ban.utils.ThrowableUtils;
-import com.velocitypowered.api.proxy.Player;
-import com.velocitypowered.api.proxy.ProxyServer;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -51,7 +51,7 @@ public final class ImplPunishmentService implements IPunishmentService {
   private final @NonNull IDataService dataService;
   private final @NonNull IMessageService messageService;
   private final @NonNull Executor executor;
-  private final @NonNull ProxyServer proxyServer;
+  private final @NonNull BanServer banServer;
 
   private final @NonNull Cache<@NonNull UUID, @NonNull List<@NonNull Punishment>> punishmentCache =
       CacheBuilder.newBuilder()
@@ -62,15 +62,14 @@ public final class ImplPunishmentService implements IPunishmentService {
           .build();
 
   @Inject
-  public ImplPunishmentService(
-      final @NonNull IDataService dataService,
+  public ImplPunishmentService(final @NonNull IDataService dataService,
       final @NonNull IMessageService messageService,
       final @NonNull @BanAsyncExecutor Executor executor,
-      final @NonNull ProxyServer proxyServer) {
+      final @NonNull BanServer banServer) {
     this.dataService = dataService;
     this.messageService = messageService;
     this.executor = executor;
-    this.proxyServer = proxyServer;
+    this.banServer = banServer;
   }
 
   @Override
@@ -114,9 +113,8 @@ public final class ImplPunishmentService implements IPunishmentService {
       return CompletableFuture.completedFuture(null);
     }
 
-    final Player target = this.proxyServer
-        .getPlayer(punishment.getTarget())
-        .orElse(null);
+    final BanAudience target = this.banServer
+        .audienceOf(punishment.getTarget());
     if (target == null) {
       // We have no-one to apply the punishment on.
       return CompletableFuture.completedFuture(null);
@@ -163,13 +161,13 @@ public final class ImplPunishmentService implements IPunishmentService {
 
   private void punishmentCacheRemovalCallback(
       final @NonNull RemovalNotification<@NonNull UUID, @NonNull List<@NonNull Punishment>> notification) {
-    if (this.proxyServer.getPlayerCount() >= MAXIMUM_PUNISHMENT_CACHE_CAPACITY) {
+    if (this.banServer.onlineCount() >= MAXIMUM_PUNISHMENT_CACHE_CAPACITY) {
       // We can't afford to recache the player's punishments!
       // At this point, perhaps they should change the capacity?
       return;
     }
 
-    if (this.proxyServer.getPlayer(notification.getKey()).isPresent()) {
+    if (this.banServer.audienceOf(notification.getKey()) != null) {
       this.punishmentCache.put(notification.getKey(), notification.getValue());
     }
   }

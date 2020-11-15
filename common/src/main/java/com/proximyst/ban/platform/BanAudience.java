@@ -22,6 +22,8 @@ import java.util.UUID;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.identity.Identified;
 import net.kyori.adventure.identity.Identity;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.ComponentLike;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.dataflow.qual.Pure;
 import org.checkerframework.dataflow.qual.SideEffectFree;
@@ -41,6 +43,12 @@ public interface BanAudience extends Identified, Identity, Audience {
   @NonNull String username();
 
   boolean hasPermission(@NonNull final String permission);
+
+  void disconnect(final @NonNull Component reason);
+
+  default void disconnect(final @NonNull ComponentLike reason) {
+    this.disconnect(reason.asComponent());
+  }
 
   @SuppressWarnings("unchecked") // This is intentional.
   default <A extends Audience> @NonNull A castAudience() {

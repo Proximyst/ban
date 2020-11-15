@@ -40,7 +40,6 @@ import java.util.stream.Collectors;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.result.RowView;
-import org.slf4j.Logger;
 
 @Singleton
 public final class ImplMySqlDataService implements IDataService {
@@ -49,7 +48,7 @@ public final class ImplMySqlDataService implements IDataService {
   private final @NonNull Jdbi jdbi;
 
   @Inject
-  public ImplMySqlDataService(final @NonNull Jdbi jdbi, final @NonNull Logger logger) {
+  public ImplMySqlDataService(final @NonNull Jdbi jdbi) {
     this.jdbi = jdbi;
   }
 

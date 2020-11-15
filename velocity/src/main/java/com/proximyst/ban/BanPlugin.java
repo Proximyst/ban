@@ -20,7 +20,6 @@ package com.proximyst.ban;
 
 import cloud.commandframework.execution.AsynchronousCommandExecutionCoordinator;
 import cloud.commandframework.velocity.VelocityCommandManager;
-import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -92,11 +91,6 @@ public class BanPlugin {
   public static final @NonNull String PLUGIN_NAME = "ban";
   public static final @NonNull String PLUGIN_VERSION = "0.1.0";
   public static final @NonNull String PLUGIN_DESCRIPTION = "A simple punishment suite for Velocity.";
-
-  /**
-   * A {@link Gson} instance with no leniency in compact mode.
-   */
-  public static final @NonNull Gson COMPACT_GSON = new Gson();
 
   private final @NonNull ProxyServer proxyServer;
   private final @NonNull Logger logger;

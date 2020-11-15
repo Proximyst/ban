@@ -111,7 +111,7 @@ public final class BanUserArgument extends CommandArgument<@NonNull BanAudience,
       final String lowercaseInput = input.toLowerCase(Locale.ENGLISH).trim();
       final ImmutableList.Builder<String> builder = ImmutableList.builder();
 
-      for (final BanAudience player : this.banServer.connectedAudiences()) {
+      for (final BanAudience player : this.banServer.onlineAudiences()) {
         if (lowercaseInput.isEmpty() || player.username().toLowerCase(Locale.ENGLISH).startsWith(lowercaseInput)) {
           builder.add(player.username());
         }

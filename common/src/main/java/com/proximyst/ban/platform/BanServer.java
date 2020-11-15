@@ -18,9 +18,20 @@
 
 package com.proximyst.ban.platform;
 
+import java.util.UUID;
 import net.kyori.adventure.audience.Audience;
+import org.checkerframework.checker.index.qual.NonNegative;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public interface BanServer extends Audience {
-  @NonNull Iterable<? extends BanAudience> connectedAudiences();
+  @NonNull Iterable<? extends BanAudience> onlineAudiences();
+
+  @NonNull BanAudience consoleAudience();
+
+  @NonNegative int onlineCount();
+
+  @Nullable BanAudience audienceOf(final @NonNull UUID uuid);
+
+  @Nullable BanAudience audienceOf(final @NonNull String username);
 }

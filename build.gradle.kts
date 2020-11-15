@@ -86,6 +86,8 @@ subprojects {
         // TODO: Include apache commons lang per-platform; see what Bukkit uses here...
         compileOnly("org.apache.commons:commons-lang3:3.11")
 
+        compileOnly("com.google.code.gson:gson:2.8.6")
+
         implementation("cloud.commandframework:cloud-core:$CLOUD_VER")
 
         compileOnlyApi("com.google.inject:guice:$GUICE_VER")
