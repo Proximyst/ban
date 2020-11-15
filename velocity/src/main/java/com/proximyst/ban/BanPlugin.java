@@ -36,13 +36,9 @@ import com.proximyst.ban.data.jdbi.UuidJdbiFactory;
 import com.proximyst.ban.event.subscriber.BannedPlayerJoinSubscriber;
 import com.proximyst.ban.event.subscriber.CacheUpdatePlayerSubscriber;
 import com.proximyst.ban.event.subscriber.MutedPlayerChatSubscriber;
-import com.proximyst.ban.inject.FactoryModule;
 import com.proximyst.ban.inject.PlatformModule;
 import com.proximyst.ban.inject.annotation.BanAsyncExecutor;
 import com.proximyst.ban.inject.config.ConfigurationModule;
-import com.proximyst.ban.inject.data.JdbiModule;
-import com.proximyst.ban.inject.plugin.ProvideConfigurationModule;
-import com.proximyst.ban.inject.plugin.VelocityExecutorModule;
 import com.proximyst.ban.inject.service.DataServiceModule;
 import com.proximyst.ban.inject.service.MessageServiceModule;
 import com.proximyst.ban.inject.service.MojangServiceModule;
@@ -113,16 +109,12 @@ public class BanPlugin {
     this.dataDirectory = dataDirectory;
 
     this.injector = pluginInjector.createChildInjector(
-        new JdbiModule(),
-        new ProvideConfigurationModule(),
         new ConfigurationModule(),
-        new VelocityExecutorModule(),
         new DataServiceModule(),
         new MessageServiceModule(),
         new MojangServiceModule(),
         new PunishmentServiceModule(),
         new UserServiceModule(),
-        new FactoryModule(),
         new PlatformModule()
     );
   }

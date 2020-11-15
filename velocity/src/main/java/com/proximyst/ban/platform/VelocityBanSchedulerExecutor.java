@@ -16,7 +16,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-package com.proximyst.ban.boilerplate;
+package com.proximyst.ban.platform;
 
 import com.google.inject.Inject;
 import com.proximyst.ban.BanPlugin;
