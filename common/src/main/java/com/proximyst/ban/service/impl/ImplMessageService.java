@@ -125,7 +125,7 @@ public final class ImplMessageService implements IMessageService {
       return CompletableFuture.completedFuture(Component.empty());
     }
 
-    final String[] strings = new String[placeholders.length / 2];
+    final String[] strings = new String[placeholders.length];
     for (int i = 0; i < placeholders.length; ++i) {
       final Object obj = placeholders[i];
       if (obj instanceof CompletableFuture) {
@@ -138,14 +138,11 @@ public final class ImplMessageService implements IMessageService {
         int futures = 1;
         for (int j = i + 1; j < placeholders.length; ++j) {
           final Object rest = placeholders[j];
-          if (!(rest instanceof CompletableFuture)) {
-            placeholders[j] = String.valueOf(rest);
-          } else {
+          if (rest instanceof CompletableFuture) {
             ++futures;
           }
         }
 
-        //noinspection NullableProblems -- This is fine because we just ensured all nulls are turned into "null" strings
         return this.formatMessageFuture(message, futures, placeholders);
       }
 
@@ -183,7 +180,7 @@ public final class ImplMessageService implements IMessageService {
    * @return The finished component.
    */
   private @NonNull CompletableFuture<@NonNull Component> formatMessageFuture(final @NonNull String message,
-      final @Positive int futureCount, final @NonNull Object @NonNull ... placeholders) {
+      final @Positive int futureCount, final @Nullable Object @NonNull ... placeholders) {
     final CompletableFuture<?>[] futures = new CompletableFuture<?>[futureCount];
 
     // We know how many futures there are, but we also need to actually find them.
@@ -204,7 +201,7 @@ public final class ImplMessageService implements IMessageService {
     return allDone.thenApply($ -> {
       // We now know all the futures are done.
       // We'll need to unwrap them, then pass to MiniMessage.
-      final String[] strings = new String[placeholders.length / 2];
+      final String[] strings = new String[placeholders.length];
       for (int i = 0; i < placeholders.length; ++i) {
         final Object obj = placeholders[i];
         if (obj instanceof CompletableFuture) {
@@ -214,9 +211,6 @@ public final class ImplMessageService implements IMessageService {
         }
       }
 
-      // The method has an expectation (as described in its javadoc) that placeholders must all be
-      // String|CompletableFuture. The futures were converted to strings in the loop right above this,
-      // so the entire array must now be strings.
       return MiniMessage.get().parse(message, strings);
     });
   }
