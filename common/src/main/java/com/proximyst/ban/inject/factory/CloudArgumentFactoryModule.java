@@ -16,17 +16,16 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-package com.proximyst.ban.factory;
+package com.proximyst.ban.inject.factory;
 
-import com.google.inject.assistedinject.Assisted;
-import com.proximyst.ban.commands.cloud.BanUserArgument;
-import com.proximyst.ban.commands.cloud.PlayerArgument;
-import org.checkerframework.checker.nullness.qual.NonNull;
+import com.google.inject.AbstractModule;
+import com.google.inject.assistedinject.FactoryModuleBuilder;
+import com.proximyst.ban.factory.ICloudArgumentFactory;
 
-public interface ICloudArgumentFactory {
-  @NonNull BanUserArgument banUser(final @Assisted("name") @NonNull String name,
-      final @Assisted("required") boolean required);
-
-  @NonNull PlayerArgument player(final @Assisted("name") @NonNull String name,
-      final @Assisted("required") boolean required);
+public class CloudArgumentFactoryModule extends AbstractModule {
+  @Override
+  protected void configure() {
+    install(new FactoryModuleBuilder()
+        .build(ICloudArgumentFactory.class));
+  }
 }

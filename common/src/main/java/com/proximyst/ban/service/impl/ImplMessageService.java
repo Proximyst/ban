@@ -125,6 +125,7 @@ public final class ImplMessageService implements IMessageService {
       return CompletableFuture.completedFuture(Component.empty());
     }
 
+    final String[] strings = new String[placeholders.length / 2];
     for (int i = 0; i < placeholders.length; ++i) {
       final Object obj = placeholders[i];
       if (obj instanceof CompletableFuture) {
@@ -148,13 +149,10 @@ public final class ImplMessageService implements IMessageService {
         return this.formatMessageFuture(message, futures, placeholders);
       }
 
-      placeholders[i] = String.valueOf(obj);
+      strings[i] = String.valueOf(obj);
     }
 
-    // No placeholders must be awaited.
-
-    // The String[] cast is safe because we set every placeholder in the Object[] to become a String.
-    return CompletableFuture.completedFuture(MiniMessage.get().parse(message, (String[]) placeholders));
+    return CompletableFuture.completedFuture(MiniMessage.get().parse(message, strings));
   }
 
   @Override
@@ -193,6 +191,9 @@ public final class ImplMessageService implements IMessageService {
     for (final Object placeholder : placeholders) {
       if (placeholder instanceof CompletableFuture) {
         futures[futureIdx++] = (CompletableFuture<?>) placeholder;
+        if (futureIdx == futureCount) {
+          break;
+        }
       }
     }
 
@@ -203,23 +204,20 @@ public final class ImplMessageService implements IMessageService {
     return allDone.thenApply($ -> {
       // We now know all the futures are done.
       // We'll need to unwrap them, then pass to MiniMessage.
-      int found = 0;
+      final String[] strings = new String[placeholders.length / 2];
       for (int i = 0; i < placeholders.length; ++i) {
         final Object obj = placeholders[i];
         if (obj instanceof CompletableFuture) {
-          ++found;
-          placeholders[i] = String.valueOf(((CompletableFuture<?>) obj).join());
-        }
-
-        if (found == futureCount) {
-          break;
+          strings[i] = String.valueOf(((CompletableFuture<?>) obj).join());
+        } else {
+          strings[i] = String.valueOf(obj);
         }
       }
 
       // The method has an expectation (as described in its javadoc) that placeholders must all be
       // String|CompletableFuture. The futures were converted to strings in the loop right above this,
       // so the entire array must now be strings.
-      return MiniMessage.get().parse(message, (String[]) placeholders);
+      return MiniMessage.get().parse(message, strings);
     });
   }
 

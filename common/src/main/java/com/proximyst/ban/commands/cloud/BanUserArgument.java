@@ -23,8 +23,8 @@ import cloud.commandframework.arguments.parser.ArgumentParseResult;
 import cloud.commandframework.arguments.parser.ArgumentParser;
 import cloud.commandframework.context.CommandContext;
 import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
+import com.google.inject.assistedinject.AssistedInject;
 import com.proximyst.ban.model.BanUser;
 import com.proximyst.ban.platform.BanAudience;
 import com.proximyst.ban.platform.BanServer;
@@ -37,28 +37,43 @@ import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public final class BanUserArgument extends CommandArgument<@NonNull BanAudience, @NonNull BanUser> {
-  @Inject
+  @AssistedInject
+  public BanUserArgument(
+      final @NonNull IUserService userService,
+      final @NonNull BanServer banServer,
+      final @Assisted("required") boolean required,
+      final @Assisted("name") @NonNull String name,
+      final @Assisted("online") boolean online
+  ) {
+    super(
+        required,
+        name,
+        new BanUserParser(userService, banServer, online),
+        BanUser.class
+    );
+  }
+
+  @AssistedInject
   public BanUserArgument(
       final @NonNull IUserService userService,
       final @NonNull BanServer banServer,
       final @Assisted("required") boolean required,
       final @Assisted("name") @NonNull String name
   ) {
-    super(
-        required,
-        name,
-        new BanUserParser(userService, banServer),
-        BanUser.class
-    );
+    this(userService, banServer, required, name, false);
   }
 
   public static final class BanUserParser implements ArgumentParser<@NonNull BanAudience, BanUser> {
     private final @NonNull IUserService userService;
     private final @NonNull BanServer banServer;
+    private final boolean online;
 
-    public BanUserParser(final @NonNull IUserService userService, final @NonNull BanServer banServer) {
+    public BanUserParser(final @NonNull IUserService userService,
+        final @NonNull BanServer banServer,
+        final boolean online) {
       this.userService = userService;
       this.banServer = banServer;
+      this.online = online;
     }
 
     @Override
@@ -85,9 +100,19 @@ public final class BanUserArgument extends CommandArgument<@NonNull BanAudience,
         try {
           // We only want to make sure the UUID is valid here.
           //noinspection ResultOfMethodCallIgnored
-          UUID.fromString(input);
+          final UUID uuid = UUID.fromString(input);
+          if (this.online && this.banServer.audienceOf(uuid) == null) {
+            // The player isn't online, yet is required to be.
+            return ArgumentParseResult.failure(new InvalidPlayerIdentifierException("Expected online player"));
+          }
         } catch (final IllegalArgumentException ignored) {
           return ArgumentParseResult.failure(new InvalidPlayerIdentifierException("Invalid UUID '" + input + "'"));
+        }
+      } else {
+        // This is a username.
+        if (this.online && this.banServer.audienceOf(input) == null) {
+          // The player isn't online, yet is required to be.
+          return ArgumentParseResult.failure(new InvalidPlayerIdentifierException("Expected online player"));
         }
       }
 

@@ -26,13 +26,13 @@ import com.proximyst.ban.BanPermissions;
 import com.proximyst.ban.commands.cloud.BaseCommand;
 import com.proximyst.ban.config.MessageKey;
 import com.proximyst.ban.factory.ICloudArgumentFactory;
+import com.proximyst.ban.model.BanUser;
 import com.proximyst.ban.model.Punishment;
 import com.proximyst.ban.model.PunishmentBuilder;
 import com.proximyst.ban.model.PunishmentType;
 import com.proximyst.ban.platform.BanAudience;
 import com.proximyst.ban.service.IMessageService;
 import com.proximyst.ban.service.IPunishmentService;
-import com.velocitypowered.api.proxy.Player;
 import net.kyori.adventure.identity.Identity;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -55,24 +55,24 @@ public class KickCommand extends BaseCommand {
   public void register(final @NonNull CommandManager<@NonNull BanAudience> commandManager) {
     commandManager.command(commandManager.commandBuilder("kick")
         .permission(BanPermissions.COMMAND_KICK)
-        .argument(this.cloudArgumentFactory.player("target", true))
+        .argument(this.cloudArgumentFactory.banUser("target", true, true))
         .argument(StringArgument.optional("reason", StringArgument.StringMode.GREEDY))
         .handler(this::execute));
   }
 
   private void execute(final @NonNull CommandContext<BanAudience> ctx) {
-    final Player target = ctx.get("target");
+    final BanUser target = ctx.get("target");
     final @Nullable String reason = ctx.getOrDefault("reason", null);
 
     this.messageService.sendFormattedMessage(ctx.getSender(), Identity.nil(), MessageKey.COMMANDS_FEEDBACK_KICK,
         "targetName", target.getUsername(),
-        "targetUuid", target.getUniqueId());
+        "targetUuid", target.getUuid());
 
     final Punishment punishment =
         new PunishmentBuilder()
             .type(PunishmentType.KICK)
             .punisher(ctx.getSender().uuid())
-            .target(target.getUniqueId())
+            .target(target.getUuid())
             .reason(reason)
             .build();
     this.punishmentService.savePunishment(punishment);

@@ -18,7 +18,7 @@
 
 package com.proximyst.ban.platform;
 
-import com.proximyst.ban.utils.CommandUtils;
+import com.proximyst.ban.model.BanUser;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
 import java.util.HashMap;
@@ -39,12 +39,12 @@ public class VelocityAudience implements BanAudience, ForwardingAudience.Single 
 
   private VelocityAudience(final @NonNull CommandSource commandSource) {
     this.commandSource = commandSource;
-    this.uuid = CommandUtils.getSourceUuid(this.commandSource);
-    this.username = CommandUtils.getSourceName(this.commandSource);
+    this.uuid = getSourceUuid(this.commandSource);
+    this.username = getSourceName(this.commandSource);
   }
 
   public static @NonNull VelocityAudience getAudience(final @NonNull CommandSource source) {
-    return AUDIENCE_CACHE.computeIfAbsent(CommandUtils.getSourceUuid(source), $ -> new VelocityAudience(source));
+    return AUDIENCE_CACHE.computeIfAbsent(getSourceUuid(source), $ -> new VelocityAudience(source));
   }
 
   @Pure
@@ -79,5 +79,13 @@ public class VelocityAudience implements BanAudience, ForwardingAudience.Single 
     if (this.commandSource instanceof Player) {
       ((Player) this.commandSource).disconnect(reason);
     }
+  }
+
+  private static @NonNull String getSourceName(final @NonNull CommandSource source) {
+    return source instanceof Player ? ((Player) source).getUsername() : BanUser.CONSOLE.getUsername();
+  }
+
+  private static @NonNull UUID getSourceUuid(final @NonNull CommandSource source) {
+    return source instanceof Player ? ((Player) source).getUniqueId() : BanUser.CONSOLE.getUuid();
   }
 }

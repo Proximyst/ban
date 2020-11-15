@@ -39,6 +39,7 @@ import com.proximyst.ban.event.subscriber.MutedPlayerChatSubscriber;
 import com.proximyst.ban.inject.PlatformModule;
 import com.proximyst.ban.inject.annotation.BanAsyncExecutor;
 import com.proximyst.ban.inject.config.ConfigurationModule;
+import com.proximyst.ban.inject.factory.CloudArgumentFactoryModule;
 import com.proximyst.ban.inject.service.DataServiceModule;
 import com.proximyst.ban.inject.service.MessageServiceModule;
 import com.proximyst.ban.inject.service.MojangServiceModule;
@@ -115,6 +116,7 @@ public class BanPlugin {
         new MojangServiceModule(),
         new PunishmentServiceModule(),
         new UserServiceModule(),
+        new CloudArgumentFactoryModule(),
         new PlatformModule()
     );
   }

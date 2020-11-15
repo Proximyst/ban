@@ -16,24 +16,17 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-package com.proximyst.ban.utils;
+package com.proximyst.ban.factory;
 
-import com.proximyst.ban.model.BanUser;
-import com.velocitypowered.api.command.CommandSource;
-import com.velocitypowered.api.proxy.Player;
-import java.util.UUID;
+import com.google.inject.assistedinject.Assisted;
+import com.proximyst.ban.commands.cloud.BanUserArgument;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
-public final class CommandUtils {
-  private CommandUtils() throws IllegalAccessException {
-    throw new IllegalAccessException(getClass().getSimpleName() + " cannot be instantiated.");
-  }
+public interface ICloudArgumentFactory {
+  @NonNull BanUserArgument banUser(final @Assisted("name") @NonNull String name,
+      final @Assisted("required") boolean required);
 
-  public static @NonNull String getSourceName(final @NonNull CommandSource source) {
-    return source instanceof Player ? ((Player) source).getUsername() : BanUser.CONSOLE.getUsername();
-  }
-
-  public static @NonNull UUID getSourceUuid(final @NonNull CommandSource source) {
-    return source instanceof Player ? ((Player) source).getUniqueId() : BanUser.CONSOLE.getUuid();
-  }
+  @NonNull BanUserArgument banUser(final @Assisted("name") @NonNull String name,
+      final @Assisted("required") boolean required,
+      final @Assisted("online") boolean online);
 }
