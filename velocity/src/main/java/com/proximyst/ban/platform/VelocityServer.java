@@ -21,6 +21,7 @@ package com.proximyst.ban.platform;
 import com.google.common.collect.Iterators;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.proximyst.ban.model.BanUser;
 import com.velocitypowered.api.proxy.ProxyServer;
 import java.util.Objects;
 import java.util.UUID;
@@ -46,7 +47,7 @@ public class VelocityServer implements BanServer, ForwardingAudience.Single {
 
   @Override
   public @NonNull Iterable<? extends BanAudience> onlineAudiences() {
-    return (Iterable<BanAudience>) () -> Iterators.transform(this.proxyServer.getAllPlayers().iterator(),
+    return () -> Iterators.transform(this.proxyServer.getAllPlayers().iterator(),
         pl -> VelocityAudience.getAudience(Objects.requireNonNull(pl)));
   }
 
@@ -62,6 +63,10 @@ public class VelocityServer implements BanServer, ForwardingAudience.Single {
 
   @Override
   public @Nullable BanAudience audienceOf(final @NonNull UUID uuid) {
+    if (uuid.equals(BanUser.CONSOLE.getUuid())) {
+      return this.consoleAudience();
+    }
+
     return this.proxyServer.getPlayer(uuid)
         .map(VelocityAudience::getAudience)
         .orElse(null);

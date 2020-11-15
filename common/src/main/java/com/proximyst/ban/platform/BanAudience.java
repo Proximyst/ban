@@ -18,6 +18,7 @@
 
 package com.proximyst.ban.platform;
 
+import com.proximyst.ban.model.BanUser;
 import java.util.UUID;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.identity.Identified;
@@ -28,30 +29,72 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.dataflow.qual.Pure;
 import org.checkerframework.dataflow.qual.SideEffectFree;
 
+/**
+ * A user on the server, represented as an {@link Audience} and {@link Identity}.
+ */
 public interface BanAudience extends Identified, Identity, Audience {
-  @Override
-  @SideEffectFree
-  default @NonNull Identity identity() {
-    return this;
-  }
-
+  /**
+   * The UUID of this user.
+   * <p>
+   * This will be referentially equal to {@link BanUser#CONSOLE}'s UUID if it is the console.
+   *
+   * @return The UUID of the user.
+   */
   @Override
   @Pure
   @NonNull UUID uuid();
 
+  /**
+   * The username of this user.
+   * <p>
+   * This will be referentially equal to {@link BanUser#CONSOLE}'s username if it is the console.
+   *
+   * @return The username of this user; this is not a deterministic result.
+   */
   @SideEffectFree
   @NonNull String username();
 
+  /**
+   * Checks whether this user has the permission. If the platform supports tristates, it will return {@code true} if
+   * granted, else the default value.
+   *
+   * @param permission The permission to check.
+   * @return Whether the user has the permission given.
+   */
   boolean hasPermission(@NonNull final String permission);
 
+  /**
+   * Disconnect this user, if applicable. This will not throw any kind of exception if the user is a console or
+   * offline.
+   *
+   * @param reason The reason for disconnecting the user.
+   */
   void disconnect(final @NonNull Component reason);
 
+  /**
+   * Disconnect this user, if applicable. This will not throw any kind of exception if the user is a console or
+   * offline.
+   *
+   * @param reason The reason for disconnecting the user.
+   */
   default void disconnect(final @NonNull ComponentLike reason) {
     this.disconnect(reason.asComponent());
   }
 
+  /**
+   * Cast this audience to a platform specific audience.
+   *
+   * @param <A> The type of {@link BanAudience} for this platform.
+   * @return The platform-specific {@link BanAudience}.
+   */
   @SuppressWarnings("unchecked") // This is intentional.
-  default <A extends Audience> @NonNull A castAudience() {
+  default <A extends BanAudience> @NonNull A castAudience() {
     return (A) this;
+  }
+
+  @Override
+  @SideEffectFree
+  default @NonNull Identity identity() {
+    return this;
   }
 }

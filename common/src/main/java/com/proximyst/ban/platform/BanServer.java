@@ -23,15 +23,42 @@ import net.kyori.adventure.audience.Audience;
 import org.checkerframework.checker.index.qual.NonNegative;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.dataflow.qual.Pure;
 
+/**
+ * A server wrapper for the platform. This is an {@link Audience} as it is possible to send messages to the entire
+ * server.
+ */
 public interface BanServer extends Audience {
+  /**
+   * @return All online {@link BanAudience}s. This does not include the console.
+   */
   @NonNull Iterable<? extends BanAudience> onlineAudiences();
 
+  /**
+   * @return The console audience. There will only ever be one console.
+   */
+  @Pure
   @NonNull BanAudience consoleAudience();
 
+  /**
+   * @return The amount of audiences there are online.
+   */
   @NonNegative int onlineCount();
 
+  /**
+   * Gets a cached or creates a new {@link BanAudience} for the given user by their {@link UUID}, if they are online.
+   *
+   * @param uuid The UUID to get an audience of.
+   * @return The audience of the user, if online.
+   */
   @Nullable BanAudience audienceOf(final @NonNull UUID uuid);
 
+  /**
+   * Gets a cached or creates a new {@link BanAudience} for the given user by their username, if they are online.
+   *
+   * @param username The username to get an audience of.
+   * @return The audience of the user, if online.
+   */
   @Nullable BanAudience audienceOf(final @NonNull String username);
 }
