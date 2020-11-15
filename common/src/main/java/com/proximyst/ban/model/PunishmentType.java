@@ -58,6 +58,7 @@ public enum PunishmentType {
       .setCanLift(true)
       .setIsApplicable(false)
       .setNotificationPermission(BanPermissions.NOTIFY_MUTE)
+      .setBypassPermission(BanPermissions.BYPASS_MUTE)
       .setBroadcastReasonless(MessageKey.BROADCAST_REASONLESS_MUTE)
       .setBroadcastReasoned(MessageKey.BROADCAST_REASONED_MUTE)
       .setBroadcastLift(MessageKey.BROADCAST_UNMUTE)
@@ -75,6 +76,7 @@ public enum PunishmentType {
       .setCanLift(false)
       .setIsApplicable(true)
       .setNotificationPermission(BanPermissions.NOTIFY_KICK)
+      .setBypassPermission(BanPermissions.BYPASS_KICK)
       .setBroadcastReasonless(MessageKey.BROADCAST_REASONLESS_KICK)
       .setBroadcastReasoned(MessageKey.BROADCAST_REASONED_KICK)
       .setApplicationReasonless(MessageKey.APPLICATION_REASONLESS_KICK)
@@ -91,6 +93,7 @@ public enum PunishmentType {
       .setCanLift(true)
       .setIsApplicable(true)
       .setNotificationPermission(BanPermissions.NOTIFY_BAN)
+      .setBypassPermission(BanPermissions.BYPASS_BAN)
       .setBroadcastReasonless(MessageKey.BROADCAST_REASONLESS_BAN)
       .setBroadcastReasoned(MessageKey.BROADCAST_REASONED_BAN)
       .setBroadcastLift(MessageKey.BROADCAST_UNBAN)
@@ -141,6 +144,11 @@ public enum PunishmentType {
    */
   private final @Nullable String notificationPermission;
 
+  /**
+   * The permission required to bypass {@link Punishment}s of this type.
+   */
+  private final @Nullable String bypassPermission;
+
   private final @Nullable MessageKey broadcastReasonless;
   private final @Nullable MessageKey broadcastReasoned;
   private final @Nullable MessageKey broadcastLift;
@@ -153,6 +161,7 @@ public enum PunishmentType {
     this.canLift = builder.canLift;
     this.isApplicable = builder.isApplicable;
     this.notificationPermission = builder.notificationPermission;
+    this.bypassPermission = builder.bypassPermission;
     this.broadcastReasonless = builder.broadcastReasonless;
     this.broadcastReasoned = builder.broadcastReasoned;
     this.broadcastLift = builder.broadcastLift;
@@ -199,6 +208,14 @@ public enum PunishmentType {
   }
 
   /**
+   * @return The permission to bypass a punishment of this type. This returns an {@link Optional#empty() empty Optional}
+   * if it's not eligible for bypassing.
+   */
+  public @NonNull Optional<@NonNull String> getBypassPermission() {
+    return Optional.ofNullable(this.bypassPermission);
+  }
+
+  /**
    * @param hasReason Whether the punishment has a reason.
    * @return The {@link MessageKey} for broadcasting a punishment of this type.
    */
@@ -233,6 +250,7 @@ public enum PunishmentType {
     private boolean canLift;
     private boolean isApplicable;
     private @Nullable String notificationPermission;
+    private @Nullable String bypassPermission;
     private @Nullable MessageKey broadcastReasonless;
     private @Nullable MessageKey broadcastReasoned;
     private @Nullable MessageKey broadcastLift;
@@ -265,6 +283,13 @@ public enum PunishmentType {
     @Pure
     public PunishmentTypeBuilder setNotificationPermission(final @Nullable String notificationPermission) {
       this.notificationPermission = notificationPermission;
+      return this;
+    }
+
+    @This
+    @Pure
+    public PunishmentTypeBuilder setBypassPermission(final @Nullable String bypassPermission) {
+      this.bypassPermission = bypassPermission;
       return this;
     }
 
