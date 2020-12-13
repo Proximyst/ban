@@ -258,79 +258,68 @@ public enum PunishmentType {
     private @Nullable MessageKey applicationReasoned;
     private @MonotonicNonNull MessageKey verbPastTense;
 
-    @This
     @Pure
-    public PunishmentTypeBuilder setId(final int id) {
+    public @This PunishmentTypeBuilder setId(final int id) {
       this.id = (byte) id;
       return this;
     }
 
-    @This
     @Pure
-    public PunishmentTypeBuilder setCanLift(final boolean canLift) {
+    public @This PunishmentTypeBuilder setCanLift(final boolean canLift) {
       this.canLift = canLift;
       return this;
     }
 
-    @This
     @Pure
-    public PunishmentTypeBuilder setIsApplicable(final boolean isApplicable) {
+    public @This PunishmentTypeBuilder setIsApplicable(final boolean isApplicable) {
       this.isApplicable = isApplicable;
       return this;
     }
 
-    @This
     @Pure
-    public PunishmentTypeBuilder setNotificationPermission(final @Nullable String notificationPermission) {
+    public @This PunishmentTypeBuilder setNotificationPermission(final @Nullable String notificationPermission) {
       this.notificationPermission = notificationPermission;
       return this;
     }
 
-    @This
     @Pure
-    public PunishmentTypeBuilder setBypassPermission(final @Nullable String bypassPermission) {
+    public @This PunishmentTypeBuilder setBypassPermission(final @Nullable String bypassPermission) {
       this.bypassPermission = bypassPermission;
       return this;
     }
 
-    @This
     @Pure
-    public PunishmentTypeBuilder setBroadcastReasonless(final @Nullable MessageKey broadcastReasonless) {
+    public @This PunishmentTypeBuilder setBroadcastReasonless(final @Nullable MessageKey broadcastReasonless) {
       this.broadcastReasonless = broadcastReasonless;
       return this;
     }
 
-    @This
     @Pure
-    public PunishmentTypeBuilder setBroadcastReasoned(final @Nullable MessageKey broadcastReasoned) {
+    public @This PunishmentTypeBuilder setBroadcastReasoned(final @Nullable MessageKey broadcastReasoned) {
       this.broadcastReasoned = broadcastReasoned;
       return this;
     }
 
-    @This
     @Pure
-    public PunishmentTypeBuilder setBroadcastLift(final @Nullable MessageKey broadcastLift) {
+    public @This PunishmentTypeBuilder setBroadcastLift(final @Nullable MessageKey broadcastLift) {
       this.broadcastLift = broadcastLift;
       return this;
     }
 
-    @This
     @Pure
-    public PunishmentTypeBuilder setApplicationReasonless(final @Nullable MessageKey applicationReasonless) {
+    public @This PunishmentTypeBuilder setApplicationReasonless(final @Nullable MessageKey applicationReasonless) {
       this.applicationReasonless = applicationReasonless;
       return this;
     }
 
-    @This
     @Pure
-    public PunishmentTypeBuilder setApplicationReasoned(final @Nullable MessageKey applicationReasoned) {
+    public @This PunishmentTypeBuilder setApplicationReasoned(final @Nullable MessageKey applicationReasoned) {
       this.applicationReasoned = applicationReasoned;
       return this;
     }
 
-    @This
     @Pure
-    public PunishmentTypeBuilder setVerbPastTense(final @MonotonicNonNull MessageKey verbPastTense) {
+    public @This PunishmentTypeBuilder setVerbPastTense(final @MonotonicNonNull MessageKey verbPastTense) {
       this.verbPastTense = verbPastTense;
       return this;
     }

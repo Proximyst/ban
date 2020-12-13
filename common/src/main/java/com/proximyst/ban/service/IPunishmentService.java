@@ -36,8 +36,7 @@ public interface IPunishmentService {
    * @param target The target whose punishments are requested.
    * @return An immutable copy of the punishments of the player where order is not guaranteed.
    */
-  @NonNull CompletableFuture<@NonNull ImmutableList<@NonNull Punishment>> getPunishments(
-      final @NonNull UUID target);
+  @NonNull CompletableFuture<@NonNull ImmutableList<@NonNull Punishment>> getPunishments(final @NonNull UUID target);
 
   /**
    * Get the punishments of a user.

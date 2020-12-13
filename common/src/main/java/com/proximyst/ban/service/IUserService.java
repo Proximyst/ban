@@ -25,6 +25,7 @@ import java.util.concurrent.CompletableFuture;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+// TODO(Proximyst): Document this
 public interface IUserService {
   /**
    * Save the given user.

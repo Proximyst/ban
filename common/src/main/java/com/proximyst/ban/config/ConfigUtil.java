@@ -54,10 +54,9 @@ public final class ConfigUtil {
     return OBJECT_MAPPER.bindToNew().populate(node);
   }
 
-  public static void saveConfiguration(
-      final @NonNull Configuration configuration,
-      final @NonNull ConfigurationNode node
-  ) throws ObjectMappingException {
+  public static void saveConfiguration(final @NonNull Configuration configuration,
+      final @NonNull ConfigurationNode node)
+      throws ObjectMappingException {
     OBJECT_MAPPER.bind(configuration).serialize(node);
   }
 }

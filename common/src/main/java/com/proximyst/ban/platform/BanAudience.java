@@ -26,6 +26,7 @@ import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.common.returnsreceiver.qual.This;
 import org.checkerframework.dataflow.qual.Pure;
 import org.checkerframework.dataflow.qual.SideEffectFree;
 
@@ -88,7 +89,7 @@ public interface BanAudience extends Identified, Identity, Audience {
    * @return The platform-specific {@link BanAudience}.
    */
   @SuppressWarnings("unchecked") // This is intentional.
-  default <A extends BanAudience> @NonNull A castAudience() {
+  default <A extends BanAudience> @NonNull @This A castAudience() {
     return (A) this;
   }
 

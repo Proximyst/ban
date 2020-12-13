@@ -24,6 +24,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
+// TODO(Proximyst): Cut down with Java 11
 public final class ThrowableUtils {
   private ThrowableUtils() throws IllegalAccessException {
     throw new IllegalAccessException(getClass().getSimpleName() + " cannot be instantiated.");

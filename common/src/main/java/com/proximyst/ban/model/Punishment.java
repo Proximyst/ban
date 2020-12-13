@@ -28,6 +28,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jdbi.v3.core.result.RowView;
 
+// TODO(Proximyst): Google autovalues?
 /**
  * A punishment enacted on a player.
  */

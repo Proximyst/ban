@@ -25,6 +25,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.checkerframework.common.returnsreceiver.qual.This;
 
+// TODO(Proximyst): Google autovalues?
 public final class PunishmentBuilder {
   private long id = -1;
   private @MonotonicNonNull PunishmentType punishmentType;
@@ -123,8 +124,7 @@ public final class PunishmentBuilder {
    */
   @RequiresNonNull({"target", "punisher", "punishmentType"})
   public @NonNull Punishment build() {
-    return new Punishment(
-        Math.max(this.id, -1),
+    return new Punishment(Math.max(this.id, -1),
         this.punishmentType,
         this.target,
         this.punisher,
@@ -132,7 +132,6 @@ public final class PunishmentBuilder {
         this.lifted,
         this.liftedBy,
         this.time,
-        this.duration
-    );
+        this.duration);
   }
 }

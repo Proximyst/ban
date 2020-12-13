@@ -38,13 +38,11 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 
 public final class BanUserArgument extends CommandArgument<@NonNull BanAudience, @NonNull BanUser> {
   @AssistedInject
-  public BanUserArgument(
-      final @NonNull IUserService userService,
+  public BanUserArgument(final @NonNull IUserService userService,
       final @NonNull BanServer banServer,
       final @Assisted("required") boolean required,
       final @Assisted("name") @NonNull String name,
-      final @Assisted("online") boolean online
-  ) {
+      final @Assisted("online") boolean online) {
     super(
         required,
         name,
@@ -54,12 +52,10 @@ public final class BanUserArgument extends CommandArgument<@NonNull BanAudience,
   }
 
   @AssistedInject
-  public BanUserArgument(
-      final @NonNull IUserService userService,
+  public BanUserArgument(final @NonNull IUserService userService,
       final @NonNull BanServer banServer,
       final @Assisted("required") boolean required,
-      final @Assisted("name") @NonNull String name
-  ) {
+      final @Assisted("name") @NonNull String name) {
     this(userService, banServer, required, name, false);
   }
 
@@ -77,10 +73,8 @@ public final class BanUserArgument extends CommandArgument<@NonNull BanAudience,
     }
 
     @Override
-    public @NonNull ArgumentParseResult<BanUser> parse(
-        final @NonNull CommandContext<BanAudience> commandContext,
-        final @NonNull Queue<String> inputQueue
-    ) {
+    public @NonNull ArgumentParseResult<BanUser> parse(final @NonNull CommandContext<BanAudience> commandContext,
+        final @NonNull Queue<String> inputQueue) {
       final String input = inputQueue.peek();
       if (input == null) {
         return ArgumentParseResult.failure(new NullPointerException("Expected player name/UUID"));
@@ -129,10 +123,8 @@ public final class BanUserArgument extends CommandArgument<@NonNull BanAudience,
     }
 
     @Override
-    public @NonNull List<String> suggestions(
-        final @NonNull CommandContext<BanAudience> commandContext,
-        final @NonNull String input
-    ) {
+    public @NonNull List<String> suggestions(final @NonNull CommandContext<BanAudience> commandContext,
+        final @NonNull String input) {
       final String lowercaseInput = input.toLowerCase(Locale.ENGLISH).trim();
       final ImmutableList.Builder<String> builder = ImmutableList.builder();
 

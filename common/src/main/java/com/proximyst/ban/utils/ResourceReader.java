@@ -40,7 +40,7 @@ public final class ResourceReader {
    */
   public static @NonNull String readResource(final @NonNull String path) {
     // We use this class as the "entry point" to our jar.
-    // All classes should be loaded by the plugin's classloader anyways.
+    // All classes should be loaded by the plugin's classloader anyways; at least this very class...
     try (final InputStream stream = ResourceReader.class.getResourceAsStream("/" + path);
         final Reader reader = new InputStreamReader(stream)) {
       return CharStreams.toString(reader);

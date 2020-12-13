@@ -208,14 +208,12 @@ public final class ImplAshconMojangService implements IMojangService {
     @Nullable List<UsernameHistory.@NonNull Entry> history;
 
     @NonNull BanUser toBanUser() {
-      return new BanUser(
-          this.uuid,
+      return new BanUser(this.uuid,
           this.username,
           new UsernameHistory(this.uuid,
               this.history == null
                   ? Collections.singleton(new UsernameHistory.Entry(this.username, null))
-                  : this.history)
-      );
+                  : this.history));
     }
   }
 }

@@ -32,6 +32,7 @@ public final class HttpUtils {
     throw new IllegalAccessException(getClass().getSimpleName() + " cannot be instantiated.");
   }
 
+  // TODO(Proximyst): java.net.http
   public static @NonNull Optional<@NonNull String> get(final @NonNull String url) {
     try {
       final URL u = new URL(url);

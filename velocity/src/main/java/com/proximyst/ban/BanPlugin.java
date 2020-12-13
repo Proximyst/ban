@@ -109,16 +109,14 @@ public class BanPlugin {
     this.logger = logger;
     this.dataDirectory = dataDirectory;
 
-    this.injector = pluginInjector.createChildInjector(
-        new ConfigurationModule(),
+    this.injector = pluginInjector.createChildInjector(new ConfigurationModule(),
         new DataServiceModule(),
         new MessageServiceModule(),
         new MojangServiceModule(),
         new PunishmentServiceModule(),
         new UserServiceModule(),
         new CloudArgumentFactoryModule(),
-        new PlatformModule()
-    );
+        new PlatformModule());
   }
 
   @Subscribe
@@ -225,8 +223,7 @@ public class BanPlugin {
     this.injector.getInstance(UnmuteCommand.class).register(velocityCommandManager);
 
     tm.finish();
-    this.logger.info(
-        "Plugin has finished initialisation in {}ms.",
+    this.logger.info("Plugin has finished initialisation in {}ms.",
         TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start));
   }
 
@@ -244,8 +241,7 @@ public class BanPlugin {
     }
 
     tm.finish();
-    this.logger.info(
-        "Plugin disabled correctly in {}ms.",
+    this.logger.info("Plugin disabled correctly in {}ms.",
         TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start));
   }
 

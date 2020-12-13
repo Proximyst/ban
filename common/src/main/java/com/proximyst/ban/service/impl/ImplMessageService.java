@@ -180,7 +180,8 @@ public final class ImplMessageService implements IMessageService {
    * @return The finished component.
    */
   private @NonNull CompletableFuture<@NonNull Component> formatMessageFuture(final @NonNull String message,
-      final @Positive int futureCount, final @Nullable Object @NonNull ... placeholders) {
+      final @Positive int futureCount,
+      final @Nullable Object @NonNull ... placeholders) {
     final CompletableFuture<?>[] futures = new CompletableFuture<?>[futureCount];
 
     // We know how many futures there are, but we also need to actually find them.
@@ -215,8 +216,7 @@ public final class ImplMessageService implements IMessageService {
     });
   }
 
-  private @NonNull CompletableFuture<@Nullable Void> announcePunishmentMessage(
-      final @NonNull Punishment punishment,
+  private @NonNull CompletableFuture<@Nullable Void> announcePunishmentMessage(final @NonNull Punishment punishment,
       final @NonNull MessageKey messageKey) {
     final String permission = punishment.getPunishmentType().getNotificationPermission().orElse(null);
     return this.formatMessage(messageKey, punishment)

@@ -34,11 +34,9 @@ public final class BanUser {
    * Its {@link UUID} is {@code null} with its {@link UUID#getMostSignificantBits() most significant bits} and {@link
    * UUID#getLeastSignificantBits() least significant bits} being {@code 0}.
    */
-  public static final @NonNull BanUser CONSOLE = new BanUser(
-      CONSOLE_UUID,
+  public static final @NonNull BanUser CONSOLE = new BanUser(CONSOLE_UUID,
       "CONSOLE",
-      new UsernameHistory(CONSOLE_UUID, Collections.emptyList())
-  );
+      new UsernameHistory(CONSOLE_UUID, Collections.emptyList()));
 
   private final @NonNull UUID uuid;
   private final @NonNull String username;

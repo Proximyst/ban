@@ -49,10 +49,9 @@ public class BannedPlayerJoinSubscriber {
         .join() // This *should* be fast, and only on one player's connection thread
         .ifPresent(ban -> {
           event.setResult(ComponentResult.denied(
-              this.messageService
-                  .formatMessage(
-                      ban.getPunishmentType().getApplicationMessage(ban.getReason().isPresent()).orElse(null),
-                      ban)
+              this.messageService.formatMessage(ban.getPunishmentType()
+                      .getApplicationMessage(ban.getReason().isPresent()).orElse(null),
+                  ban)
                   // We're about to deny them access; the time it takes to fetch the data doesn't matter.
                   .join()
           ));

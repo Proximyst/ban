@@ -96,8 +96,7 @@ public interface IMessageService {
    * the future will be completed. If there is a future in the {@code placeholders}, the future will only be completed
    * once all the futures in {@code placeholders} are completed.
    */
-  @NonNull CompletableFuture<Component> formatMessage(
-      final @Nullable MessageKey messageKey,
+  @NonNull CompletableFuture<Component> formatMessage(final @Nullable MessageKey messageKey,
       final @NonNull Punishment punishment,
       final @Nullable Object @NonNull ... placeholders);
 
@@ -121,8 +120,7 @@ public interface IMessageService {
    * be completed once all the futures in {@code placeholders} are completed.
    * @see #formatMessage(MessageKey, Object...)
    */
-  default @NonNull CompletableFuture<Void> sendFormattedMessage(
-      final @NonNull Audience audience,
+  default @NonNull CompletableFuture<Void> sendFormattedMessage(final @NonNull Audience audience,
       final @NonNull Identity identity,
       final @Nullable MessageKey messageKey,
       final @Nullable Object @NonNull ... placeholders) {
@@ -155,8 +153,7 @@ public interface IMessageService {
    * @see #sendFormattedMessage(Audience, Identity, MessageKey, Object...)
    * @see #formatMessage(MessageKey, Object...)
    */
-  default @NonNull CompletableFuture<Void> sendFormattedMessage(
-      final @NonNull Audience audience,
+  default @NonNull CompletableFuture<Void> sendFormattedMessage(final @NonNull Audience audience,
       final @NonNull Identified identity,
       final @Nullable MessageKey messageKey,
       final @Nullable Object @NonNull ... placeholders) {
@@ -184,8 +181,7 @@ public interface IMessageService {
    * be completed once all the futures in {@code placeholders} are completed.
    * @see #formatMessage(MessageKey, Punishment, Object...)
    */
-  default @NonNull CompletableFuture<Void> sendFormattedMessage(
-      final @NonNull Audience audience,
+  default @NonNull CompletableFuture<Void> sendFormattedMessage(final @NonNull Audience audience,
       final @NonNull Identity identity,
       final @Nullable MessageKey messageKey,
       final @NonNull Punishment punishment,
@@ -220,8 +216,7 @@ public interface IMessageService {
    * @see #sendFormattedMessage(Audience, Identity, MessageKey, Punishment, Object...)
    * @see #formatMessage(MessageKey, Punishment, Object...)
    */
-  default @NonNull CompletableFuture<Void> sendFormattedMessage(
-      final @NonNull Audience audience,
+  default @NonNull CompletableFuture<Void> sendFormattedMessage(final @NonNull Audience audience,
       final @NonNull Identified identity,
       final @Nullable MessageKey messageKey,
       final @NonNull Punishment punishment,

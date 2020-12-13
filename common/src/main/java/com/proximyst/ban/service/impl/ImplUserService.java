@@ -30,6 +30,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -61,38 +62,14 @@ public final class ImplUserService implements IUserService {
       return CompletableFuture.completedFuture(Optional.empty());
     }
 
-    return CompletableFuture
-        .supplyAsync(() -> this.dataService.getUser(uuid), this.executor)
-        .thenCompose(opt -> {
-          if (opt.isPresent()) {
-            return CompletableFuture.completedFuture(opt);
-          }
-
-          return this.mojangService.getUser(uuid)
-              .thenApply(mojangUser -> {
-                mojangUser.ifPresent(banUser -> this.executor.execute(() -> this.dataService.saveUser(banUser)));
-
-                return mojangUser;
-              });
-        });
+    return this.getUserInternal(() -> this.dataService.getUser(uuid),
+        () -> this.mojangService.getUser(uuid));
   }
 
   @Override
   public @NonNull CompletableFuture<@NonNull Optional<@NonNull BanUser>> getUser(final @NonNull String name) {
-    return CompletableFuture
-        .supplyAsync(() -> this.dataService.getUser(name), this.executor)
-        .thenCompose(opt -> {
-          if (opt.isPresent()) {
-            return CompletableFuture.completedFuture(opt);
-          }
-
-          return this.mojangService.getUser(name)
-              .thenApply(mojangUser -> {
-                mojangUser.ifPresent(banUser -> this.executor.execute(() -> this.dataService.saveUser(banUser)));
-
-                return mojangUser;
-              });
-        });
+    return this.getUserInternal(() -> this.dataService.getUser(name),
+        () -> this.mojangService.getUser(name));
   }
 
   @Override
@@ -126,5 +103,24 @@ public final class ImplUserService implements IUserService {
       this.dataService.saveUser(user);
       return null;
     }, this.executor);
+  }
+
+  private @NonNull CompletableFuture<@NonNull Optional<@NonNull BanUser>> getUserInternal(
+      final @NonNull Supplier<@NonNull Optional<@NonNull BanUser>> banUserSupplier,
+      final @NonNull Supplier<@NonNull CompletableFuture<@NonNull Optional<@NonNull BanUser>>> mojangUserSupplier) {
+    return CompletableFuture
+        .supplyAsync(banUserSupplier, this.executor)
+        .thenCompose(opt -> {
+          if (opt.isPresent()) {
+            return CompletableFuture.completedFuture(opt);
+          }
+
+          return mojangUserSupplier.get()
+              .thenApply(mojangUser -> {
+                mojangUser.ifPresent(banUser -> this.executor.execute(() -> this.dataService.saveUser(banUser)));
+
+                return mojangUser;
+              });
+        });
   }
 }

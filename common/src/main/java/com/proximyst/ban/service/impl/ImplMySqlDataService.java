@@ -191,12 +191,8 @@ public final class ImplMySqlDataService implements IDataService {
   }
 
   private enum SqlQueries {
-    SELECT_VERSION("select-version"),
-    CREATE_VERSION_TABLE("create-version-table"),
-    UPDATE_VERSION("update-version"),
     SELECT_PUNISHMENTS_BY_TARGET("select-punishments-by-target"),
     CREATE_PUNISHMENT("create-punishment"),
-    LIFT_PUNISHMENT("lift-punishment"),
     SELECT_USER_BY_UUID("select-user-by-uuid"),
     SELECT_USER_BY_USERNAME("select-user-by-username"),
     SELECT_USERNAME_HISTORY_BY_UUID("select-username-history-by-uuid"),

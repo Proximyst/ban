@@ -35,14 +35,12 @@ public final class UsernameHistory {
 
   public UsernameHistory(final @NonNull UUID uuid, final @NonNull Iterable<? extends UsernameHistory.Entry> entries) {
     this.uuid = uuid;
-    this.entries = ImmutableList.sortedCopyOf(
-        Comparator.comparingLong(entry -> entry
+    this.entries = ImmutableList.sortedCopyOf(Comparator.comparingLong(entry -> entry
             .getChangedAt()
             .map(Date::getTime)
             .orElse(Long.MIN_VALUE) // Original is first in the list.
         ),
-        entries
-    );
+        entries);
   }
 
   public @NonNull ImmutableList<@NonNull Entry> getEntries() {
@@ -85,12 +83,10 @@ public final class UsernameHistory {
     }
 
     public static @NonNull Entry fromRow(final @NonNull RowView view) {
-      return new Entry(
-          view.getColumn("username", String.class),
+      return new Entry(view.getColumn("username", String.class),
           Optional.ofNullable(view.getColumn("timestamp", Timestamp.class))
               .map(stamp -> Date.from(stamp.toInstant()))
-              .orElse(null)
-      );
+              .orElse(null));
     }
 
     public @NonNull String getUsername() {

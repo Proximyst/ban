@@ -21,6 +21,7 @@ package com.proximyst.ban.config;
 import java.util.function.Function;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
+// TODO(Proximyst): Document all this
 public enum MessageKey {
   /**
    * The supplied target has no active ban.

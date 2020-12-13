@@ -80,9 +80,8 @@ public final class ImplPunishmentService implements IPunishmentService {
     }
 
     // Okay, we've got to load them and cache them thereafter.
-    return ThrowableUtils.supplyAsyncSneaky(
-        () -> ImmutableList.copyOf(
-            this.punishmentCache.get(target, () -> this.dataService.getPunishmentsForTarget(target))),
+    return ThrowableUtils.supplyAsyncSneaky(() -> ImmutableList.copyOf(this.punishmentCache
+            .get(target, () -> this.dataService.getPunishmentsForTarget(target))),
         this.executor);
   }
 
