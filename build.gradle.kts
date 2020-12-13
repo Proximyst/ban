@@ -77,7 +77,7 @@ subprojects {
         }
         implementation("org.flywaydb:flyway-core:7.1.1")
 
-        compileOnlyApi("net.kyori:adventure-api:4.1.1")
+        compileOnlyApi("net.kyori:adventure-api:4.3.0")
         implementation("net.kyori:adventure-text-minimessage:4.0.0-SNAPSHOT") {
             // We get adventure through velocity-api
             isTransitive = false
