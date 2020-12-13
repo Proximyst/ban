@@ -159,7 +159,7 @@ subprojects {
 
             opt.encoding("UTF-8")
             opt.charSet("UTF-8")
-            opt.source("8")
+            opt.source("11")
             doFirst {
                 opt.links(
                     "https://docs.oracle.com/javase/8/docs/api/",
@@ -178,7 +178,7 @@ subprojects {
 // will be nice to have to disable potential warnings and errors.
 allprojects {
     configure<JavaPluginConvention> {
-        sourceCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = sourceCompatibility
     }
 

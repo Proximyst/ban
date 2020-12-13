@@ -18,42 +18,64 @@
 
 package com.proximyst.ban.utils;
 
-import com.google.common.io.CharStreams;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import com.google.common.base.Charsets;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.proximyst.ban.inject.annotation.BanAsyncExecutor;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpClient.Redirect;
+import java.net.http.HttpClient.Version;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse.BodySubscribers;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
+@Singleton
 public final class HttpUtils {
-  private HttpUtils() throws IllegalAccessException {
-    throw new IllegalAccessException(getClass().getSimpleName() + " cannot be instantiated.");
+  private static final int STATUS_RANGE_OK = 200;
+  private static final int STATUS_RANGE_LENGTH = 100;
+  private static final int STATUS_NO_CONTENT = 204;
+
+  private final @NonNull HttpClient httpClient;
+
+  @Inject
+  public HttpUtils(final @BanAsyncExecutor @NonNull Executor executor) {
+    this.httpClient = HttpClient.newBuilder()
+        .executor(executor)
+        .version(Version.HTTP_2)
+        .followRedirects(Redirect.NORMAL)
+        .build();
   }
 
   // TODO(Proximyst): java.net.http
-  public static @NonNull Optional<@NonNull String> get(final @NonNull String url) {
+  public @NonNull CompletableFuture<@NonNull Optional<@NonNull String>> get(final @NonNull String url) {
+    final URI u;
     try {
-      final URL u = new URL(url);
-      final HttpURLConnection conn = (HttpURLConnection) u.openConnection();
-      conn.setDoOutput(true);
-      conn.setRequestProperty("User-Agent",
-          "Mozilla/5.0 Proximyst/ban Velocity-plugin <https://github.com/Proximyst/ban>");
-      conn.connect();
-      if (conn.getResponseCode() >= 300 || conn.getResponseCode() < 200) {
-        conn.disconnect();
-        return Optional.empty();
-      }
-
-      try (final InputStream stream = conn.getInputStream();
-          final InputStreamReader reader = new InputStreamReader(stream)) {
-        return Optional.of(CharStreams.toString(reader));
-      } finally {
-        conn.disconnect();
-      }
-    } catch (final IOException ignored) {
-      return Optional.empty();
+      u = URI.create(url);
+    } catch (final IllegalArgumentException ex) {
+      ThrowableUtils.sneakyThrow(ex);
+      throw new RuntimeException();
     }
+
+    return this.httpClient.sendAsync(HttpRequest.newBuilder()
+            .GET()
+            .setHeader("User-Agent",
+                "Mozilla/5.0 Incendo/ban plugin <https://github.com/Incendo/ban>")
+            .uri(u)
+            .build(),
+        responseInfo -> BodySubscribers.ofString(Charsets.UTF_8))
+        .thenApply(response -> {
+          final int status = response.statusCode();
+          if (status == STATUS_NO_CONTENT ||
+              status < STATUS_RANGE_OK ||
+              status >= STATUS_RANGE_OK + STATUS_RANGE_LENGTH) {
+            return Optional.empty();
+          }
+
+          return Optional.ofNullable(response.body());
+        });
   }
 }

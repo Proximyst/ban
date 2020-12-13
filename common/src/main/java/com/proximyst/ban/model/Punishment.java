@@ -29,6 +29,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jdbi.v3.core.result.RowView;
 
 // TODO(Proximyst): Google autovalues?
+
 /**
  * A punishment enacted on a player.
  */
@@ -162,11 +163,11 @@ public final class Punishment {
    * @throws IllegalStateException If this punishment already has an ID.
    */
   public void setId(final long id) {
-    if (this.getId().isPresent()) {
-      throw new IllegalStateException("Cannot set ID of punishment with a pre-existing ID");
-    }
-
-    this.id = id;
+    this.getId().ifPresentOrElse(
+        $ -> {
+          throw new IllegalStateException("Cannot set ID of punishment with a pre-existing ID");
+        },
+        () -> this.id = id);
   }
 
   /**
@@ -209,16 +210,6 @@ public final class Punishment {
   public void setReason(final @Nullable String reason) {
     Preconditions.checkArgument(reason != null && reason.getBytes().length <= 255, "reason must be <= 255 bytes");
     this.reason = reason;
-  }
-
-  /**
-   * @param reason The reason for the punishment or {@link Optional#empty()} otherwise. This must be a maximum of 255
-   *               bytes long.
-   */
-  @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-  public void setReason(final @NonNull Optional<@NonNull String> reason) {
-    reason.ifPresent(str -> Preconditions.checkArgument(str.getBytes().length <= 255, "reason must be <= 255 bytes"));
-    this.reason = reason.orElse(null);
   }
 
   /**

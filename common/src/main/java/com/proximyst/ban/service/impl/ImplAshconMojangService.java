@@ -57,6 +57,7 @@ public final class ImplAshconMojangService implements IMojangService {
 
   private final @NonNull Executor executor;
   private final @NonNull BanServer banServer;
+  private final @NonNull HttpUtils httpUtils;
 
   private final @NonNull Cache<@NonNull UUID, @NonNull BanUser> banUserCache = CacheBuilder.newBuilder()
       .initialCapacity(512)
@@ -74,9 +75,11 @@ public final class ImplAshconMojangService implements IMojangService {
 
   @Inject
   public ImplAshconMojangService(final @NonNull @BanAsyncExecutor Executor executor,
-      final @NonNull BanServer banServer) {
+      final @NonNull BanServer banServer,
+      final @NonNull HttpUtils httpUtils) {
     this.executor = executor;
     this.banServer = banServer;
+    this.httpUtils = httpUtils;
   }
 
   @Override
@@ -86,7 +89,7 @@ public final class ImplAshconMojangService implements IMojangService {
     }
 
     if (uuid.version() != 4) {
-      return ThrowableUtils.throwingFuture(
+      return CompletableFuture.failedFuture(
           new IllegalArgumentException("UUID \"" + uuid + "\" is not an online-mode UUID"));
     }
 
@@ -102,14 +105,14 @@ public final class ImplAshconMojangService implements IMojangService {
   public @NonNull CompletableFuture<@NonNull Optional<@NonNull BanUser>> getUser(@NonNull String identifier) {
     if (identifier.length() < 3) {
       // Too short to be a username.
-      return ThrowableUtils.throwingFuture(
+      return CompletableFuture.failedFuture(
           new IllegalArgumentException("Username \"" + identifier + "\" is too short."));
     }
 
     if (identifier.length() > 16) {
       // Too long to be a username.
       if (identifier.length() != 32 && identifier.length() != 36) {
-        return ThrowableUtils.throwingFuture(
+        return CompletableFuture.failedFuture(
             new IllegalArgumentException("Username/UUID \"" + identifier + "\" has an invalid length."));
       }
 
@@ -155,19 +158,16 @@ public final class ImplAshconMojangService implements IMojangService {
 
   private @NonNull CompletableFuture<@NonNull Optional<@NonNull BanUser>> fetchFromIdentifier(
       final @NonNull String identifier) {
-    return ThrowableUtils.supplyAsyncSneaky(
-        () -> {
-          final Optional<BanUser> user = HttpUtils.get(API_BASE + "user/" + identifier)
-              .map(json -> GSON.fromJson(json, AshconUser.class).toBanUser());
-          user.ifPresent(banUser -> this.usernameUuidCache.put(banUser.getUsername(), banUser.getUuid()));
-
-          if (!user.isPresent()) {
-            throw new IllegalArgumentException("No user \"" + identifier + "\" exists.");
-          }
+    return this.httpUtils.get(API_BASE + "user/" + identifier)
+        .thenApply(opt -> {
+          final Optional<BanUser> user = opt.map(json -> GSON.fromJson(json, AshconUser.class).toBanUser());
+          user.ifPresentOrElse(banUser -> this.usernameUuidCache.put(banUser.getUsername(), banUser.getUuid()),
+              () -> {
+                throw new IllegalArgumentException("No user \"" + identifier + "\" exists.");
+              });
 
           return user;
-        }, this.executor
-    );
+        });
   }
 
   private void banUserCacheRemovalCallback(

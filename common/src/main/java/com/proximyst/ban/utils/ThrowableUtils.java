@@ -24,7 +24,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
-// TODO(Proximyst): Cut down with Java 11
 public final class ThrowableUtils {
   private ThrowableUtils() throws IllegalAccessException {
     throw new IllegalAccessException(getClass().getSimpleName() + " cannot be instantiated.");
@@ -43,12 +42,6 @@ public final class ThrowableUtils {
   @SuppressWarnings("unchecked")
   private static <T extends Throwable> T superSneaky(final @NonNull Throwable throwable) throws T {
     throw (T) throwable;
-  }
-
-  public static <T> @NonNull CompletableFuture<@NonNull T> throwingFuture(final @NonNull Throwable throwable) {
-    final CompletableFuture<T> future = new CompletableFuture<>();
-    future.completeExceptionally(throwable);
-    return future;
   }
 
   public static <T> @NonNull CompletableFuture<T> supplySneaky(final @NonNull Callable<T> callable) {
