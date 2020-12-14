@@ -1,3 +1,3 @@
 SELECT *
-FROM `usernames`
-WHERE `uuid` = ?;
+FROM usernames
+WHERE uuid = :uuid;

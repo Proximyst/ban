@@ -1,5 +1,5 @@
 SELECT *
-FROM `users`
-WHERE `uuid` = ?
-ORDER BY `timestamp` DESC
+FROM users
+WHERE uuid = :uuid
+ORDER BY timestamp DESC
 LIMIT 1;
