@@ -47,8 +47,6 @@ import org.jdbi.v3.core.statement.Update;
 
 @Singleton
 public final class ImplMySqlDataService implements IDataService {
-  private static final @NonNull String PATH = "sql/mysql/";
-
   private final @NonNull Jdbi jdbi;
   private final @NonNull String path;
 
