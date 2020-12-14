@@ -18,27 +18,21 @@
 
 package com.proximyst.ban.data.jdbi;
 
-import java.sql.Types;
-import java.util.UUID;
+import com.proximyst.ban.model.UsernameHistory;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Date;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
-import org.jdbi.v3.core.argument.AbstractArgumentFactory;
-import org.jdbi.v3.core.argument.Argument;
-import org.jdbi.v3.core.config.ConfigRegistry;
+import org.jdbi.v3.core.mapper.RowMapper;
+import org.jdbi.v3.core.statement.StatementContext;
 
-public final class UuidJdbiFactory extends AbstractArgumentFactory<UUID> {
-  public UuidJdbiFactory() {
-    super(Types.CHAR);
-  }
-
+public final class UsernameHistoryEntryJdbiRowMapper implements RowMapper<UsernameHistory.Entry> {
   @Override
-  protected @NonNull Argument build(final @Nullable UUID value, final @Nullable ConfigRegistry config) {
-    return (position, statement, $) -> {
-      if (value == null) {
-        statement.setNull(position, Types.CHAR);
-      } else {
-        statement.setString(position, value.toString());
-      }
-    };
+  public UsernameHistory.@NonNull Entry map(final @NonNull ResultSet rs, final @NonNull StatementContext ctx)
+      throws SQLException {
+    return new UsernameHistory.Entry(rs.getString("username"),
+        rs.getObject("timestamp") == null
+            ? null
+            : Date.from(rs.getTimestamp("timestamp").toInstant()));
   }
 }

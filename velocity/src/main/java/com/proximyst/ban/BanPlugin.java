@@ -32,6 +32,8 @@ import com.proximyst.ban.commands.UnbanCommand;
 import com.proximyst.ban.commands.UnmuteCommand;
 import com.proximyst.ban.config.ConfigUtil;
 import com.proximyst.ban.config.Configuration;
+import com.proximyst.ban.data.jdbi.PunishmentJdbiRowMapper;
+import com.proximyst.ban.data.jdbi.UsernameHistoryEntryJdbiRowMapper;
 import com.proximyst.ban.data.jdbi.UuidJdbiFactory;
 import com.proximyst.ban.event.subscriber.BannedPlayerJoinSubscriber;
 import com.proximyst.ban.event.subscriber.CacheUpdatePlayerSubscriber;
@@ -177,7 +179,9 @@ public class BanPlugin {
             BanPlugin.this.logger.warn("Could not execute JDBI statement.", ex);
           }
         })
-        .registerArgument(this.injector.getInstance(UuidJdbiFactory.class));
+        .registerArgument(this.injector.getInstance(UuidJdbiFactory.class))
+        .registerRowMapper(this.injector.getInstance(PunishmentJdbiRowMapper.class))
+        .registerRowMapper(this.injector.getInstance(UsernameHistoryEntryJdbiRowMapper.class));
 
     tm.start("Preparing database");
     try {

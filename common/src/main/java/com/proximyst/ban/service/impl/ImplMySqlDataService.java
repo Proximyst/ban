@@ -83,7 +83,7 @@ public final class ImplMySqlDataService implements IDataService {
     return this.jdbi.withHandle(handle ->
         handle.createQuery(this.querySelectPunishmentsByTarget.getQuery())
             .bind("target", target)
-            .map(Punishment::fromRow)
+            .mapTo(Punishment.class)
             .stream()
             .sorted(Comparator.comparingLong(Punishment::getTime))
             .collect(Collectors.toCollection(ArrayList::new)) // toList has no mutability guarantee
@@ -118,7 +118,7 @@ public final class ImplMySqlDataService implements IDataService {
           uuid,
           handle.createQuery(this.querySelectUsernameHistoryByUuid.getQuery())
               .bind("uuid", uuid)
-              .map(UsernameHistory.Entry::fromRow)
+              .mapTo(UsernameHistory.Entry.class)
               .list()
       );
 
