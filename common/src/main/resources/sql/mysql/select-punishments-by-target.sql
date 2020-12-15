@@ -1,3 +1,3 @@
 SELECT *
-FROM `punishments`
-WHERE `target` = ?;
+FROM punishments
+WHERE target = :target;

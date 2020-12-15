@@ -35,6 +35,7 @@ import java.util.Optional;
 import java.util.Queue;
 import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.common.returnsreceiver.qual.This;
 
 public final class BanUserArgument extends CommandArgument<@NonNull BanAudience, @NonNull BanUser> {
   @AssistedInject
@@ -43,12 +44,10 @@ public final class BanUserArgument extends CommandArgument<@NonNull BanAudience,
       final @Assisted("required") boolean required,
       final @Assisted("name") @NonNull String name,
       final @Assisted("online") boolean online) {
-    super(
-        required,
+    super(required,
         name,
         new BanUserParser(userService, banServer, online),
-        BanUser.class
-    );
+        BanUser.class);
   }
 
   @AssistedInject
@@ -75,6 +74,11 @@ public final class BanUserArgument extends CommandArgument<@NonNull BanAudience,
     @Override
     public @NonNull ArgumentParseResult<BanUser> parse(final @NonNull CommandContext<BanAudience> commandContext,
         final @NonNull Queue<String> inputQueue) {
+      if (commandContext.isSuggestions()) {
+        // The result here is irrelevant, as long as it's present.
+        return ArgumentParseResult.success(BanUser.CONSOLE);
+      }
+
       final String input = inputQueue.peek();
       if (input == null) {
         return ArgumentParseResult.failure(new NullPointerException("Expected player name/UUID"));
@@ -148,6 +152,11 @@ public final class BanUserArgument extends CommandArgument<@NonNull BanAudience,
 
     public InvalidPlayerIdentifierException(final @NonNull String message) {
       super(message);
+    }
+
+    @Override
+    public synchronized @This @NonNull Throwable fillInStackTrace() {
+      return this;
     }
   }
 }

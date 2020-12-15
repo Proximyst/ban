@@ -16,29 +16,19 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-package com.proximyst.ban.data.jdbi;
+package com.proximyst.ban.inject.factory;
 
-import java.sql.Types;
-import java.util.UUID;
+import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.proximyst.ban.factory.IBanExceptionalFutureLoggerFactory;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
-import org.jdbi.v3.core.argument.AbstractArgumentFactory;
-import org.jdbi.v3.core.argument.Argument;
-import org.jdbi.v3.core.config.ConfigRegistry;
 
-public final class UuidJdbiFactory extends AbstractArgumentFactory<UUID> {
-  public UuidJdbiFactory() {
-    super(Types.CHAR);
-  }
-
-  @Override
-  protected @NonNull Argument build(final @Nullable UUID value, final @Nullable ConfigRegistry config) {
-    return (position, statement, $) -> {
-      if (value == null) {
-        statement.setNull(position, Types.CHAR);
-      } else {
-        statement.setString(position, value.toString());
-      }
-    };
+public class BanExceptionalFutureLoggerFactoryModule extends AbstractModule {
+  @Provides
+  @Singleton
+  @NonNull IBanExceptionalFutureLoggerFactory banExceptionalFutureLoggerFactory(
+      final IBanExceptionalFutureLoggerFactory.@NonNull ImplBanExceptionalFutureLoggerFactory factory) {
+    return factory;
   }
 }

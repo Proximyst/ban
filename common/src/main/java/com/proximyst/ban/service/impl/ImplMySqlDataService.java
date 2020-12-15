@@ -21,6 +21,7 @@ package com.proximyst.ban.service.impl;
 import cloud.commandframework.types.tuples.Pair;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.proximyst.ban.config.SqlConfig;
 import com.proximyst.ban.model.BanUser;
 import com.proximyst.ban.model.Punishment;
 import com.proximyst.ban.model.UsernameHistory;
@@ -33,36 +34,56 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.result.RowView;
+import org.jdbi.v3.core.statement.Update;
 
 @Singleton
 public final class ImplMySqlDataService implements IDataService {
-  private static final @NonNull String PATH = "sql/mysql/";
-
   private final @NonNull Jdbi jdbi;
+  private final @NonNull String path;
+
+  private final @NonNull Query queryCreatePunishment;
+  private final @NonNull Query querySaveUser;
+  private final @NonNull Query querySaveUserName;
+  private final @NonNull Query querySelectPunishmentsByTarget;
+  private final @NonNull Query querySelectUserByUsername;
+  private final @NonNull Query querySelectUserByUuid;
+  private final @NonNull Query querySelectUsernameHistoryByUuid;
 
   @Inject
-  public ImplMySqlDataService(final @NonNull Jdbi jdbi) {
+  public ImplMySqlDataService(final @NonNull Jdbi jdbi,
+      final @NonNull SqlConfig sqlConfig) {
     this.jdbi = jdbi;
+    this.path = "sql/" + SqlDialect.parse(sqlConfig.dialect).getPath() + "/";
+
+    this.queryCreatePunishment = new Query("create-punishment.sql", this.path);
+    this.querySaveUser = new Query("save-user.sql", this.path);
+    this.querySaveUserName = new Query("save-user-name.sql", this.path);
+    this.querySelectPunishmentsByTarget = new Query("select-punishments-by-target.sql", this.path);
+    this.querySelectUserByUsername = new Query("select-user-by-username.sql", this.path);
+    this.querySelectUserByUuid = new Query("select-user-by-uuid.sql", this.path);
+    this.querySelectUsernameHistoryByUuid = new Query("select-username-history-by-uuid.sql", this.path);
   }
 
   @Override
   public @NonNull String getClassPathPrefix() {
-    return PATH;
+    return this.path;
   }
 
   @Override
   public @NonNull List<@NonNull Punishment> getPunishmentsForTarget(final @NonNull UUID target) {
     return this.jdbi.withHandle(handle ->
-        handle.createQuery(SqlQueries.SELECT_PUNISHMENTS_BY_TARGET.getQuery())
-            .bind(0, target)
-            .map(Punishment::fromRow)
+        handle.createQuery(this.querySelectPunishmentsByTarget.getQuery())
+            .bind("target", target)
+            .mapTo(Punishment.class)
             .stream()
             .sorted(Comparator.comparingLong(Punishment::getTime))
             .collect(Collectors.toCollection(ArrayList::new)) // toList has no mutability guarantee
@@ -72,28 +93,21 @@ public final class ImplMySqlDataService implements IDataService {
   @Override
   public void savePunishment(final @NonNull Punishment punishment) {
     this.jdbi.useHandle(handle -> {
-      handle.execute(
-          SqlQueries.CREATE_PUNISHMENT.getQuery(),
-          punishment.getId().orElse(null),
-          punishment.getPunishmentType().getId(),
-          punishment.getTarget(),
-          punishment.getPunisher(),
-          punishment.getReason(),
-          punishment.isLifted(),
-          punishment.getLiftedBy(),
-          punishment.getTime(),
-          punishment.getDuration()
-      );
-      if (punishment.getId().isPresent()) {
-        // We don't need to set the ID.
-        return;
-      }
+      final Update update = handle.createUpdate(this.queryCreatePunishment.getQuery())
+          .bind("id", punishment.getId().orElse(null))
+          .bind("type", punishment.getPunishmentType().getId())
+          .bind("target", punishment.getTarget())
+          .bind("punisher", punishment.getPunisher())
+          .bind("lifted", punishment.isLifted())
+          .bind("lifted_by", punishment.getLiftedBy())
+          .bind("time", punishment.getTime())
+          .bind("duration", punishment.getDuration());
 
-      punishment.setId(
-          handle.createQuery("SELECT LAST_INSERT_ID()")
-              .mapTo(long.class)
-              .one()
-      );
+      punishment.getId().ifPresentOrElse($ -> update.execute(),
+          () -> punishment.setId(
+              update.executeAndReturnGeneratedKeys("id")
+                  .map((RowView row) -> row.getColumn("id", Long.class))
+                  .one()));
     });
   }
 
@@ -102,14 +116,14 @@ public final class ImplMySqlDataService implements IDataService {
     return this.jdbi.withHandle(handle -> {
       final UsernameHistory history = new UsernameHistory(
           uuid,
-          handle.createQuery(SqlQueries.SELECT_USERNAME_HISTORY_BY_UUID.getQuery())
-              .bind(0, uuid)
-              .map(UsernameHistory.Entry::fromRow)
+          handle.createQuery(this.querySelectUsernameHistoryByUuid.getQuery())
+              .bind("uuid", uuid)
+              .mapTo(UsernameHistory.Entry.class)
               .list()
       );
 
-      return handle.createQuery(SqlQueries.SELECT_USER_BY_UUID.getQuery())
-          .bind(0, uuid)
+      return handle.createQuery(this.querySelectUserByUuid.getQuery())
+          .bind("uuid", uuid)
           .setMaxRows(1)
           .map((RowView rowView) -> new BanUser(
               uuid,
@@ -123,8 +137,8 @@ public final class ImplMySqlDataService implements IDataService {
   @Override
   public @NonNull Optional<@NonNull BanUser> getUser(final @NonNull String username) {
     return this.jdbi.withHandle(handle -> {
-      final Pair<UUID, String> user = handle.createQuery(SqlQueries.SELECT_USER_BY_USERNAME.getQuery())
-          .bind(0, username)
+      final Pair<UUID, String> user = handle.createQuery(this.querySelectUserByUsername.getQuery())
+          .bind("username", username)
           .setMaxRows(1)
           .map((RowView rowView) -> Pair.of(
               rowView.getColumn("uuid", UUID.class),
@@ -138,8 +152,8 @@ public final class ImplMySqlDataService implements IDataService {
 
       final UsernameHistory history = new UsernameHistory(
           user.getFirst(),
-          handle.createQuery(SqlQueries.SELECT_USERNAME_HISTORY_BY_UUID.getQuery())
-              .bind(0, user.getFirst())
+          handle.createQuery(this.querySelectUsernameHistoryByUuid.getQuery())
+              .bind("uuid", user.getFirst())
               .map(UsernameHistory.Entry::fromRow)
               .list()
       );
@@ -155,8 +169,8 @@ public final class ImplMySqlDataService implements IDataService {
   @Override
   public @NonNull Optional<@NonNull Long> getUserCacheDate(final @NonNull UUID uuid) {
     return this.jdbi.withHandle(handle ->
-        handle.createQuery(SqlQueries.SELECT_USER_BY_UUID.getQuery())
-            .bind(0, uuid)
+        handle.createQuery(this.querySelectUserByUuid.getQuery())
+            .bind("uuid", uuid)
             .setMaxRows(1)
             .map((RowView rowView) -> rowView.getColumn("timestamp", Timestamp.class))
             .findOne()
@@ -171,39 +185,27 @@ public final class ImplMySqlDataService implements IDataService {
     }
 
     this.jdbi.useTransaction(handle -> {
-      handle.execute(
-          SqlQueries.SAVE_USER.getQuery(),
-          user.getUuid(),
-          user.getUsername()
-      );
+      handle.createUpdate(this.querySaveUser.getQuery())
+          .bind("uuid", user.getUuid())
+          .bind("username", user.getUsername())
+          .execute();
 
       for (final Entry entry : user.getUsernameHistory().getEntries()) {
-        handle.execute(
-            SqlQueries.SAVE_USER_NAME.getQuery(),
-            user.getUuid(),
-            entry.getUsername(),
-            entry.getChangedAt().map(date -> new Timestamp(date.getTime()))
-        );
+        handle.createUpdate(this.querySaveUserName.getQuery())
+            .bind("uuid", user.getUuid())
+            .bind("username", entry.getUsername())
+            .bind("timestamp", entry.getChangedAt().map(Date::getTime).map(Timestamp::new))
+            .execute();
       }
-
-      handle.commit();
     });
   }
 
-  private enum SqlQueries {
-    SELECT_PUNISHMENTS_BY_TARGET("select-punishments-by-target"),
-    CREATE_PUNISHMENT("create-punishment"),
-    SELECT_USER_BY_UUID("select-user-by-uuid"),
-    SELECT_USER_BY_USERNAME("select-user-by-username"),
-    SELECT_USERNAME_HISTORY_BY_UUID("select-username-history-by-uuid"),
-    SAVE_USER("save-user"),
-    SAVE_USER_NAME("save-user-name"),
-    ;
-
+  private static final class Query {
     private final @NonNull String query;
 
-    SqlQueries(final @NonNull String name) {
-      this.query = ResourceReader.readResource(PATH + name + ".sql");
+    private Query(final @NonNull String fileName,
+        final @NonNull String path) {
+      this.query = ResourceReader.readResource(path + fileName);
     }
 
     /**
@@ -211,7 +213,7 @@ public final class ImplMySqlDataService implements IDataService {
      *
      * @return The query for this enumeration.
      */
-    public @NonNull String getQuery() {
+    @NonNull String getQuery() {
       return this.query;
     }
 
@@ -220,7 +222,7 @@ public final class ImplMySqlDataService implements IDataService {
      *
      * @return The queries for this enumeration.
      */
-    public @NonNull String @NonNull [] getQueries() {
+    @NonNull String @NonNull [] getQueries() {
       return this.getQuery().split(";");
     }
 
@@ -229,7 +231,7 @@ public final class ImplMySqlDataService implements IDataService {
      *
      * @param consumer The {@link ThrowingConsumer} to apply to each query.
      */
-    public void forEachQuery(final @NonNull ThrowingConsumer<@NonNull String, SQLException> consumer) {
+    void forEachQuery(final @NonNull ThrowingConsumer<@NonNull String, SQLException> consumer) {
       for (final String query : this.getQueries()) {
         if (query.trim().isEmpty()) {
           continue;
@@ -240,6 +242,52 @@ public final class ImplMySqlDataService implements IDataService {
         } catch (final SQLException ex) {
           ThrowableUtils.sneakyThrow(ex);
         }
+      }
+    }
+  }
+
+  private enum SqlDialect {
+    MYSQL("mysql"),
+    MARIADB("mysql"),
+    POSTGRESQL("postgresql"),
+    ;
+
+    private final @NonNull String path;
+
+    SqlDialect(final @NonNull String path) {
+      this.path = path;
+    }
+
+    @NonNull String getPath() {
+      return this.path;
+    }
+
+    static @NonNull SqlDialect parse(final @NonNull String name) {
+      switch (name.toLowerCase(Locale.ENGLISH)) {
+        case "mysql":
+        case "my":
+        case "msql":
+          return MYSQL;
+
+        case "mariadb":
+        case "maria":
+        case "mdb":
+          return MARIADB;
+
+        case "postgresql":
+        case "postgressql":
+        case "pgsql":
+        case "pg":
+        case "psql":
+        case "postgres":
+        case "postgre":
+        case "postgress":
+          // Dear child has many names.
+          return POSTGRESQL;
+
+        default:
+          throw new IllegalArgumentException(
+              "Unknown SQL dialect: " + name + "; only `mysql`, `mariadb`, `postgresql` are valid");
       }
     }
   }

@@ -27,8 +27,11 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 @ConfigSerializable
 @NonNull
 public final class SqlConfig {
+  @Setting(comment = "The SQL language dialect of this server. Common values such as MariaDB, MySQL and PostgresSQL work here.")
+  public String dialect = "mariadb";
+
   @Setting(comment = "The JDBC URI to connect to the SQL server with.")
-  public String jdbcUri = "jdbc:mysql://localhost:3306/ban";
+  public String jdbcUri = "jdbc:mariadb://localhost:3306/ban";
 
   @Setting(comment = "The username for the SQL server.")
   public String username = "root";

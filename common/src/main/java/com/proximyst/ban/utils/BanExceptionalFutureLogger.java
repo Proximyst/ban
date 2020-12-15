@@ -16,29 +16,26 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-package com.proximyst.ban.data.jdbi;
+package com.proximyst.ban.utils;
 
-import java.sql.Types;
-import java.util.UUID;
+import java.util.function.Function;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
-import org.jdbi.v3.core.argument.AbstractArgumentFactory;
-import org.jdbi.v3.core.argument.Argument;
-import org.jdbi.v3.core.config.ConfigRegistry;
+import org.slf4j.Logger;
 
-public final class UuidJdbiFactory extends AbstractArgumentFactory<UUID> {
-  public UuidJdbiFactory() {
-    super(Types.CHAR);
+public final class BanExceptionalFutureLogger<T> implements Function<Throwable, T> {
+  private final @NonNull Logger logger;
+  private final @NonNull String name;
+
+  public BanExceptionalFutureLogger(final @NonNull Logger logger,
+      final @NonNull String name) {
+    this.logger = logger;
+    this.name = name;
   }
 
   @Override
-  protected @NonNull Argument build(final @Nullable UUID value, final @Nullable ConfigRegistry config) {
-    return (position, statement, $) -> {
-      if (value == null) {
-        statement.setNull(position, Types.CHAR);
-      } else {
-        statement.setString(position, value.toString());
-      }
-    };
+  public @NonNull T apply(final @NonNull Throwable throwable) {
+    this.logger.warn("[{}] Future has returned exceptionally", this.name, throwable);
+    ThrowableUtils.sneakyThrow(throwable);
+    throw new RuntimeException();
   }
 }

@@ -32,6 +32,8 @@ import com.proximyst.ban.commands.UnbanCommand;
 import com.proximyst.ban.commands.UnmuteCommand;
 import com.proximyst.ban.config.ConfigUtil;
 import com.proximyst.ban.config.Configuration;
+import com.proximyst.ban.data.jdbi.PunishmentJdbiRowMapper;
+import com.proximyst.ban.data.jdbi.UsernameHistoryEntryJdbiRowMapper;
 import com.proximyst.ban.data.jdbi.UuidJdbiFactory;
 import com.proximyst.ban.event.subscriber.BannedPlayerJoinSubscriber;
 import com.proximyst.ban.event.subscriber.CacheUpdatePlayerSubscriber;
@@ -39,6 +41,7 @@ import com.proximyst.ban.event.subscriber.MutedPlayerChatSubscriber;
 import com.proximyst.ban.inject.PlatformModule;
 import com.proximyst.ban.inject.annotation.BanAsyncExecutor;
 import com.proximyst.ban.inject.config.ConfigurationModule;
+import com.proximyst.ban.inject.factory.BanExceptionalFutureLoggerFactoryModule;
 import com.proximyst.ban.inject.factory.CloudArgumentFactoryModule;
 import com.proximyst.ban.inject.service.DataServiceModule;
 import com.proximyst.ban.inject.service.MessageServiceModule;
@@ -52,6 +55,7 @@ import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
 import com.velocitypowered.api.plugin.Plugin;
+import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.zaxxer.hikari.HikariConfig;
@@ -93,21 +97,22 @@ public class BanPlugin {
   private final @NonNull Logger logger;
   private final @NonNull Path dataDirectory;
   private final @NonNull Injector injector;
+  private final @NonNull PluginContainer pluginContainer;
 
   private @MonotonicNonNull Configuration configuration;
   private @MonotonicNonNull HikariDataSource hikariDataSource;
   private @MonotonicNonNull Jdbi jdbi;
 
   @Inject
-  private BanPlugin(
-      final @NonNull ProxyServer proxyServer,
+  private BanPlugin(final @NonNull ProxyServer proxyServer,
       final @NonNull Logger logger,
       final @NonNull @DataDirectory Path dataDirectory,
-      final @NonNull Injector pluginInjector
-  ) {
+      final @NonNull Injector pluginInjector,
+      final @NonNull PluginContainer pluginContainer) {
     this.proxyServer = proxyServer;
     this.logger = logger;
     this.dataDirectory = dataDirectory;
+    this.pluginContainer = pluginContainer;
 
     this.injector = pluginInjector.createChildInjector(new ConfigurationModule(),
         new DataServiceModule(),
@@ -115,6 +120,7 @@ public class BanPlugin {
         new MojangServiceModule(),
         new PunishmentServiceModule(),
         new UserServiceModule(),
+        new BanExceptionalFutureLoggerFactoryModule(),
         new CloudArgumentFactoryModule(),
         new PlatformModule());
   }
@@ -177,7 +183,9 @@ public class BanPlugin {
             BanPlugin.this.logger.warn("Could not execute JDBI statement.", ex);
           }
         })
-        .registerArgument(this.injector.getInstance(UuidJdbiFactory.class));
+        .registerArgument(this.injector.getInstance(UuidJdbiFactory.class))
+        .registerRowMapper(this.injector.getInstance(PunishmentJdbiRowMapper.class))
+        .registerRowMapper(this.injector.getInstance(UsernameHistoryEntryJdbiRowMapper.class));
 
     tm.start("Preparing database");
     try {
@@ -195,6 +203,7 @@ public class BanPlugin {
 
     tm.start("Initialising plugin essentials");
     final VelocityCommandManager<BanAudience> velocityCommandManager = new VelocityCommandManager<>(
+        this.pluginContainer,
         this.proxyServer,
         AsynchronousCommandExecutionCoordinator.<BanAudience>newBuilder()
             .withAsynchronousParsing()

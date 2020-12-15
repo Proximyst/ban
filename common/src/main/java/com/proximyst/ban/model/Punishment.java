@@ -26,7 +26,6 @@ import java.util.UUID;
 import org.checkerframework.checker.index.qual.NonNegative;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.jdbi.v3.core.result.RowView;
 
 // TODO(Proximyst): Google autovalues?
 
@@ -130,25 +129,6 @@ public final class Punishment {
     this.liftedBy = liftedBy;
     this.time = time <= 0 ? System.currentTimeMillis() : time;
     this.duration = Math.max(duration, 0);
-  }
-
-  public static @NonNull Punishment fromRow(final @NonNull RowView row) {
-    return new PunishmentBuilder()
-        .id(row.getColumn("id", Long.class))
-        .type(
-            PunishmentType.getById(row.getColumn("type", Byte.class))
-                .orElseThrow(() -> new IllegalStateException(
-                    "punishment type id " + row.getColumn("type", Byte.class) + " is unknown"
-                ))
-        )
-        .target(row.getColumn("target", UUID.class))
-        .punisher(row.getColumn("punisher", UUID.class))
-        .reason(row.getColumn("reason", String.class))
-        .lifted(row.getColumn("lifted", Boolean.class))
-        .liftedBy(row.getColumn("lifted_by", UUID.class))
-        .time(row.getColumn("time", Long.class))
-        .duration(row.getColumn("duration", Long.class))
-        .build();
   }
 
   /**

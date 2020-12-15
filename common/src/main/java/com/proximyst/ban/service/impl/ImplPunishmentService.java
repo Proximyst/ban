@@ -20,7 +20,6 @@ package com.proximyst.ban.service.impl;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.RemovalNotification;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -57,7 +56,6 @@ public final class ImplPunishmentService implements IPunishmentService {
           .initialCapacity(512)
           .maximumSize(MAXIMUM_PUNISHMENT_CACHE_CAPACITY)
           .expireAfterAccess(5, TimeUnit.MINUTES)
-          .removalListener(this::punishmentCacheRemovalCallback)
           .build();
 
   @Inject
@@ -142,18 +140,5 @@ public final class ImplPunishmentService implements IPunishmentService {
               break;
           }
         });
-  }
-
-  private void punishmentCacheRemovalCallback(
-      final @NonNull RemovalNotification<@NonNull UUID, @NonNull List<@NonNull Punishment>> notification) {
-    if (this.banServer.onlineCount() >= MAXIMUM_PUNISHMENT_CACHE_CAPACITY) {
-      // We can't afford to recache the player's punishments!
-      // At this point, perhaps they should change the capacity?
-      return;
-    }
-
-    if (this.banServer.audienceOf(notification.getKey()) != null) {
-      this.punishmentCache.put(notification.getKey(), notification.getValue());
-    }
   }
 }
