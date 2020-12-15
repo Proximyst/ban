@@ -162,11 +162,11 @@ subprojects {
             opt.source("11")
             doFirst {
                 opt.links(
-                    "https://docs.oracle.com/javase/8/docs/api/",
+                    "https://docs.oracle.com/javase/11/docs/api/",
                     "http://www.slf4j.org/apidocs/",
                     "https://google.github.io/guava/releases/25.1-jre/api/docs/",
                     "https://google.github.io/guice/api-docs/4.2/javadoc/",
-                    "https://jd.adventure.kyori.net/api/4.1.1/",
+                    "https://jd.adventure.kyori.net/api/4.3.0/",
                     *ban.javadocLinks.toTypedArray()
                 )
             }
