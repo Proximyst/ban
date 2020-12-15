@@ -24,6 +24,7 @@ import com.google.inject.Inject;
 import com.proximyst.ban.BanPermissions;
 import com.proximyst.ban.commands.cloud.BaseCommand;
 import com.proximyst.ban.config.MessageKey;
+import com.proximyst.ban.factory.IBanExceptionalFutureLoggerFactory;
 import com.proximyst.ban.factory.ICloudArgumentFactory;
 import com.proximyst.ban.model.BanUser;
 import com.proximyst.ban.platform.BanAudience;
@@ -34,14 +35,17 @@ import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public final class HistoryCommand extends BaseCommand {
+  private final @NonNull IBanExceptionalFutureLoggerFactory banExceptionalFutureLoggerFactory;
   private final @NonNull ICloudArgumentFactory cloudArgumentFactory;
   private final @NonNull IPunishmentService punishmentService;
   private final @NonNull IMessageService messageService;
 
   @Inject
-  public HistoryCommand(final @NonNull ICloudArgumentFactory cloudArgumentFactory,
+  public HistoryCommand(final @NonNull IBanExceptionalFutureLoggerFactory banExceptionalFutureLoggerFactory,
+      final @NonNull ICloudArgumentFactory cloudArgumentFactory,
       final @NonNull IPunishmentService punishmentService,
       final @NonNull IMessageService messageService) {
+    this.banExceptionalFutureLoggerFactory = banExceptionalFutureLoggerFactory;
     this.cloudArgumentFactory = cloudArgumentFactory;
     this.punishmentService = punishmentService;
     this.messageService = messageService;
@@ -60,7 +64,8 @@ public final class HistoryCommand extends BaseCommand {
 
     this.messageService.sendFormattedMessage(ctx.getSender(), Identity.nil(), MessageKey.COMMANDS_FEEDBACK_HISTORY,
         "targetName", target.getUsername(),
-        "targetUuid", target.getUuid());
+        "targetUuid", target.getUuid())
+        .exceptionally(this.banExceptionalFutureLoggerFactory.createLogger(this.getClass()));
 
     this.punishmentService.getPunishments(target.getUuid())
         .thenCompose(punishments -> this.messageService.formatHistory(punishments, target))
@@ -68,6 +73,7 @@ public final class HistoryCommand extends BaseCommand {
           for (final Component message : messages) {
             ctx.getSender().sendMessage(Identity.nil(), message);
           }
-        });
+        })
+        .exceptionally(this.banExceptionalFutureLoggerFactory.createLogger(this.getClass()));
   }
 }

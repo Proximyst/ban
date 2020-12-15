@@ -20,15 +20,13 @@ package com.proximyst.ban.service.impl;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.RemovalNotification;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.proximyst.ban.inject.annotation.BanAsyncExecutor;
+import com.proximyst.ban.factory.IBanExceptionalFutureLoggerFactory;
 import com.proximyst.ban.model.BanUser;
 import com.proximyst.ban.model.UsernameHistory;
-import com.proximyst.ban.platform.BanServer;
 import com.proximyst.ban.service.IMojangService;
 import com.proximyst.ban.utils.HttpUtils;
 import com.proximyst.ban.utils.StringUtils;
@@ -38,7 +36,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import org.checkerframework.checker.index.qual.NonNegative;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -55,30 +52,25 @@ public final class ImplAshconMojangService implements IMojangService {
   private static final @NonNull CompletableFuture<@NonNull Optional<@NonNull BanUser>> CONSOLE_USER =
       CompletableFuture.completedFuture(Optional.of(BanUser.CONSOLE));
 
-  private final @NonNull Executor executor;
-  private final @NonNull BanServer banServer;
+  private final @NonNull IBanExceptionalFutureLoggerFactory banExceptionalFutureLoggerFactory;
   private final @NonNull HttpUtils httpUtils;
 
   private final @NonNull Cache<@NonNull UUID, @NonNull BanUser> banUserCache = CacheBuilder.newBuilder()
       .initialCapacity(512)
       .maximumSize(MAXIMUM_BAN_USER_CACHE_CAPACITY)
       .expireAfterWrite(2, TimeUnit.MINUTES)
-      .removalListener(this::banUserCacheRemovalCallback)
       .build();
 
   private final @NonNull Cache<@NonNull String, @NonNull UUID> usernameUuidCache = CacheBuilder.newBuilder()
       .initialCapacity(512)
       .maximumSize(MAXIMUM_USERNAME_TO_UUID_CACHE_CAPACITY)
       .expireAfterWrite(2, TimeUnit.MINUTES)
-      .removalListener(this::usernameToUuidRemovalCallback)
       .build();
 
   @Inject
-  public ImplAshconMojangService(final @NonNull @BanAsyncExecutor Executor executor,
-      final @NonNull BanServer banServer,
+  public ImplAshconMojangService(final @NonNull IBanExceptionalFutureLoggerFactory banExceptionalFutureLoggerFactory,
       final @NonNull HttpUtils httpUtils) {
-    this.executor = executor;
-    this.banServer = banServer;
+    this.banExceptionalFutureLoggerFactory = banExceptionalFutureLoggerFactory;
     this.httpUtils = httpUtils;
   }
 
@@ -128,10 +120,7 @@ public final class ImplAshconMojangService implements IMojangService {
     // This is a name. Let's check if they're already cached.
     final UUID uuid = this.usernameUuidCache.getIfPresent(identifier);
     if (uuid != null) {
-      final BanUser cachedUser = this.banUserCache.getIfPresent(uuid);
-      if (cachedUser != null) {
-        return CompletableFuture.completedFuture(Optional.of(cachedUser));
-      }
+      return this.getUser(uuid);
     }
 
     return this.fetchFromIdentifier(identifier);
@@ -168,32 +157,6 @@ public final class ImplAshconMojangService implements IMojangService {
 
           return user;
         });
-  }
-
-  private void banUserCacheRemovalCallback(
-      final @NonNull RemovalNotification<@NonNull UUID, @NonNull BanUser> notification) {
-    if (this.banServer.onlineCount() >= MAXIMUM_BAN_USER_CACHE_CAPACITY) {
-      // We can't afford to recache the players' users!
-      // At this point, perhaps they should change the capacity?
-      return;
-    }
-
-    if (this.banServer.audienceOf(notification.getKey()) != null) {
-      this.banUserCache.put(notification.getKey(), notification.getValue());
-    }
-  }
-
-  private void usernameToUuidRemovalCallback(
-      final @NonNull RemovalNotification<@NonNull String, @NonNull UUID> notification) {
-    if (this.banServer.onlineCount() >= MAXIMUM_USERNAME_TO_UUID_CACHE_CAPACITY) {
-      // We can't afford to recache the players' usernames!
-      // At this point, perhaps they should change the capacity?
-      return;
-    }
-
-    if (this.banServer.audienceOf(notification.getKey()) != null) {
-      this.usernameUuidCache.put(notification.getKey(), notification.getValue());
-    }
   }
 
   @NonNull

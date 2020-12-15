@@ -50,7 +50,6 @@ public final class HttpUtils {
         .build();
   }
 
-  // TODO(Proximyst): java.net.http
   public @NonNull CompletableFuture<@NonNull Optional<@NonNull String>> get(final @NonNull String url) {
     final URI u;
     try {

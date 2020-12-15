@@ -62,7 +62,7 @@ public final class ImplMySqlDataService implements IDataService {
   public ImplMySqlDataService(final @NonNull Jdbi jdbi,
       final @NonNull SqlConfig sqlConfig) {
     this.jdbi = jdbi;
-    this.path = "sql/" + SqlDialect.parse(sqlConfig.dialect) + "/";
+    this.path = "sql/" + SqlDialect.parse(sqlConfig.dialect).getPath() + "/";
 
     this.queryCreatePunishment = new Query("create-punishment.sql", this.path);
     this.querySaveUser = new Query("save-user.sql", this.path);
@@ -153,7 +153,7 @@ public final class ImplMySqlDataService implements IDataService {
       final UsernameHistory history = new UsernameHistory(
           user.getFirst(),
           handle.createQuery(this.querySelectUsernameHistoryByUuid.getQuery())
-              .bind(0, user.getFirst())
+              .bind("uuid", user.getFirst())
               .map(UsernameHistory.Entry::fromRow)
               .list()
       );
@@ -170,7 +170,7 @@ public final class ImplMySqlDataService implements IDataService {
   public @NonNull Optional<@NonNull Long> getUserCacheDate(final @NonNull UUID uuid) {
     return this.jdbi.withHandle(handle ->
         handle.createQuery(this.querySelectUserByUuid.getQuery())
-            .bind(0, uuid)
+            .bind("uuid", uuid)
             .setMaxRows(1)
             .map((RowView rowView) -> rowView.getColumn("timestamp", Timestamp.class))
             .findOne()

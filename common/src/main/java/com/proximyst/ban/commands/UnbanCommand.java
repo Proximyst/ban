@@ -24,6 +24,7 @@ import com.google.inject.Inject;
 import com.proximyst.ban.BanPermissions;
 import com.proximyst.ban.commands.cloud.BaseCommand;
 import com.proximyst.ban.config.MessageKey;
+import com.proximyst.ban.factory.IBanExceptionalFutureLoggerFactory;
 import com.proximyst.ban.factory.ICloudArgumentFactory;
 import com.proximyst.ban.model.BanUser;
 import com.proximyst.ban.model.Punishment;
@@ -34,14 +35,17 @@ import net.kyori.adventure.identity.Identity;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public final class UnbanCommand extends BaseCommand {
+  private final @NonNull IBanExceptionalFutureLoggerFactory banExceptionalFutureLoggerFactory;
   private final @NonNull ICloudArgumentFactory cloudArgumentFactory;
   private final @NonNull IMessageService messageService;
   private final @NonNull IPunishmentService punishmentService;
 
   @Inject
-  public UnbanCommand(final @NonNull ICloudArgumentFactory cloudArgumentFactory,
+  public UnbanCommand(final @NonNull IBanExceptionalFutureLoggerFactory banExceptionalFutureLoggerFactory,
+      final @NonNull ICloudArgumentFactory cloudArgumentFactory,
       final @NonNull IMessageService messageService,
       final @NonNull IPunishmentService punishmentService) {
+    this.banExceptionalFutureLoggerFactory = banExceptionalFutureLoggerFactory;
     this.cloudArgumentFactory = cloudArgumentFactory;
     this.messageService = messageService;
     this.punishmentService = punishmentService;
@@ -60,7 +64,8 @@ public final class UnbanCommand extends BaseCommand {
 
     this.messageService.sendFormattedMessage(ctx.getSender(), Identity.nil(), MessageKey.COMMANDS_FEEDBACK_UNBAN,
         "targetName", target.getUsername(),
-        "targetUuid", target.getUuid());
+        "targetUuid", target.getUuid())
+        .exceptionally(this.banExceptionalFutureLoggerFactory.createLogger(this.getClass()));
 
     this.punishmentService.getActiveBan(target.getUuid())
         .thenAccept(punishmentOptional -> {
@@ -68,13 +73,17 @@ public final class UnbanCommand extends BaseCommand {
           if (punishment == null) {
             this.messageService.sendFormattedMessage(ctx.getSender(), Identity.nil(), MessageKey.ERROR_NO_ACTIVE_BAN,
                 "targetName", target.getUsername(),
-                "targetUuid", target.getUuid());
+                "targetUuid", target.getUuid())
+                .exceptionally(this.banExceptionalFutureLoggerFactory.createLogger(this.getClass()));
             return;
           }
 
           punishment.setLiftedBy(ctx.getSender().uuid());
-          this.punishmentService.savePunishment(punishment);
-          this.messageService.announceLiftedPunishment(punishment);
-        });
+          this.punishmentService.savePunishment(punishment)
+              .exceptionally(this.banExceptionalFutureLoggerFactory.createLogger(this.getClass()));
+          this.messageService.announceLiftedPunishment(punishment)
+              .exceptionally(this.banExceptionalFutureLoggerFactory.createLogger(this.getClass()));
+        })
+        .exceptionally(this.banExceptionalFutureLoggerFactory.createLogger(this.getClass()));
   }
 }

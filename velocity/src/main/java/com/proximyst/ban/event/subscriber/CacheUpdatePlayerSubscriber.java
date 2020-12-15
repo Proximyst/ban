@@ -19,6 +19,7 @@
 package com.proximyst.ban.event.subscriber;
 
 import com.google.inject.Inject;
+import com.proximyst.ban.factory.IBanExceptionalFutureLoggerFactory;
 import com.proximyst.ban.platform.VelocityAudience;
 import com.proximyst.ban.service.IPunishmentService;
 import com.proximyst.ban.service.IUserService;
@@ -29,20 +30,26 @@ import com.velocitypowered.api.event.connection.LoginEvent;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class CacheUpdatePlayerSubscriber {
+  private final @NonNull IBanExceptionalFutureLoggerFactory banExceptionalFutureLoggerFactory;
   private final @NonNull IUserService userService;
   private final @NonNull IPunishmentService punishmentService;
 
   @Inject
-  public CacheUpdatePlayerSubscriber(final @NonNull IUserService userService,
+  public CacheUpdatePlayerSubscriber(
+      final @NonNull IBanExceptionalFutureLoggerFactory banExceptionalFutureLoggerFactory,
+      final @NonNull IUserService userService,
       final @NonNull IPunishmentService punishmentService) {
+    this.banExceptionalFutureLoggerFactory = banExceptionalFutureLoggerFactory;
     this.userService = userService;
     this.punishmentService = punishmentService;
   }
 
   @Subscribe
   public void onJoinServer(final @NonNull LoginEvent event) {
-    this.userService.getUserUpdated(event.getPlayer().getUniqueId());
-    this.punishmentService.getPunishments(event.getPlayer().getUniqueId()); // Get the punishments of the user.
+    this.userService.getUserUpdated(event.getPlayer().getUniqueId())
+        .exceptionally(this.banExceptionalFutureLoggerFactory.createLogger(this.getClass()));
+    this.punishmentService.getPunishments(event.getPlayer().getUniqueId()) // Get the punishments of the user.
+        .exceptionally(this.banExceptionalFutureLoggerFactory.createLogger(this.getClass()));
   }
 
   @Subscribe(order = PostOrder.LAST)
