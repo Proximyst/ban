@@ -26,8 +26,6 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.slf4j.Logger;
 
 public interface IBanExceptionalFutureLoggerFactory {
-  <T> @NonNull BanExceptionalFutureLogger<? extends T> createLogger(final @NonNull String name);
-
   <T> @NonNull BanExceptionalFutureLogger<? extends T> createLogger(final @NonNull Class<?> owner);
 
   @Singleton
@@ -37,11 +35,6 @@ public interface IBanExceptionalFutureLoggerFactory {
     @Inject
     public ImplBanExceptionalFutureLoggerFactory(final @NonNull Provider<@NonNull Logger> loggerProvider) {
       this.loggerProvider = loggerProvider;
-    }
-
-    @Override
-    public @NonNull <T> BanExceptionalFutureLogger<? extends T> createLogger(final @NonNull String name) {
-      return new BanExceptionalFutureLogger<>(this.loggerProvider.get(), name);
     }
 
     @Override

@@ -24,7 +24,6 @@ import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.proximyst.ban.factory.IBanExceptionalFutureLoggerFactory;
 import com.proximyst.ban.model.BanUser;
 import com.proximyst.ban.model.UsernameHistory;
 import com.proximyst.ban.service.IMojangService;
@@ -52,7 +51,6 @@ public final class ImplAshconMojangService implements IMojangService {
   private static final @NonNull CompletableFuture<@NonNull Optional<@NonNull BanUser>> CONSOLE_USER =
       CompletableFuture.completedFuture(Optional.of(BanUser.CONSOLE));
 
-  private final @NonNull IBanExceptionalFutureLoggerFactory banExceptionalFutureLoggerFactory;
   private final @NonNull HttpUtils httpUtils;
 
   private final @NonNull Cache<@NonNull UUID, @NonNull BanUser> banUserCache = CacheBuilder.newBuilder()
@@ -68,9 +66,7 @@ public final class ImplAshconMojangService implements IMojangService {
       .build();
 
   @Inject
-  public ImplAshconMojangService(final @NonNull IBanExceptionalFutureLoggerFactory banExceptionalFutureLoggerFactory,
-      final @NonNull HttpUtils httpUtils) {
-    this.banExceptionalFutureLoggerFactory = banExceptionalFutureLoggerFactory;
+  public ImplAshconMojangService(final @NonNull HttpUtils httpUtils) {
     this.httpUtils = httpUtils;
   }
 

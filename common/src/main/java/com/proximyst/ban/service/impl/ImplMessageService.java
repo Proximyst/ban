@@ -29,8 +29,8 @@ import com.proximyst.ban.config.MessagesConfig;
 import com.proximyst.ban.model.BanUser;
 import com.proximyst.ban.model.Punishment;
 import com.proximyst.ban.model.PunishmentType;
-import com.proximyst.ban.platform.BanAudience;
-import com.proximyst.ban.platform.BanServer;
+import com.proximyst.ban.platform.IBanAudience;
+import com.proximyst.ban.platform.IBanServer;
 import com.proximyst.ban.service.IMessageService;
 import com.proximyst.ban.service.IUserService;
 import java.text.SimpleDateFormat;
@@ -47,12 +47,12 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public final class ImplMessageService implements IMessageService {
   private final @NonNull IUserService userService;
   private final @NonNull MessagesConfig cfg;
-  private final @NonNull BanServer banServer;
+  private final @NonNull IBanServer banServer;
 
   @Inject
   public ImplMessageService(final @NonNull IUserService userService,
       final @NonNull MessagesConfig messagesConfig,
-      final @NonNull BanServer banServer) {
+      final @NonNull IBanServer banServer) {
     this.userService = userService;
     this.cfg = messagesConfig;
     this.banServer = banServer;
@@ -222,7 +222,7 @@ public final class ImplMessageService implements IMessageService {
     return this.formatMessage(messageKey, punishment)
         .thenApply(component -> {
           this.banServer.consoleAudience().sendMessage(Identity.nil(), component);
-          for (final BanAudience audience : this.banServer.onlineAudiences()) {
+          for (final IBanAudience audience : this.banServer.onlineAudiences()) {
             if (permission != null && !audience.hasPermission(permission)) {
               continue;
             }

@@ -29,17 +29,17 @@ import org.checkerframework.dataflow.qual.Pure;
  * A server wrapper for the platform. This is an {@link Audience} as it is possible to send messages to the entire
  * server.
  */
-public interface BanServer extends Audience {
+public interface IBanServer extends Audience {
   /**
-   * @return All online {@link BanAudience}s. This does not include the console.
+   * @return All online {@link IBanAudience}s. This does not include the console.
    */
-  @NonNull Iterable<? extends BanAudience> onlineAudiences();
+  @NonNull Iterable<? extends IBanAudience> onlineAudiences();
 
   /**
    * @return The console audience. There will only ever be one console.
    */
   @Pure
-  @NonNull BanAudience consoleAudience();
+  @NonNull IBanAudience consoleAudience();
 
   /**
    * @return The amount of audiences there are online.
@@ -47,18 +47,23 @@ public interface BanServer extends Audience {
   @NonNegative int onlineCount();
 
   /**
-   * Gets a cached or creates a new {@link BanAudience} for the given user by their {@link UUID}, if they are online.
+   * Gets a cached or creates a new {@link IBanAudience} for the given user by their {@link UUID}, if they are online.
    *
    * @param uuid The UUID to get an audience of.
    * @return The audience of the user, if online.
    */
-  @Nullable BanAudience audienceOf(final @NonNull UUID uuid);
+  @Nullable IBanAudience audienceOf(final @NonNull UUID uuid);
 
   /**
-   * Gets a cached or creates a new {@link BanAudience} for the given user by their username, if they are online.
+   * Gets a cached or creates a new {@link IBanAudience} for the given user by their username, if they are online.
    *
    * @param username The username to get an audience of.
    * @return The audience of the user, if online.
    */
-  @Nullable BanAudience audienceOf(final @NonNull String username);
+  @Nullable IBanAudience audienceOf(final @NonNull String username);
+
+  /**
+   * @return Whether the server currently only accepts valid paying users of the game.
+   */
+  boolean isOnlineMode();
 }

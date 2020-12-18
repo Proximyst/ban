@@ -40,15 +40,8 @@ import com.proximyst.ban.event.subscriber.CacheUpdatePlayerSubscriber;
 import com.proximyst.ban.event.subscriber.MutedPlayerChatSubscriber;
 import com.proximyst.ban.inject.PlatformModule;
 import com.proximyst.ban.inject.annotation.BanAsyncExecutor;
-import com.proximyst.ban.inject.config.ConfigurationModule;
-import com.proximyst.ban.inject.factory.BanExceptionalFutureLoggerFactoryModule;
-import com.proximyst.ban.inject.factory.CloudArgumentFactoryModule;
-import com.proximyst.ban.inject.service.DataServiceModule;
-import com.proximyst.ban.inject.service.MessageServiceModule;
-import com.proximyst.ban.inject.service.MojangServiceModule;
-import com.proximyst.ban.inject.service.PunishmentServiceModule;
-import com.proximyst.ban.inject.service.UserServiceModule;
-import com.proximyst.ban.platform.BanAudience;
+import com.proximyst.ban.platform.IBanAudience;
+import com.proximyst.ban.platform.IBanPlugin;
 import com.proximyst.ban.platform.VelocityAudience;
 import com.proximyst.ban.service.IDataService;
 import com.velocitypowered.api.event.Subscribe;
@@ -69,6 +62,7 @@ import java.util.concurrent.TimeUnit;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
+import org.apache.commons.lang3.ArrayUtils;
 import org.checkerframework.checker.index.qual.NonNegative;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -87,7 +81,7 @@ import org.slf4j.Logger;
     description = BanPlugin.PLUGIN_DESCRIPTION,
     authors = {"Proximyst"}
 )
-public class BanPlugin {
+public final class BanPlugin implements IBanPlugin {
   public static final @NonNull String PLUGIN_ID = "ban";
   public static final @NonNull String PLUGIN_NAME = "ban";
   public static final @NonNull String PLUGIN_VERSION = "0.1.0";
@@ -104,7 +98,7 @@ public class BanPlugin {
   private @MonotonicNonNull Jdbi jdbi;
 
   @Inject
-  private BanPlugin(final @NonNull ProxyServer proxyServer,
+  public BanPlugin(final @NonNull ProxyServer proxyServer,
       final @NonNull Logger logger,
       final @NonNull @DataDirectory Path dataDirectory,
       final @NonNull Injector pluginInjector,
@@ -114,15 +108,22 @@ public class BanPlugin {
     this.dataDirectory = dataDirectory;
     this.pluginContainer = pluginContainer;
 
-    this.injector = pluginInjector.createChildInjector(new ConfigurationModule(),
-        new DataServiceModule(),
-        new MessageServiceModule(),
-        new MojangServiceModule(),
-        new PunishmentServiceModule(),
-        new UserServiceModule(),
-        new BanExceptionalFutureLoggerFactoryModule(),
-        new CloudArgumentFactoryModule(),
-        new PlatformModule());
+    this.injector = pluginInjector.createChildInjector(ArrayUtils.add(STANDARD_MODULES, new PlatformModule()));
+  }
+
+  @Override
+  public @NonNull String pluginId() {
+    return PLUGIN_ID;
+  }
+
+  @Override
+  public @NonNull Logger pluginLogger() {
+    return this.logger;
+  }
+
+  @Override
+  public @NonNull Injector pluginInjector() {
+    return this.injector;
   }
 
   @Subscribe
@@ -202,10 +203,10 @@ public class BanPlugin {
     }
 
     tm.start("Initialising plugin essentials");
-    final VelocityCommandManager<BanAudience> velocityCommandManager = new VelocityCommandManager<>(
+    final VelocityCommandManager<IBanAudience> velocityCommandManager = new VelocityCommandManager<>(
         this.pluginContainer,
         this.proxyServer,
-        AsynchronousCommandExecutionCoordinator.<BanAudience>newBuilder()
+        AsynchronousCommandExecutionCoordinator.<IBanAudience>newBuilder()
             .withAsynchronousParsing()
             .withExecutor(this.injector.getInstance(Key.get(Executor.class, BanAsyncExecutor.class)))
             .build(),

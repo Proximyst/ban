@@ -26,8 +26,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.proximyst.ban.inject.annotation.BanAsyncExecutor;
 import com.proximyst.ban.model.Punishment;
-import com.proximyst.ban.platform.BanAudience;
-import com.proximyst.ban.platform.BanServer;
+import com.proximyst.ban.platform.IBanAudience;
+import com.proximyst.ban.platform.IBanServer;
 import com.proximyst.ban.service.IDataService;
 import com.proximyst.ban.service.IMessageService;
 import com.proximyst.ban.service.IPunishmentService;
@@ -49,7 +49,7 @@ public final class ImplPunishmentService implements IPunishmentService {
   private final @NonNull IDataService dataService;
   private final @NonNull IMessageService messageService;
   private final @NonNull Executor executor;
-  private final @NonNull BanServer banServer;
+  private final @NonNull IBanServer banServer;
 
   private final @NonNull Cache<@NonNull UUID, @NonNull List<@NonNull Punishment>> punishmentCache =
       CacheBuilder.newBuilder()
@@ -62,7 +62,7 @@ public final class ImplPunishmentService implements IPunishmentService {
   public ImplPunishmentService(final @NonNull IDataService dataService,
       final @NonNull IMessageService messageService,
       final @NonNull @BanAsyncExecutor Executor executor,
-      final @NonNull BanServer banServer) {
+      final @NonNull IBanServer banServer) {
     this.dataService = dataService;
     this.messageService = messageService;
     this.executor = executor;
@@ -109,7 +109,7 @@ public final class ImplPunishmentService implements IPunishmentService {
       return CompletableFuture.completedFuture(null);
     }
 
-    final BanAudience target = this.banServer
+    final IBanAudience target = this.banServer
         .audienceOf(punishment.getTarget());
     if (target == null) {
       // We have no-one to apply the punishment on.

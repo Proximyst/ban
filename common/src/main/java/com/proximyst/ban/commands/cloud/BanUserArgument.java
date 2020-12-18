@@ -26,8 +26,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import com.proximyst.ban.model.BanUser;
-import com.proximyst.ban.platform.BanAudience;
-import com.proximyst.ban.platform.BanServer;
+import com.proximyst.ban.platform.IBanAudience;
+import com.proximyst.ban.platform.IBanServer;
 import com.proximyst.ban.service.IUserService;
 import java.util.List;
 import java.util.Locale;
@@ -37,10 +37,10 @@ import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.common.returnsreceiver.qual.This;
 
-public final class BanUserArgument extends CommandArgument<@NonNull BanAudience, @NonNull BanUser> {
+public final class BanUserArgument extends CommandArgument<@NonNull IBanAudience, @NonNull BanUser> {
   @AssistedInject
   public BanUserArgument(final @NonNull IUserService userService,
-      final @NonNull BanServer banServer,
+      final @NonNull IBanServer banServer,
       final @Assisted("required") boolean required,
       final @Assisted("name") @NonNull String name,
       final @Assisted("online") boolean online) {
@@ -52,19 +52,19 @@ public final class BanUserArgument extends CommandArgument<@NonNull BanAudience,
 
   @AssistedInject
   public BanUserArgument(final @NonNull IUserService userService,
-      final @NonNull BanServer banServer,
+      final @NonNull IBanServer banServer,
       final @Assisted("required") boolean required,
       final @Assisted("name") @NonNull String name) {
     this(userService, banServer, required, name, false);
   }
 
-  public static final class BanUserParser implements ArgumentParser<@NonNull BanAudience, BanUser> {
+  public static final class BanUserParser implements ArgumentParser<@NonNull IBanAudience, BanUser> {
     private final @NonNull IUserService userService;
-    private final @NonNull BanServer banServer;
+    private final @NonNull IBanServer banServer;
     private final boolean online;
 
     public BanUserParser(final @NonNull IUserService userService,
-        final @NonNull BanServer banServer,
+        final @NonNull IBanServer banServer,
         final boolean online) {
       this.userService = userService;
       this.banServer = banServer;
@@ -72,7 +72,7 @@ public final class BanUserArgument extends CommandArgument<@NonNull BanAudience,
     }
 
     @Override
-    public @NonNull ArgumentParseResult<BanUser> parse(final @NonNull CommandContext<BanAudience> commandContext,
+    public @NonNull ArgumentParseResult<BanUser> parse(final @NonNull CommandContext<IBanAudience> commandContext,
         final @NonNull Queue<String> inputQueue) {
       if (commandContext.isSuggestions()) {
         // The result here is irrelevant, as long as it's present.
@@ -127,12 +127,12 @@ public final class BanUserArgument extends CommandArgument<@NonNull BanAudience,
     }
 
     @Override
-    public @NonNull List<String> suggestions(final @NonNull CommandContext<BanAudience> commandContext,
+    public @NonNull List<String> suggestions(final @NonNull CommandContext<IBanAudience> commandContext,
         final @NonNull String input) {
       final String lowercaseInput = input.toLowerCase(Locale.ENGLISH).trim();
       final ImmutableList.Builder<String> builder = ImmutableList.builder();
 
-      for (final BanAudience player : this.banServer.onlineAudiences()) {
+      for (final IBanAudience player : this.banServer.onlineAudiences()) {
         if (lowercaseInput.isEmpty() || player.username().toLowerCase(Locale.ENGLISH).startsWith(lowercaseInput)) {
           builder.add(player.username());
         }

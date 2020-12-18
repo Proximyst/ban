@@ -32,7 +32,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 @Singleton
-public class VelocityServer implements BanServer, ForwardingAudience.Single {
+public class VelocityServer implements IBanServer, ForwardingAudience.Single {
   private final @NonNull ProxyServer proxyServer;
 
   @Inject
@@ -46,13 +46,13 @@ public class VelocityServer implements BanServer, ForwardingAudience.Single {
   }
 
   @Override
-  public @NonNull Iterable<? extends BanAudience> onlineAudiences() {
+  public @NonNull Iterable<? extends IBanAudience> onlineAudiences() {
     return () -> Iterators.transform(this.proxyServer.getAllPlayers().iterator(),
         pl -> VelocityAudience.getAudience(Objects.requireNonNull(pl)));
   }
 
   @Override
-  public @NonNull BanAudience consoleAudience() {
+  public @NonNull IBanAudience consoleAudience() {
     return VelocityAudience.getAudience(this.proxyServer.getConsoleCommandSource());
   }
 
@@ -62,7 +62,7 @@ public class VelocityServer implements BanServer, ForwardingAudience.Single {
   }
 
   @Override
-  public @Nullable BanAudience audienceOf(final @NonNull UUID uuid) {
+  public @Nullable IBanAudience audienceOf(final @NonNull UUID uuid) {
     if (uuid.equals(BanUser.CONSOLE.getUuid())) {
       return this.consoleAudience();
     }
@@ -73,9 +73,14 @@ public class VelocityServer implements BanServer, ForwardingAudience.Single {
   }
 
   @Override
-  public @Nullable BanAudience audienceOf(final @NonNull String username) {
+  public @Nullable IBanAudience audienceOf(final @NonNull String username) {
     return this.proxyServer.getPlayer(username)
         .map(VelocityAudience::getAudience)
         .orElse(null);
+  }
+
+  @Override
+  public boolean isOnlineMode() {
+    return this.proxyServer.getConfiguration().isOnlineMode();
   }
 }

@@ -30,7 +30,7 @@ import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.dataflow.qual.Pure;
 
-public class VelocityAudience implements BanAudience, ForwardingAudience.Single {
+public class VelocityAudience implements IBanAudience, ForwardingAudience.Single {
   public static final @NonNull Map<UUID, VelocityAudience> AUDIENCE_CACHE = new HashMap<>();
 
   private final @NonNull CommandSource commandSource;

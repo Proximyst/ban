@@ -19,18 +19,18 @@
 package com.proximyst.ban.commands.cloud;
 
 import cloud.commandframework.CommandManager;
-import com.proximyst.ban.platform.BanAudience;
+import com.proximyst.ban.platform.IBanAudience;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
- * A command, registered with Cloud's {@link CommandManager} and operates on a {@link BanAudience} sender.
+ * A command, registered with Cloud's {@link CommandManager} and operates on a {@link IBanAudience} sender.
  */
 public abstract class BaseCommand {
   /**
    * Register this command with the {@link CommandManager}.
    *
-   * @param commandManager The manager to register commands with. This assumes the manager supports {@link BanAudience}s
+   * @param commandManager The manager to register commands with. This assumes the manager supports {@link IBanAudience}s
    *                       as a sender.
    */
-  public abstract void register(final @NonNull CommandManager<@NonNull BanAudience> commandManager);
+  public abstract void register(final @NonNull CommandManager<@NonNull IBanAudience> commandManager);
 }

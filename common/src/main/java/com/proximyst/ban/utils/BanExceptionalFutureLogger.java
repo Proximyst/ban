@@ -20,6 +20,8 @@ package com.proximyst.ban.utils;
 
 import java.util.function.Function;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.common.returnsreceiver.qual.This;
+import org.checkerframework.dataflow.qual.Pure;
 import org.slf4j.Logger;
 
 public final class BanExceptionalFutureLogger<T> implements Function<Throwable, T> {
@@ -37,5 +39,17 @@ public final class BanExceptionalFutureLogger<T> implements Function<Throwable, 
     this.logger.warn("[{}] Future has returned exceptionally", this.name, throwable);
     ThrowableUtils.sneakyThrow(throwable);
     throw new RuntimeException();
+  }
+
+  /**
+   * Cast this logger to another return type. This ensures there's only 1 instance necessary, while working for any return type.
+   *
+   * @param <R> The type to pretend to return.
+   * @return This very instance of {@link BanExceptionalFutureLogger}.
+   */
+  @SuppressWarnings("unchecked") // We do not actually ever use the type; it is irrelevant.
+  @Pure
+  public <R> @This @NonNull BanExceptionalFutureLogger<R> cast() {
+    return (BanExceptionalFutureLogger<R>) this;
   }
 }

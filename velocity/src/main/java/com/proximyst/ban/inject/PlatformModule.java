@@ -24,7 +24,8 @@ import com.google.inject.Singleton;
 import com.proximyst.ban.BanPlugin;
 import com.proximyst.ban.config.Configuration;
 import com.proximyst.ban.inject.annotation.BanAsyncExecutor;
-import com.proximyst.ban.platform.BanServer;
+import com.proximyst.ban.platform.IBanPlugin;
+import com.proximyst.ban.platform.IBanServer;
 import com.proximyst.ban.platform.VelocityBanSchedulerExecutor;
 import com.proximyst.ban.platform.VelocityServer;
 import java.util.concurrent.Executor;
@@ -34,7 +35,13 @@ import org.jdbi.v3.core.Jdbi;
 public class PlatformModule extends AbstractModule {
   @Singleton
   @Provides
-  @NonNull BanServer banServer(final @NonNull VelocityServer server) {
+  @NonNull IBanPlugin banPlugin(final @NonNull BanPlugin banPlugin) {
+    return banPlugin;
+  }
+
+  @Singleton
+  @Provides
+  @NonNull IBanServer banServer(final @NonNull VelocityServer server) {
     return server;
   }
 

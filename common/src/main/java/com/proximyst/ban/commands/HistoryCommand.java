@@ -27,15 +27,16 @@ import com.proximyst.ban.config.MessageKey;
 import com.proximyst.ban.factory.IBanExceptionalFutureLoggerFactory;
 import com.proximyst.ban.factory.ICloudArgumentFactory;
 import com.proximyst.ban.model.BanUser;
-import com.proximyst.ban.platform.BanAudience;
+import com.proximyst.ban.platform.IBanAudience;
 import com.proximyst.ban.service.IMessageService;
 import com.proximyst.ban.service.IPunishmentService;
+import com.proximyst.ban.utils.BanExceptionalFutureLogger;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public final class HistoryCommand extends BaseCommand {
-  private final @NonNull IBanExceptionalFutureLoggerFactory banExceptionalFutureLoggerFactory;
+  private final @NonNull BanExceptionalFutureLogger<?> banExceptionalFutureLogger;
   private final @NonNull ICloudArgumentFactory cloudArgumentFactory;
   private final @NonNull IPunishmentService punishmentService;
   private final @NonNull IMessageService messageService;
@@ -45,27 +46,27 @@ public final class HistoryCommand extends BaseCommand {
       final @NonNull ICloudArgumentFactory cloudArgumentFactory,
       final @NonNull IPunishmentService punishmentService,
       final @NonNull IMessageService messageService) {
-    this.banExceptionalFutureLoggerFactory = banExceptionalFutureLoggerFactory;
+    this.banExceptionalFutureLogger = banExceptionalFutureLoggerFactory.createLogger(this.getClass());
     this.cloudArgumentFactory = cloudArgumentFactory;
     this.punishmentService = punishmentService;
     this.messageService = messageService;
   }
 
   @Override
-  public void register(final @NonNull CommandManager<@NonNull BanAudience> commandManager) {
+  public void register(final @NonNull CommandManager<@NonNull IBanAudience> commandManager) {
     commandManager.command(commandManager.commandBuilder("history")
         .permission(BanPermissions.COMMAND_HISTORY)
         .argument(this.cloudArgumentFactory.banUser("target", true))
         .handler(this::execute));
   }
 
-  private void execute(final @NonNull CommandContext<BanAudience> ctx) {
+  private void execute(final @NonNull CommandContext<IBanAudience> ctx) {
     final BanUser target = ctx.get("target");
 
     this.messageService.sendFormattedMessage(ctx.getSender(), Identity.nil(), MessageKey.COMMANDS_FEEDBACK_HISTORY,
         "targetName", target.getUsername(),
         "targetUuid", target.getUuid())
-        .exceptionally(this.banExceptionalFutureLoggerFactory.createLogger(this.getClass()));
+        .exceptionally(this.banExceptionalFutureLogger.cast());
 
     this.punishmentService.getPunishments(target.getUuid())
         .thenCompose(punishments -> this.messageService.formatHistory(punishments, target))
@@ -74,6 +75,6 @@ public final class HistoryCommand extends BaseCommand {
             ctx.getSender().sendMessage(Identity.nil(), message);
           }
         })
-        .exceptionally(this.banExceptionalFutureLoggerFactory.createLogger(this.getClass()));
+        .exceptionally(this.banExceptionalFutureLogger.cast());
   }
 }

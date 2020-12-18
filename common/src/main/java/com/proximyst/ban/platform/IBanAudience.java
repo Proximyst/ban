@@ -33,7 +33,7 @@ import org.checkerframework.dataflow.qual.SideEffectFree;
 /**
  * A user on the server, represented as an {@link Audience} and {@link Identity}.
  */
-public interface BanAudience extends Identified, Identity, Audience {
+public interface IBanAudience extends Identified, Identity, Audience {
   /**
    * The UUID of this user.
    * <p>
@@ -85,11 +85,11 @@ public interface BanAudience extends Identified, Identity, Audience {
   /**
    * Cast this audience to a platform specific audience.
    *
-   * @param <A> The type of {@link BanAudience} for this platform.
-   * @return The platform-specific {@link BanAudience}.
+   * @param <A> The type of {@link IBanAudience} for this platform.
+   * @return The platform-specific {@link IBanAudience}.
    */
   @SuppressWarnings("unchecked") // This is intentional.
-  default <A extends BanAudience> @NonNull @This A castAudience() {
+  default <A extends IBanAudience> @NonNull @This A castAudience() {
     return (A) this;
   }
 
