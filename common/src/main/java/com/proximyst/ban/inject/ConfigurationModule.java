@@ -16,16 +16,26 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-package com.proximyst.ban.inject.service;
+package com.proximyst.ban.inject;
 
 import com.google.inject.AbstractModule;
-import com.proximyst.ban.service.IMojangService;
-import com.proximyst.ban.service.impl.ImplAshconMojangService;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.proximyst.ban.config.Configuration;
+import com.proximyst.ban.config.MessagesConfig;
+import com.proximyst.ban.config.SqlConfig;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
-public class MojangServiceModule extends AbstractModule {
-  @Override
-  protected void configure() {
-    // TODO: Support official Mojang API.
-    bind(IMojangService.class).to(ImplAshconMojangService.class);
+public class ConfigurationModule extends AbstractModule {
+  @Singleton
+  @Provides
+  @NonNull MessagesConfig messagesConfig(final @NonNull Configuration configuration) {
+    return configuration.messages;
+  }
+
+  @Singleton
+  @Provides
+  @NonNull SqlConfig sqlConfig(final @NonNull Configuration configuration) {
+    return configuration.sql;
   }
 }

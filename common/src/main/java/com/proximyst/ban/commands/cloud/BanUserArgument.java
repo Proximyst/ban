@@ -116,7 +116,7 @@ public final class BanUserArgument extends CommandArgument<@NonNull IBanAudience
 
       return this.userService.getUser(input)
           .exceptionally(ex -> Optional.empty())
-          .join()
+          .join() // This needs to be joined: we want the exceptions.
           .map(user -> {
             inputQueue.remove();
             return ArgumentParseResult.success(user);

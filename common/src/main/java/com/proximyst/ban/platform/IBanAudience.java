@@ -94,7 +94,7 @@ public interface IBanAudience extends Identified, Identity, Audience {
   }
 
   @Override
-  @SideEffectFree
+  @Pure
   default @NonNull Identity identity() {
     return this;
   }

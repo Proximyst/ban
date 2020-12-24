@@ -20,14 +20,10 @@ package com.proximyst.ban.platform;
 
 import com.google.inject.Injector;
 import com.google.inject.Module;
-import com.proximyst.ban.inject.config.ConfigurationModule;
+import com.proximyst.ban.inject.ServiceModule;
+import com.proximyst.ban.inject.ConfigurationModule;
 import com.proximyst.ban.inject.factory.BanExceptionalFutureLoggerFactoryModule;
 import com.proximyst.ban.inject.factory.CloudArgumentFactoryModule;
-import com.proximyst.ban.inject.service.DataServiceModule;
-import com.proximyst.ban.inject.service.MessageServiceModule;
-import com.proximyst.ban.inject.service.MojangServiceModule;
-import com.proximyst.ban.inject.service.PunishmentServiceModule;
-import com.proximyst.ban.inject.service.UserServiceModule;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.dataflow.qual.Pure;
 import org.slf4j.Logger;
@@ -43,11 +39,7 @@ public interface IBanPlugin {
       new ConfigurationModule(),
       new BanExceptionalFutureLoggerFactoryModule(),
       new CloudArgumentFactoryModule(),
-      new DataServiceModule(),
-      new MessageServiceModule(),
-      new MojangServiceModule(),
-      new PunishmentServiceModule(),
-      new UserServiceModule()
+      new ServiceModule()
   };
 
   /**
