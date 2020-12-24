@@ -98,6 +98,7 @@ public final class ImplMySqlDataService implements IDataService {
           .bind("type", punishment.getPunishmentType().getId())
           .bind("target", punishment.getTarget())
           .bind("punisher", punishment.getPunisher())
+          .bind("reason", punishment.getReason())
           .bind("lifted", punishment.isLifted())
           .bind("lifted_by", punishment.getLiftedBy())
           .bind("time", punishment.getTime())
