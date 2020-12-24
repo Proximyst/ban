@@ -40,6 +40,7 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.result.RowView;
@@ -288,7 +289,9 @@ public final class ImplGenericSqlDataService implements IDataService {
 
         default:
           throw new IllegalArgumentException(
-              "Unknown SQL dialect: " + name + "; only `mysql`, `mariadb`, `postgresql` are valid");
+              "Unknown SQL dialect: `" + name + "`; only "
+                  + Stream.of(SqlDialect.values()).map(d -> '`' + d.getPath() + "`").collect(Collectors.joining(", "))
+                  + " are valid");
       }
     }
   }
