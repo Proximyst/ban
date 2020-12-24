@@ -25,6 +25,9 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
+/**
+ * A service to interact with the Mojang API, though not necessarily directly.
+ */
 public interface IMojangService {
   /**
    * Get the UUID of an identifier.

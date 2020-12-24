@@ -31,6 +31,12 @@ import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * A service that handles creation of and sending of messages to players.
+ * <p>
+ * Some of these methods may not be threaded and will just execute its logic in a blocking manner before returning a
+ * {@link CompletableFuture#isDone() completed future}.
+ */
 public interface IMessageService {
   /**
    * Announces a newly placed {@link Punishment} to all players who are eligible to see the event, as well as console.

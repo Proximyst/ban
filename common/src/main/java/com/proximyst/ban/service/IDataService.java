@@ -20,11 +20,18 @@ package com.proximyst.ban.service;
 
 import com.proximyst.ban.model.BanUser;
 import com.proximyst.ban.model.Punishment;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
+/**
+ * A service that may fetch data from the data storage backend.
+ * <p>
+ * None of the methods are ran off-thread, and will therefore require you to do your own threading. They may all also
+ * throw exceptions such as {@link SQLException} and {@link IllegalArgumentException}.
+ */
 public interface IDataService {
   /**
    * @return The prefix for the SQL files on the classpath for this service.

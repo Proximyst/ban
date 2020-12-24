@@ -25,7 +25,6 @@ import java.util.concurrent.CompletableFuture;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-// TODO(Proximyst): Document this
 public interface IUserService {
   /**
    * Save the given user.
@@ -35,11 +34,37 @@ public interface IUserService {
    */
   @NonNull CompletableFuture<@Nullable Void> saveUser(final @NonNull BanUser user);
 
+  /**
+   * Get the user data of a user with the given name, if they exist.
+   *
+   * @param name The name of the user to get the data of.
+   * @return The user data of the user.
+   */
   @NonNull CompletableFuture<@NonNull Optional<@NonNull BanUser>> getUser(final @NonNull String name);
 
+  /**
+   * Get the user data of a user with the given UUID, if they exist.
+   *
+   * @param uuid The UUID of the user to get the data of.
+   * @return The user data of the user.
+   */
   @NonNull CompletableFuture<@NonNull Optional<@NonNull BanUser>> getUser(final @NonNull UUID uuid);
 
+  /**
+   * Schedule an update on the data of a user, only if necessary.
+   *
+   * @param uuid The UUID to schedule an update for.
+   * @return Whether an update was scheduled.
+   */
   @NonNull CompletableFuture<@NonNull Boolean> scheduleUpdateIfNecessary(final @NonNull UUID uuid);
 
+  /**
+   * Get the user data of a user with the given UUID, if they exist.
+   * <p>
+   * This will always fetch the latest data about the user.
+   *
+   * @param uuid The UUID of the user to get the data of.
+   * @return The user data of the user.
+   */
   @NonNull CompletableFuture<@NonNull Optional<@NonNull BanUser>> getUserUpdated(final @NonNull UUID uuid);
 }
