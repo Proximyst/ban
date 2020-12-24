@@ -28,7 +28,7 @@ import com.proximyst.ban.service.IPunishmentService;
 import com.proximyst.ban.service.IUserService;
 import com.proximyst.ban.service.impl.ImplAshconMojangService;
 import com.proximyst.ban.service.impl.ImplMessageService;
-import com.proximyst.ban.service.impl.ImplMySqlDataService;
+import com.proximyst.ban.service.impl.ImplGenericSqlDataService;
 import com.proximyst.ban.service.impl.ImplPunishmentService;
 import com.proximyst.ban.service.impl.ImplUserService;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -37,7 +37,7 @@ public final class ServiceModule extends AbstractModule {
   // TODO(Proximyst): Support non-SQL data?
   @Provides
   @Singleton
-  @NonNull IDataService dataService(final @NonNull ImplMySqlDataService sqlDataService) {
+  @NonNull IDataService dataService(final @NonNull ImplGenericSqlDataService sqlDataService) {
     return sqlDataService;
   }
 

@@ -46,7 +46,7 @@ import org.jdbi.v3.core.result.RowView;
 import org.jdbi.v3.core.statement.Update;
 
 @Singleton
-public final class ImplMySqlDataService implements IDataService {
+public final class ImplGenericSqlDataService implements IDataService {
   private final @NonNull Jdbi jdbi;
   private final @NonNull String path;
 
@@ -59,7 +59,7 @@ public final class ImplMySqlDataService implements IDataService {
   private final @NonNull Query querySelectUsernameHistoryByUuid;
 
   @Inject
-  public ImplMySqlDataService(final @NonNull Jdbi jdbi,
+  public ImplGenericSqlDataService(final @NonNull Jdbi jdbi,
       final @NonNull SqlConfig sqlConfig) {
     this.jdbi = jdbi;
     this.path = "sql/" + SqlDialect.parse(sqlConfig.dialect).getPath() + "/";
