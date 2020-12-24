@@ -146,10 +146,7 @@ public final class ImplAshconMojangService implements IMojangService {
     return this.httpUtils.get(API_BASE + "user/" + identifier)
         .thenApply(opt -> {
           final Optional<BanUser> user = opt.map(json -> GSON.fromJson(json, AshconUser.class).toBanUser());
-          user.ifPresentOrElse(banUser -> this.usernameUuidCache.put(banUser.getUsername(), banUser.getUuid()),
-              () -> {
-                throw new IllegalArgumentException("No user \"" + identifier + "\" exists.");
-              });
+          user.ifPresent(banUser -> this.usernameUuidCache.put(banUser.getUsername(), banUser.getUuid()));
 
           return user;
         });
