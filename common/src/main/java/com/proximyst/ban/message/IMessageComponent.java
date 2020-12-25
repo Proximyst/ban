@@ -16,26 +16,26 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-package com.proximyst.ban.inject;
+package com.proximyst.ban.message;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-import com.proximyst.ban.config.Configuration;
-import com.proximyst.ban.config.MessagesConfig;
-import com.proximyst.ban.config.SqlConfig;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.dataflow.qual.Pure;
 
-public final class ConfigurationModule extends AbstractModule {
-  @Singleton
-  @Provides
-  @NonNull MessagesConfig messagesConfig(final @NonNull Configuration configuration) {
-    return configuration.messages;
-  }
+public interface IMessageComponent {
+  /**
+   * @return The name of this message component. This may be {@code null} iff {@link #await()}'s {@link
+   * CompletableFuture#isDone() completed future} is a {@link Map}{@code <}{@link String}{@code , ?>}.
+   */
+  @Pure
+  @Nullable String name();
 
-  @Singleton
-  @Provides
-  @NonNull SqlConfig sqlConfig(final @NonNull Configuration configuration) {
-    return configuration.sql;
-  }
+  /**
+   * @return A future that is eventually completed with the component this future represents. It may be {@code null} iff
+   * {@link #name()} is not {@code null}.
+   */
+  @Pure
+  @NonNull CompletableFuture<@Nullable ?> await();
 }

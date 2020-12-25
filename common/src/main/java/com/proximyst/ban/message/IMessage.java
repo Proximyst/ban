@@ -16,26 +16,22 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-package com.proximyst.ban.inject;
+package com.proximyst.ban.message;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-import com.proximyst.ban.config.Configuration;
-import com.proximyst.ban.config.MessagesConfig;
-import com.proximyst.ban.config.SqlConfig;
+import java.util.concurrent.CompletableFuture;
+import net.kyori.adventure.audience.Audience;
+import net.kyori.adventure.audience.ForwardingAudience;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
-public final class ConfigurationModule extends AbstractModule {
-  @Singleton
-  @Provides
-  @NonNull MessagesConfig messagesConfig(final @NonNull Configuration configuration) {
-    return configuration.messages;
-  }
-
-  @Singleton
-  @Provides
-  @NonNull SqlConfig sqlConfig(final @NonNull Configuration configuration) {
-    return configuration.sql;
-  }
+public interface IMessage {
+  /**
+   * Eventually send this message to the given {@link Audience}.
+   *
+   * @param audience The audience to receive the message. This may be a {@link ForwardingAudience} to target more than
+   *                 {@code 1} audience at a time.
+   * @return A {@link CompletableFuture} that is completed once the message has been sent, or {@link
+   * CompletableFuture#isCompletedExceptionally() completes exceptionally} if something went wrong.
+   */
+  @NonNull CompletableFuture<@Nullable Void> send(final @NonNull Audience audience);
 }

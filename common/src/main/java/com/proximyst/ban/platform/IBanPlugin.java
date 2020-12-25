@@ -20,10 +20,9 @@ package com.proximyst.ban.platform;
 
 import com.google.inject.Injector;
 import com.google.inject.Module;
-import com.proximyst.ban.inject.ServiceModule;
 import com.proximyst.ban.inject.ConfigurationModule;
-import com.proximyst.ban.inject.factory.BanExceptionalFutureLoggerFactoryModule;
-import com.proximyst.ban.inject.factory.CloudArgumentFactoryModule;
+import com.proximyst.ban.inject.FactoryModule;
+import com.proximyst.ban.inject.ServiceModule;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.dataflow.qual.Pure;
 import org.slf4j.Logger;
@@ -37,8 +36,7 @@ public interface IBanPlugin {
    */
   @NonNull Module @NonNull [] STANDARD_MODULES = new Module[]{
       new ConfigurationModule(),
-      new BanExceptionalFutureLoggerFactoryModule(),
-      new CloudArgumentFactoryModule(),
+      new FactoryModule(),
       new ServiceModule()
   };
 

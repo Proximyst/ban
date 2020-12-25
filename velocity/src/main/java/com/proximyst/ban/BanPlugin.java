@@ -28,6 +28,7 @@ import com.proximyst.ban.commands.BanCommand;
 import com.proximyst.ban.commands.HistoryCommand;
 import com.proximyst.ban.commands.KickCommand;
 import com.proximyst.ban.commands.MuteCommand;
+import com.proximyst.ban.commands.TestingCommand;
 import com.proximyst.ban.commands.UnbanCommand;
 import com.proximyst.ban.commands.UnmuteCommand;
 import com.proximyst.ban.config.ConfigUtil;
@@ -231,6 +232,7 @@ public final class BanPlugin implements IBanPlugin {
     this.injector.getInstance(MuteCommand.class).register(velocityCommandManager);
     this.injector.getInstance(UnbanCommand.class).register(velocityCommandManager);
     this.injector.getInstance(UnmuteCommand.class).register(velocityCommandManager);
+    this.injector.getInstance(TestingCommand.class).register(velocityCommandManager); // FIXME(Proximyst)
 
     tm.finish();
     this.logger.info("Plugin has finished initialisation in {}ms.",

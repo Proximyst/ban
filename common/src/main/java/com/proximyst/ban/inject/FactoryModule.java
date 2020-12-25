@@ -16,15 +16,26 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-package com.proximyst.ban.inject.factory;
+package com.proximyst.ban.inject;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.proximyst.ban.factory.IBanExceptionalFutureLoggerFactory;
+import com.proximyst.ban.factory.ICloudArgumentFactory;
+import com.proximyst.ban.factory.IMessageFactory;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
-public class BanExceptionalFutureLoggerFactoryModule extends AbstractModule {
+public final class FactoryModule extends AbstractModule {
+  @Override
+  protected void configure() {
+    install(new FactoryModuleBuilder()
+        .build(ICloudArgumentFactory.class));
+    install(new FactoryModuleBuilder()
+        .build(IMessageFactory.class));
+  }
+
   @Provides
   @Singleton
   @NonNull IBanExceptionalFutureLoggerFactory banExceptionalFutureLoggerFactory(
