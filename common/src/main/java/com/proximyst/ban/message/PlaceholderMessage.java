@@ -18,7 +18,6 @@
 
 package com.proximyst.ban.message;
 
-import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import com.proximyst.ban.config.MessageKey;
@@ -35,16 +34,12 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.slf4j.Logger;
 
 public final class PlaceholderMessage implements IMessage {
   private final @NonNull MessageKey messageKey;
   private final @NonNull MessagesConfig messagesConfig;
   private final @NonNull IMessageComponent @NonNull [] messageComponents;
   private final @NonNull BanExceptionalFutureLogger<?> banExceptionalFutureLogger;
-
-  @Inject
-  private Logger logger;
 
   @AssistedInject
   public PlaceholderMessage(final @Assisted @NonNull MessageKey messageKey,
