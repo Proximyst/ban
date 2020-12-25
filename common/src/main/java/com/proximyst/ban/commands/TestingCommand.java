@@ -24,21 +24,20 @@ import cloud.commandframework.context.CommandContext;
 import com.google.inject.Inject;
 import com.proximyst.ban.BanPermissions;
 import com.proximyst.ban.commands.cloud.BaseCommand;
-import com.proximyst.ban.config.MessageKey;
 import com.proximyst.ban.factory.ICloudArgumentFactory;
-import com.proximyst.ban.factory.IMessageFactory;
+import com.proximyst.ban.message.MessageFactoryService;
 import com.proximyst.ban.platform.IBanAudience;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 @Deprecated // FIXME(Proximyst)
 public class TestingCommand extends BaseCommand {
-  private final @NonNull IMessageFactory messageFactory;
+  private final @NonNull MessageFactoryService messageFactoryService;
   private final @NonNull ICloudArgumentFactory cloudArgumentFactory;
 
   @Inject
-  public TestingCommand(final @NonNull IMessageFactory messageFactory,
+  public TestingCommand(final @NonNull MessageFactoryService messageFactoryService,
       final @NonNull ICloudArgumentFactory cloudArgumentFactory) {
-    this.messageFactory = messageFactory;
+    this.messageFactoryService = messageFactoryService;
     this.cloudArgumentFactory = cloudArgumentFactory;
   }
 
@@ -52,10 +51,7 @@ public class TestingCommand extends BaseCommand {
   }
 
   private void execute(final @NonNull CommandContext<IBanAudience> ctx) {
-    this.messageFactory.staticMessage(MessageKey.COMMANDS_FEEDBACK_UNBAN)
-        .send(ctx.getSender());
-    this.messageFactory.placeholderMessage(MessageKey.COMMANDS_FEEDBACK_UNBAN,
-        this.messageFactory.staticComponent("targetName", ctx.getSender().username()))
+    this.messageFactoryService.commandsFeedbackUnban(ctx.get("target"))
         .send(ctx.getSender());
   }
 }

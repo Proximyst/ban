@@ -45,11 +45,4 @@ public interface IMessageFactory {
 
   @NonNull PlaceholderMessage placeholderMessage(final @Assisted @NonNull MessageKey messageKey,
       final @Assisted @NonNull IMessageComponent @NonNull ... messageComponents);
-
-  // This doesn't work...
-  //  default @NonNull IMessage commandsFeedbackUnban(final @NonNull BanUser target) {
-  //    return this.placeholderMessage(MessageKey.COMMANDS_FEEDBACK_UNBAN,
-  //        this.staticComponent("targetName", target.getUsername()),
-  //        this.staticComponent("targetUuid", target.getUuid().toString()));
-  //  }
 }
