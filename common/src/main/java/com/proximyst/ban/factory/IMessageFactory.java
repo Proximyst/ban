@@ -19,35 +19,39 @@
 package com.proximyst.ban.factory;
 
 import com.google.inject.assistedinject.Assisted;
+import com.google.inject.name.Named;
 import com.proximyst.ban.config.MessageKey;
+import com.proximyst.ban.message.IMessage;
 import com.proximyst.ban.message.IMessageComponent;
-import com.proximyst.ban.message.MessageComponent;
-import com.proximyst.ban.message.MessageKeyComponent;
-import com.proximyst.ban.message.MessageMessageComponentComponent;
-import com.proximyst.ban.message.PlaceholderMessage;
-import com.proximyst.ban.message.StaticMessage;
 import java.util.concurrent.CompletableFuture;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public interface IMessageFactory {
-  @NonNull MessageComponent staticComponent(final @Assisted("name") @NonNull String name,
+  @Named("MessageComponent")
+  @NonNull IMessageComponent staticComponent(final @Assisted("name") @NonNull String name,
       final @Assisted("value") @Nullable String value);
 
-  @NonNull MessageComponent awaitedComponent(final @Assisted @NonNull String name,
+  @Named("MessageComponent")
+  @NonNull IMessageComponent awaitedComponent(final @Assisted @NonNull String name,
       final @Assisted @NonNull CompletableFuture<@Nullable String> future);
 
-  @NonNull MessageKeyComponent keyComponent(final @Assisted @NonNull String name,
+  @Named("MessageKeyComponent")
+  @NonNull IMessageComponent keyComponent(final @Assisted @NonNull String name,
       final @Assisted @NonNull MessageKey messageKey);
 
-  @NonNull MessageMessageComponentComponent componentComponent(
+  @Named("MessageMessageComponentComponent")
+  @NonNull IMessageComponent componentComponent(
       final @Assisted @NonNull IMessageComponent @NonNull [] messageComponents);
 
-  @NonNull MessageMessageComponentComponent componentComponent(
+  @Named("MessageMessageComponentComponent")
+  @NonNull IMessageComponent componentComponent(
       final @Assisted @NonNull CompletableFuture<@NonNull IMessageComponent @NonNull []> messageComponents);
 
-  @NonNull StaticMessage staticMessage(final @Assisted @NonNull MessageKey messageKey);
+  @Named("StaticMessage")
+  @NonNull IMessage staticMessage(final @Assisted @NonNull MessageKey messageKey);
 
-  @NonNull PlaceholderMessage placeholderMessage(final @Assisted @NonNull MessageKey messageKey,
+  @Named("PlaceholderMessage")
+  @NonNull IMessage placeholderMessage(final @Assisted @NonNull MessageKey messageKey,
       final @Assisted @NonNull IMessageComponent @NonNull ... messageComponents);
 }
