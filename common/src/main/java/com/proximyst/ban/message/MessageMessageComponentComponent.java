@@ -25,43 +25,30 @@ import java.util.concurrent.CompletableFuture;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public final class MessageComponent implements IMessageComponent {
-  private final @NonNull String name;
-  private final @NonNull CompletableFuture<@Nullable ?> future;
+public final class MessageMessageComponentComponent implements IMessageComponent {
+  private final @NonNull CompletableFuture<@NonNull IMessageComponent @NonNull []> messageComponents;
 
-  private MessageComponent(final @NonNull String name,
-      final @Nullable Object object,
+  @AssistedInject
+  public MessageMessageComponentComponent(
+      final @Assisted @NonNull CompletableFuture<@NonNull IMessageComponent @NonNull []> messageComponents,
       final @NonNull IBanExceptionalFutureLoggerFactory banExceptionalFutureLoggerFactory) {
-    this.name = name;
-    if (object instanceof CompletableFuture) {
-      this.future = ((CompletableFuture<?>) object)
-          .exceptionally(banExceptionalFutureLoggerFactory.createLogger(this.getClass()).cast());
-    } else {
-      this.future = CompletableFuture.completedFuture(object);
-    }
+    this.messageComponents = messageComponents
+        .exceptionally(banExceptionalFutureLoggerFactory.createLogger(this.getClass()));
   }
 
   @AssistedInject
-  public MessageComponent(final @Assisted("name") @NonNull String name,
-      final @Assisted("value") @Nullable String value,
+  public MessageMessageComponentComponent(final @Assisted @NonNull IMessageComponent @NonNull [] messageComponents,
       final @NonNull IBanExceptionalFutureLoggerFactory banExceptionalFutureLoggerFactory) {
-    this(name, (Object) value, banExceptionalFutureLoggerFactory);
-  }
-
-  @AssistedInject
-  public MessageComponent(final @Assisted @NonNull String name,
-      final @Assisted @NonNull CompletableFuture<@Nullable String> value,
-      final @NonNull IBanExceptionalFutureLoggerFactory banExceptionalFutureLoggerFactory) {
-    this(name, (Object) value, banExceptionalFutureLoggerFactory);
+    this(CompletableFuture.completedFuture(messageComponents), banExceptionalFutureLoggerFactory);
   }
 
   @Override
   public @NonNull String name() {
-    return this.name;
+    return ""; // We won't need the name here.
   }
 
   @Override
   public @NonNull CompletableFuture<@Nullable ?> await() {
-    return this.future;
+    return this.messageComponents;
   }
 }

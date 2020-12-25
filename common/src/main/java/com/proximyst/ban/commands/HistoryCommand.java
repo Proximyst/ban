@@ -23,14 +23,16 @@ import cloud.commandframework.context.CommandContext;
 import com.google.inject.Inject;
 import com.proximyst.ban.BanPermissions;
 import com.proximyst.ban.commands.cloud.BaseCommand;
-import com.proximyst.ban.config.MessageKey;
 import com.proximyst.ban.factory.IBanExceptionalFutureLoggerFactory;
 import com.proximyst.ban.factory.ICloudArgumentFactory;
+import com.proximyst.ban.message.MessageFactoryService;
 import com.proximyst.ban.model.BanUser;
+import com.proximyst.ban.model.Punishment;
 import com.proximyst.ban.platform.IBanAudience;
-import com.proximyst.ban.service.IMessageService;
 import com.proximyst.ban.service.IPunishmentService;
 import com.proximyst.ban.utils.BanExceptionalFutureLogger;
+import java.util.Arrays;
+import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -39,17 +41,17 @@ public final class HistoryCommand extends BaseCommand {
   private final @NonNull BanExceptionalFutureLogger<?> banExceptionalFutureLogger;
   private final @NonNull ICloudArgumentFactory cloudArgumentFactory;
   private final @NonNull IPunishmentService punishmentService;
-  private final @NonNull IMessageService messageService;
+  private final @NonNull MessageFactoryService messageFactoryService;
 
   @Inject
   public HistoryCommand(final @NonNull IBanExceptionalFutureLoggerFactory banExceptionalFutureLoggerFactory,
       final @NonNull ICloudArgumentFactory cloudArgumentFactory,
       final @NonNull IPunishmentService punishmentService,
-      final @NonNull IMessageService messageService) {
+      final @NonNull MessageFactoryService messageFactoryService) {
     this.banExceptionalFutureLogger = banExceptionalFutureLoggerFactory.createLogger(this.getClass());
     this.cloudArgumentFactory = cloudArgumentFactory;
     this.punishmentService = punishmentService;
-    this.messageService = messageService;
+    this.messageFactoryService = messageFactoryService;
   }
 
   @Override
@@ -63,17 +65,31 @@ public final class HistoryCommand extends BaseCommand {
   private void execute(final @NonNull CommandContext<IBanAudience> ctx) {
     final BanUser target = ctx.get("target");
 
-    this.messageService.sendFormattedMessage(ctx.getSender(), Identity.nil(), MessageKey.COMMANDS_FEEDBACK_HISTORY,
-        "targetName", target.getUsername(),
-        "targetUuid", target.getUuid())
-        .exceptionally(this.banExceptionalFutureLogger.cast());
+    this.messageFactoryService.commandsFeedbackHistory(target)
+        .send(ctx.getSender());
 
     this.punishmentService.getPunishments(target.getUuid())
-        .thenCompose(punishments -> this.messageService.formatHistory(punishments, target))
-        .thenAccept(messages -> {
-          for (final Component message : messages) {
-            ctx.getSender().sendMessage(Identity.nil(), message);
+        .thenCompose(punishments -> {
+          final CompletableFuture<?>[] futures = new CompletableFuture<?>[punishments.size()];
+          int index = 0;
+          for (final Punishment punishment : punishments) {
+            futures[index++] = this.messageFactoryService.commandsHistoryEntry(punishment)
+                .component();
           }
+
+          return CompletableFuture.allOf(futures)
+              .thenApply($ -> Arrays.stream(futures)
+                  .map(f -> (Component) f.join())
+                  .toArray(Component[]::new));
+        })
+        .thenAccept(messages -> {
+          this.messageFactoryService.commandsHistoryHeader(target, messages.length)
+              .send(ctx.getSender())
+              .thenRun(() -> {
+                for (final Component message : messages) {
+                  ctx.getSender().sendMessage(Identity.nil(), message);
+                }
+              });
         })
         .exceptionally(this.banExceptionalFutureLogger.cast());
   }

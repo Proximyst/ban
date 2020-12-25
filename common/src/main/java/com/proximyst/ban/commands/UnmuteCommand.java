@@ -26,6 +26,7 @@ import com.proximyst.ban.commands.cloud.BaseCommand;
 import com.proximyst.ban.config.MessageKey;
 import com.proximyst.ban.factory.IBanExceptionalFutureLoggerFactory;
 import com.proximyst.ban.factory.ICloudArgumentFactory;
+import com.proximyst.ban.message.MessageFactoryService;
 import com.proximyst.ban.model.BanUser;
 import com.proximyst.ban.model.Punishment;
 import com.proximyst.ban.platform.IBanAudience;
@@ -39,16 +40,19 @@ public final class UnmuteCommand extends BaseCommand {
   private final @NonNull BanExceptionalFutureLogger<?> banExceptionalFutureLogger;
   private final @NonNull ICloudArgumentFactory cloudArgumentFactory;
   private final @NonNull IPunishmentService punishmentService;
+  private final @NonNull MessageFactoryService messageFactoryService;
   private final @NonNull IMessageService messageService;
 
   @Inject
   public UnmuteCommand(final @NonNull IBanExceptionalFutureLoggerFactory banExceptionalFutureLoggerFactory,
       final @NonNull ICloudArgumentFactory cloudArgumentFactory,
       final @NonNull IPunishmentService punishmentService,
+      final @NonNull MessageFactoryService messageFactoryService,
       final @NonNull IMessageService messageService) {
     this.banExceptionalFutureLogger = banExceptionalFutureLoggerFactory.createLogger(this.getClass());
     this.cloudArgumentFactory = cloudArgumentFactory;
     this.punishmentService = punishmentService;
+    this.messageFactoryService = messageFactoryService;
     this.messageService = messageService;
   }
 
@@ -63,10 +67,8 @@ public final class UnmuteCommand extends BaseCommand {
   private void execute(final @NonNull CommandContext<IBanAudience> ctx) {
     final @NonNull BanUser target = ctx.get("target");
 
-    this.messageService.sendFormattedMessage(ctx.getSender(), Identity.nil(), MessageKey.COMMANDS_FEEDBACK_UNMUTE,
-        "targetName", target.getUsername(),
-        "targetUuid", target.getUuid())
-        .exceptionally(this.banExceptionalFutureLogger.cast());
+    this.messageFactoryService.commandsFeedbackUnmute(target)
+        .send(ctx.getSender());
 
     this.punishmentService.getActiveMute(target.getUuid())
         .thenAccept(punishmentOptional -> {

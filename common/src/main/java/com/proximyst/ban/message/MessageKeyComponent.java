@@ -23,33 +23,29 @@ import com.google.inject.assistedinject.Assisted;
 import com.proximyst.ban.config.MessageKey;
 import com.proximyst.ban.config.MessagesConfig;
 import java.util.concurrent.CompletableFuture;
-import net.kyori.adventure.audience.Audience;
-import net.kyori.adventure.identity.Identity;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
-public final class StaticMessage implements IMessage {
+public final class MessageKeyComponent implements IMessageComponent {
+  private final @NonNull String name;
   private final @NonNull MessageKey messageKey;
   private final @NonNull MessagesConfig messagesConfig;
 
   @Inject
-  public StaticMessage(final @Assisted @NonNull MessageKey messageKey,
+  public MessageKeyComponent(final @Assisted @NonNull String name,
+      final @Assisted @NonNull MessageKey messageKey,
       final @NonNull MessagesConfig messagesConfig) {
+    this.name = name;
     this.messageKey = messageKey;
     this.messagesConfig = messagesConfig;
   }
 
   @Override
-  public @NonNull CompletableFuture<@Nullable Void> send(final @NonNull Audience audience,
-      final @NonNull Identity source) {
-    return this.component()
-        .thenAccept(component -> audience.sendMessage(source, component));
+  public @NonNull String name() {
+    return this.name;
   }
 
   @Override
-  public @NonNull CompletableFuture<@NonNull Component> component() {
-    return CompletableFuture.completedFuture(MiniMessage.get().parse(this.messageKey.map(this.messagesConfig)));
+  public @NonNull CompletableFuture<@NonNull ?> await() {
+    return CompletableFuture.completedFuture(this.messageKey.map(this.messagesConfig));
   }
 }

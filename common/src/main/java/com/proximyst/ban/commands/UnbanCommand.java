@@ -26,6 +26,7 @@ import com.proximyst.ban.commands.cloud.BaseCommand;
 import com.proximyst.ban.config.MessageKey;
 import com.proximyst.ban.factory.IBanExceptionalFutureLoggerFactory;
 import com.proximyst.ban.factory.ICloudArgumentFactory;
+import com.proximyst.ban.message.MessageFactoryService;
 import com.proximyst.ban.model.BanUser;
 import com.proximyst.ban.model.Punishment;
 import com.proximyst.ban.platform.IBanAudience;
@@ -40,16 +41,19 @@ public final class UnbanCommand extends BaseCommand {
   private final @NonNull ICloudArgumentFactory cloudArgumentFactory;
   private final @NonNull IMessageService messageService;
   private final @NonNull IPunishmentService punishmentService;
+  private final @NonNull MessageFactoryService messageFactoryService;
 
   @Inject
   public UnbanCommand(final @NonNull IBanExceptionalFutureLoggerFactory banExceptionalFutureLoggerFactory,
       final @NonNull ICloudArgumentFactory cloudArgumentFactory,
       final @NonNull IMessageService messageService,
-      final @NonNull IPunishmentService punishmentService) {
+      final @NonNull IPunishmentService punishmentService,
+      final @NonNull MessageFactoryService messageFactoryService) {
     this.banExceptionalFutureLogger = banExceptionalFutureLoggerFactory.createLogger(this.getClass());
     this.cloudArgumentFactory = cloudArgumentFactory;
     this.messageService = messageService;
     this.punishmentService = punishmentService;
+    this.messageFactoryService = messageFactoryService;
   }
 
   @Override
@@ -63,10 +67,8 @@ public final class UnbanCommand extends BaseCommand {
   private void execute(final @NonNull CommandContext<IBanAudience> ctx) {
     final @NonNull BanUser target = ctx.get("target");
 
-    this.messageService.sendFormattedMessage(ctx.getSender(), Identity.nil(), MessageKey.COMMANDS_FEEDBACK_UNBAN,
-        "targetName", target.getUsername(),
-        "targetUuid", target.getUuid())
-        .exceptionally(this.banExceptionalFutureLogger.cast());
+    this.messageFactoryService.commandsFeedbackUnban(target)
+        .send(ctx.getSender());
 
     this.punishmentService.getActiveBan(target.getUuid())
         .thenAccept(punishmentOptional -> {
