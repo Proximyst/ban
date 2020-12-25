@@ -25,11 +25,11 @@ import com.proximyst.ban.BanPermissions;
 import com.proximyst.ban.commands.cloud.BaseCommand;
 import com.proximyst.ban.factory.IBanExceptionalFutureLoggerFactory;
 import com.proximyst.ban.factory.ICloudArgumentFactory;
-import com.proximyst.ban.message.MessageFactoryService;
 import com.proximyst.ban.model.BanUser;
 import com.proximyst.ban.model.Punishment;
 import com.proximyst.ban.platform.IBanAudience;
 import com.proximyst.ban.service.IPunishmentService;
+import com.proximyst.ban.service.MessageService;
 import com.proximyst.ban.utils.BanExceptionalFutureLogger;
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
@@ -41,17 +41,17 @@ public final class HistoryCommand extends BaseCommand {
   private final @NonNull BanExceptionalFutureLogger<?> banExceptionalFutureLogger;
   private final @NonNull ICloudArgumentFactory cloudArgumentFactory;
   private final @NonNull IPunishmentService punishmentService;
-  private final @NonNull MessageFactoryService messageFactoryService;
+  private final @NonNull MessageService messageService;
 
   @Inject
   public HistoryCommand(final @NonNull IBanExceptionalFutureLoggerFactory banExceptionalFutureLoggerFactory,
       final @NonNull ICloudArgumentFactory cloudArgumentFactory,
       final @NonNull IPunishmentService punishmentService,
-      final @NonNull MessageFactoryService messageFactoryService) {
+      final @NonNull MessageService messageService) {
     this.banExceptionalFutureLogger = banExceptionalFutureLoggerFactory.createLogger(this.getClass());
     this.cloudArgumentFactory = cloudArgumentFactory;
     this.punishmentService = punishmentService;
-    this.messageFactoryService = messageFactoryService;
+    this.messageService = messageService;
   }
 
   @Override
@@ -65,7 +65,7 @@ public final class HistoryCommand extends BaseCommand {
   private void execute(final @NonNull CommandContext<IBanAudience> ctx) {
     final BanUser target = ctx.get("target");
 
-    this.messageFactoryService.commandsFeedbackHistory(target)
+    this.messageService.commandsFeedbackHistory(target)
         .send(ctx.getSender());
 
     this.punishmentService.getPunishments(target.getUuid())
@@ -73,7 +73,7 @@ public final class HistoryCommand extends BaseCommand {
           final CompletableFuture<?>[] futures = new CompletableFuture<?>[punishments.size()];
           int index = 0;
           for (final Punishment punishment : punishments) {
-            futures[index++] = this.messageFactoryService.commandsHistoryEntry(punishment)
+            futures[index++] = this.messageService.commandsHistoryEntry(punishment)
                 .component();
           }
 
@@ -83,7 +83,7 @@ public final class HistoryCommand extends BaseCommand {
                   .toArray(Component[]::new));
         })
         .thenAccept(messages -> {
-          this.messageFactoryService.commandsHistoryHeader(target, messages.length)
+          this.messageService.commandsHistoryHeader(target, messages.length)
               .send(ctx.getSender())
               .thenRun(() -> {
                 for (final Component message : messages) {

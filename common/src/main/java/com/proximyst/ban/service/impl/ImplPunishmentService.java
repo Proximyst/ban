@@ -29,8 +29,8 @@ import com.proximyst.ban.model.Punishment;
 import com.proximyst.ban.platform.IBanAudience;
 import com.proximyst.ban.platform.IBanServer;
 import com.proximyst.ban.service.IDataService;
-import com.proximyst.ban.service.IMessageService;
 import com.proximyst.ban.service.IPunishmentService;
+import com.proximyst.ban.service.MessageService;
 import com.proximyst.ban.utils.ThrowableUtils;
 import java.util.List;
 import java.util.UUID;
@@ -47,7 +47,7 @@ public final class ImplPunishmentService implements IPunishmentService {
       Integer.getInteger("ban.maximumPunishmentCacheCapacity", 512);
 
   private final @NonNull IDataService dataService;
-  private final @NonNull IMessageService messageService;
+  private final @NonNull MessageService messageService;
   private final @NonNull Executor executor;
   private final @NonNull IBanServer banServer;
 
@@ -60,7 +60,7 @@ public final class ImplPunishmentService implements IPunishmentService {
 
   @Inject
   public ImplPunishmentService(final @NonNull IDataService dataService,
-      final @NonNull IMessageService messageService,
+      final @NonNull MessageService messageService,
       final @NonNull @BanAsyncExecutor Executor executor,
       final @NonNull IBanServer banServer) {
     this.dataService = dataService;
@@ -122,9 +122,13 @@ public final class ImplPunishmentService implements IPunishmentService {
       return CompletableFuture.completedFuture(null);
     }
 
-    return this.messageService.formatMessage(
-        punishment.getPunishmentType().getApplicationMessage(punishment.getReason().isPresent()).orElse(null),
+    return this.messageService.punishmentMessage(
+        punishment
+            .getPunishmentType()
+            .getApplicationMessage(punishment.getReason().isPresent())
+            .orElseThrow(() -> new IllegalStateException("applicable punishment without punishment type")),
         punishment)
+        .component()
         .thenAccept(component -> {
           switch (punishment.getPunishmentType()) {
             case BAN:

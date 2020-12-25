@@ -26,14 +26,13 @@ import com.proximyst.ban.BanPermissions;
 import com.proximyst.ban.commands.cloud.BaseCommand;
 import com.proximyst.ban.factory.IBanExceptionalFutureLoggerFactory;
 import com.proximyst.ban.factory.ICloudArgumentFactory;
-import com.proximyst.ban.message.MessageFactoryService;
 import com.proximyst.ban.model.BanUser;
 import com.proximyst.ban.model.Punishment;
 import com.proximyst.ban.model.PunishmentBuilder;
 import com.proximyst.ban.model.PunishmentType;
 import com.proximyst.ban.platform.IBanAudience;
-import com.proximyst.ban.service.IMessageService;
 import com.proximyst.ban.service.IPunishmentService;
+import com.proximyst.ban.service.MessageService;
 import com.proximyst.ban.utils.BanExceptionalFutureLogger;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -42,19 +41,16 @@ public final class BanCommand extends BaseCommand {
   private final @NonNull BanExceptionalFutureLogger<?> banExceptionalFutureLogger;
   private final @NonNull ICloudArgumentFactory cloudArgumentFactory;
   private final @NonNull IPunishmentService punishmentService;
-  private final @NonNull MessageFactoryService messageFactoryService;
-  private final @NonNull IMessageService messageService;
+  private final @NonNull MessageService messageService;
 
   @Inject
   public BanCommand(final @NonNull IBanExceptionalFutureLoggerFactory banExceptionalFutureLoggerFactory,
       final @NonNull ICloudArgumentFactory cloudArgumentFactory,
       final @NonNull IPunishmentService punishmentService,
-      final @NonNull MessageFactoryService messageFactoryService,
-      final @NonNull IMessageService messageService) {
+      final @NonNull MessageService messageService) {
     this.banExceptionalFutureLogger = banExceptionalFutureLoggerFactory.createLogger(this.getClass());
     this.cloudArgumentFactory = cloudArgumentFactory;
     this.punishmentService = punishmentService;
-    this.messageFactoryService = messageFactoryService;
     this.messageService = messageService;
   }
 
@@ -71,7 +67,7 @@ public final class BanCommand extends BaseCommand {
     final BanUser target = ctx.get("target");
     final @Nullable String reason = ctx.getOrDefault("reason", null);
 
-    this.messageFactoryService.commandsFeedbackBan(target)
+    this.messageService.commandsFeedbackBan(target)
         .send(ctx.getSender(), ctx.getSender().identity());
 
     // We have to lift their previous punishment.

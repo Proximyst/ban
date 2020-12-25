@@ -29,8 +29,8 @@ public abstract class BaseCommand {
   /**
    * Register this command with the {@link CommandManager}.
    *
-   * @param commandManager The manager to register commands with. This assumes the manager supports {@link IBanAudience}s
-   *                       as a sender.
+   * @param commandManager The manager to register commands with. This assumes the manager supports {@link
+   *                       IBanAudience}s as a sender.
    */
   public abstract void register(final @NonNull CommandManager<@NonNull IBanAudience> commandManager);
 }
