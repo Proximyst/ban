@@ -43,6 +43,19 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 // <https://github.com/google/guice/issues/1345>.
 @Singleton
 public final class MessageService {
+  private static final @NonNull String KEY_TARGET_NAME = "targetName";
+  private static final @NonNull String KEY_TARGET_UUID = "targetUuid";
+  private static final @NonNull String KEY_PUNISHER_NAME = "punisherName";
+  private static final @NonNull String KEY_PUNISHER_UUID = "punisherUuid";
+  private static final @NonNull String KEY_PUNISHMENT_ID = "punishmentId";
+  private static final @NonNull String KEY_PUNISHMENT_DATE = "punishmentDate";
+  private static final @NonNull String KEY_PUNISHMENT_REASON = "reason";
+  private static final @NonNull String KEY_PUNISHMENT_EXPIRY = "expiry";
+  private static final @NonNull String KEY_PUNISHMENT_DURATION = "duration";
+  private static final @NonNull String KEY_PUNISHMENT_TYPE = "punishmentType";
+  private static final @NonNull String KEY_PUNISHMENT_VERB = "punishmentVerb";
+  private static final @NonNull String KEY_QUANTITY = "amount";
+
   private final @NonNull IMessageFactory messageFactory;
   private final @NonNull MessagesConfig messagesConfig;
   private final @NonNull IUserService userService;
@@ -65,59 +78,59 @@ public final class MessageService {
   // <editor-fold desc="Errors" defaultstate="collapsed">
   public @NonNull IMessage errorNoActiveBan(final @NonNull BanUser target) {
     return this.messageFactory.placeholderMessage(MessageKey.ERROR_NO_ACTIVE_BAN,
-        this.messageFactory.staticComponent("targetName", target.getUsername()),
-        this.messageFactory.staticComponent("targetUuid", target.getUuid().toString()));
+        this.messageFactory.staticComponent(KEY_TARGET_NAME, target.getUsername()),
+        this.messageFactory.staticComponent(KEY_TARGET_UUID, target.getUuid().toString()));
   }
 
   public @NonNull IMessage errorNoActiveMute(final @NonNull BanUser target) {
     return this.messageFactory.placeholderMessage(MessageKey.ERROR_NO_ACTIVE_MUTE,
-        this.messageFactory.staticComponent("targetName", target.getUsername()),
-        this.messageFactory.staticComponent("targetUuid", target.getUuid().toString()));
+        this.messageFactory.staticComponent(KEY_TARGET_NAME, target.getUsername()),
+        this.messageFactory.staticComponent(KEY_TARGET_UUID, target.getUuid().toString()));
   }
   // </editor-fold>
 
   // <editor-fold desc="Commands" defaultstate="collapsed">
   public @NonNull IMessage commandsFeedbackBan(final @NonNull BanUser target) {
     return this.messageFactory.placeholderMessage(MessageKey.COMMANDS_FEEDBACK_BAN,
-        this.messageFactory.staticComponent("targetName", target.getUsername()),
-        this.messageFactory.staticComponent("targetUuid", target.getUuid().toString()));
+        this.messageFactory.staticComponent(KEY_TARGET_NAME, target.getUsername()),
+        this.messageFactory.staticComponent(KEY_TARGET_UUID, target.getUuid().toString()));
   }
 
   public @NonNull IMessage commandsFeedbackKick(final @NonNull BanUser target) {
     return this.messageFactory.placeholderMessage(MessageKey.COMMANDS_FEEDBACK_KICK,
-        this.messageFactory.staticComponent("targetName", target.getUsername()),
-        this.messageFactory.staticComponent("targetUuid", target.getUuid().toString()));
+        this.messageFactory.staticComponent(KEY_TARGET_NAME, target.getUsername()),
+        this.messageFactory.staticComponent(KEY_TARGET_UUID, target.getUuid().toString()));
   }
 
   public @NonNull IMessage commandsFeedbackHistory(final @NonNull BanUser target) {
     return this.messageFactory.placeholderMessage(MessageKey.COMMANDS_FEEDBACK_HISTORY,
-        this.messageFactory.staticComponent("targetName", target.getUsername()),
-        this.messageFactory.staticComponent("targetUuid", target.getUuid().toString()));
+        this.messageFactory.staticComponent(KEY_TARGET_NAME, target.getUsername()),
+        this.messageFactory.staticComponent(KEY_TARGET_UUID, target.getUuid().toString()));
   }
 
   public @NonNull IMessage commandsFeedbackMute(final @NonNull BanUser target) {
     return this.messageFactory.placeholderMessage(MessageKey.COMMANDS_FEEDBACK_MUTE,
-        this.messageFactory.staticComponent("targetName", target.getUsername()),
-        this.messageFactory.staticComponent("targetUuid", target.getUuid().toString()));
+        this.messageFactory.staticComponent(KEY_TARGET_NAME, target.getUsername()),
+        this.messageFactory.staticComponent(KEY_TARGET_UUID, target.getUuid().toString()));
   }
 
   public @NonNull IMessage commandsFeedbackUnmute(final @NonNull BanUser target) {
     return this.messageFactory.placeholderMessage(MessageKey.COMMANDS_FEEDBACK_UNMUTE,
-        this.messageFactory.staticComponent("targetName", target.getUsername()),
-        this.messageFactory.staticComponent("targetUuid", target.getUuid().toString()));
+        this.messageFactory.staticComponent(KEY_TARGET_NAME, target.getUsername()),
+        this.messageFactory.staticComponent(KEY_TARGET_UUID, target.getUuid().toString()));
   }
 
   public @NonNull IMessage commandsFeedbackUnban(final @NonNull BanUser target) {
     return this.messageFactory.placeholderMessage(MessageKey.COMMANDS_FEEDBACK_UNBAN,
-        this.messageFactory.staticComponent("targetName", target.getUsername()),
-        this.messageFactory.staticComponent("targetUuid", target.getUuid().toString()));
+        this.messageFactory.staticComponent(KEY_TARGET_NAME, target.getUsername()),
+        this.messageFactory.staticComponent(KEY_TARGET_UUID, target.getUuid().toString()));
   }
 
   public @NonNull IMessage commandsHistoryHeader(final @NonNull BanUser target, final @NonNegative int amount) {
     return this.messageFactory.placeholderMessage(MessageKey.COMMANDS_HISTORY_HEADER,
-        this.messageFactory.staticComponent("targetName", target.getUsername()),
-        this.messageFactory.staticComponent("targetUuid", target.getUuid().toString()),
-        this.messageFactory.staticComponent("amount", Integer.toString(amount)));
+        this.messageFactory.staticComponent(KEY_TARGET_NAME, target.getUsername()),
+        this.messageFactory.staticComponent(KEY_TARGET_UUID, target.getUuid().toString()),
+        this.messageFactory.staticComponent(KEY_QUANTITY, Integer.toString(amount)));
   }
 
   public @NonNull IMessage commandsHistoryEntry(final @NonNull Punishment punishment) {
@@ -179,35 +192,36 @@ public final class MessageService {
       final @NonNull BanUser target, final @NonNull BanUser punisher) {
     final IMessageComponent expiry =
         !punishment.currentlyApplies()
-            ? this.messageFactory.keyComponent("expiry", MessageKey.FORMATTING_LIFTED)
+            ? this.messageFactory.keyComponent(KEY_PUNISHMENT_EXPIRY, MessageKey.FORMATTING_LIFTED)
             : punishment.isPermanent()
-                ? this.messageFactory.keyComponent("expiry", MessageKey.FORMATTING_NEVER)
-                : this.messageFactory.staticComponent("expiry",
+                ? this.messageFactory.keyComponent(KEY_PUNISHMENT_EXPIRY, MessageKey.FORMATTING_NEVER)
+                : this.messageFactory.staticComponent(KEY_PUNISHMENT_EXPIRY,
                     DurationFormatUtils.formatDurationHMS(punishment.getExpiration() - System.currentTimeMillis()));
     final IMessageComponent duration = punishment.isPermanent()
-        ? this.messageFactory.keyComponent("duration", MessageKey.FORMATTING_PERMANENTLY)
-        : this.messageFactory.staticComponent("duration", MessageKey.FORMATTING_DURATION.map(this.messagesConfig)
-            .replace("<duration>",
-                DurationFormatUtils.formatDurationWords(
-                    punishment.getExpiration() - System.currentTimeMillis(),
-                    false,
-                    false
-                )));
+        ? this.messageFactory.keyComponent(KEY_PUNISHMENT_DURATION, MessageKey.FORMATTING_PERMANENTLY)
+        : this.messageFactory
+            .staticComponent(KEY_PUNISHMENT_DURATION, MessageKey.FORMATTING_DURATION.map(this.messagesConfig)
+                .replace("<duration>",
+                    DurationFormatUtils.formatDurationWords(
+                        punishment.getExpiration() - System.currentTimeMillis(),
+                        false,
+                        false
+                    )));
 
     return new IMessageComponent[]{
-        this.messageFactory.staticComponent("targetName", target.getUsername()),
-        this.messageFactory.staticComponent("targetUuid", target.getUuid().toString()),
+        this.messageFactory.staticComponent(KEY_TARGET_NAME, target.getUsername()),
+        this.messageFactory.staticComponent(KEY_TARGET_UUID, target.getUuid().toString()),
 
-        this.messageFactory.staticComponent("punisherName", punisher.getUsername()),
-        this.messageFactory.staticComponent("punisherUuid", punisher.getUuid().toString()),
+        this.messageFactory.staticComponent(KEY_PUNISHER_NAME, punisher.getUsername()),
+        this.messageFactory.staticComponent(KEY_PUNISHER_UUID, punisher.getUuid().toString()),
 
-        this.messageFactory.staticComponent("punishmentId", punishment.getId().orElse(-1L).toString()),
-        this.messageFactory.staticComponent("punishmentDate",
+        this.messageFactory.staticComponent(KEY_PUNISHMENT_ID, punishment.getId().orElse(-1L).toString()),
+        this.messageFactory.staticComponent(KEY_PUNISHMENT_DATE,
             SimpleDateFormat.getDateInstance().format(punishment.getDate())),
-        this.messageFactory.staticComponent("reason",
+        this.messageFactory.staticComponent(KEY_PUNISHMENT_REASON,
             punishment.getReason().map(MiniMessage.get()::escapeTokens).orElse("No reason specified")),
-        this.messageFactory.staticComponent("punishmentType", punishment.getPunishmentType().name()),
-        this.messageFactory.keyComponent("punishmentVerb", punishment.getPunishmentType().getVerbPastTense()),
+        this.messageFactory.staticComponent(KEY_PUNISHMENT_TYPE, punishment.getPunishmentType().name()),
+        this.messageFactory.keyComponent(KEY_PUNISHMENT_VERB, punishment.getPunishmentType().getVerbPastTense()),
 
         expiry,
         duration,
