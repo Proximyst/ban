@@ -34,10 +34,12 @@ import com.proximyst.ban.utils.BanExceptionalFutureLogger;
 import java.text.SimpleDateFormat;
 import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.identity.Identity;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.checkerframework.checker.index.qual.NonNegative;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 // The existence of this class is because of this issue:
 // <https://github.com/google/guice/issues/1345>.
@@ -164,16 +166,7 @@ public final class MessageService {
     final String permission = punishment.getPunishmentType().getNotificationPermission().orElse(null);
     return this.punishmentMessage(messageKey, punishment)
         .component()
-        .thenAccept(component -> {
-          this.banServer.consoleAudience().sendMessage(Identity.nil(), component);
-          for (final IBanAudience audience : this.banServer.onlineAudiences()) {
-            if (permission != null && !audience.hasPermission(permission)) {
-              continue;
-            }
-
-            audience.sendMessage(Identity.nil(), component);
-          }
-        });
+        .thenAccept(component -> this.announcePermissibleMessage(permission, component, Identity.nil()));
   }
 
   private @NonNull CompletableFuture<@NonNull IMessageComponent @NonNull []> createPlaceholders(
@@ -202,11 +195,8 @@ public final class MessageService {
         : this.messageFactory
             .staticComponent(KEY_PUNISHMENT_DURATION, MessageKey.FORMATTING_DURATION.map(this.messagesConfig)
                 .replace("<duration>",
-                    DurationFormatUtils.formatDurationWords(
-                        punishment.getExpiration() - System.currentTimeMillis(),
-                        false,
-                        false
-                    )));
+                    DurationFormatUtils.formatDurationWords(punishment.getExpiration() - System.currentTimeMillis(),
+                        false, false)));
 
     return new IMessageComponent[]{
         this.messageFactory.staticComponent(KEY_TARGET_NAME, target.getUsername()),
@@ -226,5 +216,18 @@ public final class MessageService {
         expiry,
         duration,
     };
+  }
+
+  private void announcePermissibleMessage(final @Nullable String permission,
+      final @NonNull Component component,
+      final @NonNull Identity source) {
+    this.banServer.consoleAudience().sendMessage(source, component);
+    for (final IBanAudience audience : this.banServer.onlineAudiences()) {
+      if (permission != null && !audience.hasPermission(permission)) {
+        continue;
+      }
+
+      audience.sendMessage(source, component);
+    }
   }
 }

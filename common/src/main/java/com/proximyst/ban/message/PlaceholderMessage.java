@@ -78,27 +78,35 @@ public final class PlaceholderMessage implements IMessage {
         .toArray(CompletableFuture[]::new);
 
     return CompletableFuture.allOf(futures)
-        .thenCompose($ -> {
-          // What if we got an IMessageComponent([]) as value from `await`?
-          // Well, we need to recursively merge those into our new map!
-          return this.awaitPlaceholders(Arrays.stream(futures)
-              .map(CompletableFuture::join)
-              .filter(IMessageComponent[].class::isInstance)
-              .flatMap(value -> Arrays.stream((IMessageComponent[]) value))
-              .toArray(IMessageComponent[]::new));
-        })
-        .thenApply(map -> {
-          for (int i = 0; i < messageComponents.length; ++i) {
-            final IMessageComponent component = messageComponents[i];
-            final Object value = futures[i].join();
-            if (value instanceof IMessageComponent[]) {
-              continue;
-            }
+        .thenCompose($ -> this.recursePlaceholders(futures))
+        .thenApply(map -> this.mergePlaceholders(futures, messageComponents, map));
+  }
 
-            map.put(component.name(), String.valueOf(value));
-          }
+  private @NonNull CompletableFuture<@NonNull Map<@NonNull String, @NonNull String>> recursePlaceholders(
+      final @NonNull CompletableFuture<@NonNull ?> @NonNull [] futures) {
+    // What if we got an IMessageComponent([]) as value from `await`?
+    // Well, we need to recursively merge those into our new map!
+    return this.awaitPlaceholders(Arrays.stream(futures)
+        .map(CompletableFuture::join)
+        .filter(IMessageComponent[].class::isInstance)
+        .flatMap(value -> Arrays.stream((IMessageComponent[]) value))
+        .toArray(IMessageComponent[]::new));
+  }
 
-          return map;
-        });
+  private @NonNull Map<@NonNull String, @NonNull String> mergePlaceholders(
+      final @NonNull CompletableFuture<@NonNull ?> @NonNull [] futures,
+      final @NonNull IMessageComponent @NonNull [] components,
+      final @NonNull Map<@NonNull String, @NonNull String> map) {
+    for (int i = 0; i < components.length; ++i) {
+      final IMessageComponent component = components[i];
+      final Object value = futures[i].join();
+      if (value instanceof IMessageComponent[]) {
+        continue;
+      }
+
+      map.put(component.name(), String.valueOf(value));
+    }
+
+    return map;
   }
 }

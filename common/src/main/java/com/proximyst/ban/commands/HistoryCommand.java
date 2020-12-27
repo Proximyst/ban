@@ -32,7 +32,9 @@ import com.proximyst.ban.service.IPunishmentService;
 import com.proximyst.ban.service.MessageService;
 import com.proximyst.ban.utils.BanExceptionalFutureLogger;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
+import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -69,28 +71,40 @@ public final class HistoryCommand extends BaseCommand {
         .send(ctx.getSender());
 
     this.punishmentService.getPunishments(target.getUuid())
-        .thenCompose(punishments -> {
-          final CompletableFuture<?>[] futures = new CompletableFuture<?>[punishments.size()];
-          int index = 0;
-          for (final Punishment punishment : punishments) {
-            futures[index++] = this.messageService.commandsHistoryEntry(punishment)
-                .component();
-          }
-
-          return CompletableFuture.allOf(futures)
-              .thenApply($ -> Arrays.stream(futures)
-                  .map(f -> (Component) f.join())
-                  .toArray(Component[]::new));
-        })
-        .thenAccept(messages -> {
-          this.messageService.commandsHistoryHeader(target, messages.length)
-              .send(ctx.getSender())
-              .thenRun(() -> {
-                for (final Component message : messages) {
-                  ctx.getSender().sendMessage(Identity.nil(), message);
-                }
-              });
-        })
+        .thenCompose(this::composePunishmentEntryComponents)
+        .thenCompose(components -> this.sendHeaderReturnEntries(components, target, ctx.getSender()))
+        .thenAccept(components -> this.sendMessages(components, ctx.getSender()))
         .exceptionally(this.banExceptionalFutureLogger.cast());
+  }
+
+  private @NonNull CompletableFuture<@NonNull Component @NonNull []> composePunishmentEntryComponents(
+      final @NonNull Collection<@NonNull Punishment> punishments) {
+    final CompletableFuture<?>[] futures = new CompletableFuture<?>[punishments.size()];
+    int index = 0;
+    for (final Punishment punishment : punishments) {
+      futures[index++] = this.messageService.commandsHistoryEntry(punishment)
+          .component();
+    }
+
+    return CompletableFuture.allOf(futures)
+        .thenApply($ -> Arrays.stream(futures)
+            .map(f -> (Component) f.join())
+            .toArray(Component[]::new));
+  }
+
+  private @NonNull CompletableFuture<@NonNull Component @NonNull []> sendHeaderReturnEntries(
+      final @NonNull Component @NonNull [] components,
+      final @NonNull BanUser target,
+      final @NonNull Audience receiver) {
+    return this.messageService.commandsHistoryHeader(target, components.length)
+        .send(receiver)
+        .thenApply($ -> components);
+  }
+
+  private void sendMessages(final @NonNull Component @NonNull [] components,
+      final @NonNull Audience receiver) {
+    for (final Component message : components) {
+      receiver.sendMessage(Identity.nil(), message);
+    }
   }
 }
