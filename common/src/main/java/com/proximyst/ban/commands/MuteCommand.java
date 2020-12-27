@@ -24,7 +24,6 @@ import cloud.commandframework.context.CommandContext;
 import com.google.inject.Inject;
 import com.proximyst.ban.BanPermissions;
 import com.proximyst.ban.commands.cloud.BaseCommand;
-import com.proximyst.ban.config.MessageKey;
 import com.proximyst.ban.factory.IBanExceptionalFutureLoggerFactory;
 import com.proximyst.ban.factory.ICloudArgumentFactory;
 import com.proximyst.ban.model.BanUser;
@@ -32,10 +31,9 @@ import com.proximyst.ban.model.Punishment;
 import com.proximyst.ban.model.PunishmentBuilder;
 import com.proximyst.ban.model.PunishmentType;
 import com.proximyst.ban.platform.IBanAudience;
-import com.proximyst.ban.service.IMessageService;
 import com.proximyst.ban.service.IPunishmentService;
+import com.proximyst.ban.service.MessageService;
 import com.proximyst.ban.utils.BanExceptionalFutureLogger;
-import net.kyori.adventure.identity.Identity;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -43,13 +41,13 @@ public final class MuteCommand extends BaseCommand {
   private final @NonNull BanExceptionalFutureLogger<?> banExceptionalFutureLogger;
   private final @NonNull ICloudArgumentFactory cloudArgumentFactory;
   private final @NonNull IPunishmentService punishmentService;
-  private final @NonNull IMessageService messageService;
+  private final @NonNull MessageService messageService;
 
   @Inject
   public MuteCommand(final @NonNull IBanExceptionalFutureLoggerFactory banExceptionalFutureLoggerFactory,
       final @NonNull ICloudArgumentFactory cloudArgumentFactory,
       final @NonNull IPunishmentService punishmentService,
-      final @NonNull IMessageService messageService) {
+      final @NonNull MessageService messageService) {
     this.banExceptionalFutureLogger = banExceptionalFutureLoggerFactory.createLogger(this.getClass());
     this.cloudArgumentFactory = cloudArgumentFactory;
     this.punishmentService = punishmentService;
@@ -69,10 +67,8 @@ public final class MuteCommand extends BaseCommand {
     final BanUser target = ctx.get("target");
     final @Nullable String reason = ctx.getOrDefault("reason", null);
 
-    this.messageService.sendFormattedMessage(ctx.getSender(), Identity.nil(), MessageKey.COMMANDS_FEEDBACK_MUTE,
-        "targetName", target.getUsername(),
-        "targetUuid", target.getUuid())
-        .exceptionally(this.banExceptionalFutureLogger.cast());
+    this.messageService.commandsFeedbackMute(target)
+        .send(ctx.getSender());
 
     final Punishment punishment =
         new PunishmentBuilder()

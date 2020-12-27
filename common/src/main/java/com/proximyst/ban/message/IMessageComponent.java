@@ -16,19 +16,23 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-package com.proximyst.ban.inject.factory;
+package com.proximyst.ban.message;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-import com.proximyst.ban.factory.IBanExceptionalFutureLoggerFactory;
+import java.util.concurrent.CompletableFuture;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.dataflow.qual.Pure;
 
-public class BanExceptionalFutureLoggerFactoryModule extends AbstractModule {
-  @Provides
-  @Singleton
-  @NonNull IBanExceptionalFutureLoggerFactory banExceptionalFutureLoggerFactory(
-      final IBanExceptionalFutureLoggerFactory.@NonNull ImplBanExceptionalFutureLoggerFactory factory) {
-    return factory;
-  }
+public interface IMessageComponent {
+  /**
+   * @return The name of this message component.
+   */
+  @Pure
+  @NonNull String name();
+
+  /**
+   * @return A future that is eventually completed with the component this future represents. It may be {@code null} iff
+   * {@link #name()} is not {@code null}.
+   */
+  @NonNull CompletableFuture<@Nullable ?> await();
 }

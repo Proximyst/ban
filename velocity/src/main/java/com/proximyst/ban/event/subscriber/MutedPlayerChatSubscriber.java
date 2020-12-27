@@ -20,8 +20,8 @@ package com.proximyst.ban.event.subscriber;
 
 import com.google.inject.Inject;
 import com.proximyst.ban.BanPermissions;
-import com.proximyst.ban.service.IMessageService;
 import com.proximyst.ban.service.IPunishmentService;
+import com.proximyst.ban.service.MessageService;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.player.PlayerChatEvent;
 import com.velocitypowered.api.event.player.PlayerChatEvent.ChatResult;
@@ -29,11 +29,11 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class MutedPlayerChatSubscriber {
   private final @NonNull IPunishmentService punishmentService;
-  private final @NonNull IMessageService messageService;
+  private final @NonNull MessageService messageService;
 
   @Inject
   public MutedPlayerChatSubscriber(final @NonNull IPunishmentService punishmentService,
-      final @NonNull IMessageService messageService) {
+      final @NonNull MessageService messageService) {
     this.punishmentService = punishmentService;
     this.messageService = messageService;
   }
@@ -52,7 +52,8 @@ public class MutedPlayerChatSubscriber {
 
           mute.getPunishmentType()
               .getApplicationMessage(mute.getReason().isPresent())
-              .ifPresent(key -> this.messageService.sendFormattedMessage(event.getPlayer(), event.getPlayer(), key));
+              .ifPresent(key -> this.messageService.punishmentMessage(key, mute)
+                  .send(event.getPlayer()));
         });
   }
 }

@@ -26,7 +26,7 @@ import com.proximyst.ban.config.MessagesConfig;
 import com.proximyst.ban.config.SqlConfig;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
-public class ConfigurationModule extends AbstractModule {
+public final class ConfigurationModule extends AbstractModule {
   @Singleton
   @Provides
   @NonNull MessagesConfig messagesConfig(final @NonNull Configuration configuration) {

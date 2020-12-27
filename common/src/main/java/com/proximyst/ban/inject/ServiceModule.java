@@ -22,12 +22,10 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.proximyst.ban.service.IDataService;
-import com.proximyst.ban.service.IMessageService;
 import com.proximyst.ban.service.IMojangService;
 import com.proximyst.ban.service.IPunishmentService;
 import com.proximyst.ban.service.IUserService;
 import com.proximyst.ban.service.impl.ImplAshconMojangService;
-import com.proximyst.ban.service.impl.ImplMessageService;
 import com.proximyst.ban.service.impl.ImplGenericSqlDataService;
 import com.proximyst.ban.service.impl.ImplPunishmentService;
 import com.proximyst.ban.service.impl.ImplUserService;
@@ -39,12 +37,6 @@ public final class ServiceModule extends AbstractModule {
   @Singleton
   @NonNull IDataService dataService(final @NonNull ImplGenericSqlDataService sqlDataService) {
     return sqlDataService;
-  }
-
-  @Provides
-  @Singleton
-  @NonNull IMessageService messageService(final @NonNull ImplMessageService messageService) {
-    return messageService;
   }
 
   // TODO(Proximyst): Support official Mojang API

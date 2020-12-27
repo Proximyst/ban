@@ -20,8 +20,8 @@ package com.proximyst.ban.event.subscriber;
 
 import com.google.inject.Inject;
 import com.proximyst.ban.BanPermissions;
-import com.proximyst.ban.service.IMessageService;
 import com.proximyst.ban.service.IPunishmentService;
+import com.proximyst.ban.service.MessageService;
 import com.velocitypowered.api.event.ResultedEvent.ComponentResult;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.LoginEvent;
@@ -29,11 +29,11 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class BannedPlayerJoinSubscriber {
   private final @NonNull IPunishmentService punishmentService;
-  private final @NonNull IMessageService messageService;
+  private final @NonNull MessageService messageService;
 
   @Inject
   public BannedPlayerJoinSubscriber(final @NonNull IPunishmentService punishmentService,
-      final @NonNull IMessageService messageService) {
+      final @NonNull MessageService messageService) {
     this.punishmentService = punishmentService;
     this.messageService = messageService;
   }
@@ -47,14 +47,14 @@ public class BannedPlayerJoinSubscriber {
 
     this.punishmentService.getActiveBan(event.getPlayer().getUniqueId())
         .join() // This *should* be fast, and only on one player's connection thread
-        .ifPresent(ban -> {
-          event.setResult(ComponentResult.denied(
-              this.messageService.formatMessage(ban.getPunishmentType()
-                      .getApplicationMessage(ban.getReason().isPresent()).orElse(null),
-                  ban)
-                  // We're about to deny them access; the time it takes to fetch the data doesn't matter.
-                  .join()
-          ));
-        });
+        .ifPresent(ban ->
+            event.setResult(ComponentResult.denied(
+                this.messageService.punishmentMessage(ban.getPunishmentType()
+                        .getApplicationMessage(ban.getReason().isPresent())
+                        .orElseThrow(() -> new IllegalStateException("application message must exist")),
+                    ban)
+                    // We're about to deny them access; the time it takes to fetch the data doesn't matter.
+                    .component().join()
+            )));
   }
 }
