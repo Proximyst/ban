@@ -126,7 +126,7 @@ public final class ImplPunishmentService implements IPunishmentService {
         punishment
             .getPunishmentType()
             .getApplicationMessage(punishment.getReason().isPresent())
-            .orElseThrow(() -> new IllegalStateException("applicable punishment without punishment type")),
+            .orElseThrow(() -> new IllegalStateException("Applicable punishment without punishment type")),
         punishment)
         .component()
         .thenAccept(component -> {
