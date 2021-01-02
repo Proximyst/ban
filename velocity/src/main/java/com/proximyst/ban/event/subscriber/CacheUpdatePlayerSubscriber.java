@@ -1,6 +1,6 @@
 //
 // ban - A punishment suite for Velocity.
-// Copyright (C) 2020 Mariell Hoversholm
+// Copyright (C) 2021 Mariell Hoversholm
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
@@ -36,8 +36,7 @@ public class CacheUpdatePlayerSubscriber {
   private final @NonNull IPunishmentService punishmentService;
 
   @Inject
-  public CacheUpdatePlayerSubscriber(
-      final @NonNull IBanExceptionalFutureLoggerFactory banExceptionalFutureLoggerFactory,
+  CacheUpdatePlayerSubscriber(final @NonNull IBanExceptionalFutureLoggerFactory banExceptionalFutureLoggerFactory,
       final @NonNull IUserService userService,
       final @NonNull IPunishmentService punishmentService) {
     this.banExceptionalFutureLogger = banExceptionalFutureLoggerFactory.createLogger(this.getClass());

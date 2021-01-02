@@ -1,6 +1,6 @@
 //
 // ban - A punishment suite for Velocity.
-// Copyright (C) 2020 Mariell Hoversholm
+// Copyright (C) 2021 Mariell Hoversholm
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
@@ -39,7 +39,7 @@ import org.checkerframework.common.returnsreceiver.qual.This;
 
 public final class BanUserArgument extends CommandArgument<@NonNull IBanAudience, @NonNull BanUser> {
   @AssistedInject
-  public BanUserArgument(final @NonNull IUserService userService,
+  BanUserArgument(final @NonNull IUserService userService,
       final @NonNull IBanServer banServer,
       final @Assisted("required") boolean required,
       final @Assisted("name") @NonNull String name,
@@ -51,7 +51,7 @@ public final class BanUserArgument extends CommandArgument<@NonNull IBanAudience
   }
 
   @AssistedInject
-  public BanUserArgument(final @NonNull IUserService userService,
+  BanUserArgument(final @NonNull IUserService userService,
       final @NonNull IBanServer banServer,
       final @Assisted("required") boolean required,
       final @Assisted("name") @NonNull String name) {
@@ -63,7 +63,7 @@ public final class BanUserArgument extends CommandArgument<@NonNull IBanAudience
     private final @NonNull IBanServer banServer;
     private final boolean online;
 
-    public BanUserParser(final @NonNull IUserService userService,
+    private BanUserParser(final @NonNull IUserService userService,
         final @NonNull IBanServer banServer,
         final boolean online) {
       this.userService = userService;
@@ -150,7 +150,7 @@ public final class BanUserArgument extends CommandArgument<@NonNull IBanAudience
   public static final class InvalidPlayerIdentifierException extends IllegalArgumentException {
     private static final long serialVersionUID = -6500019324607183855L;
 
-    public InvalidPlayerIdentifierException(final @NonNull String message) {
+    private InvalidPlayerIdentifierException(final @NonNull String message) {
       super(message);
     }
 

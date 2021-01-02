@@ -1,6 +1,6 @@
 //
 // ban - A punishment suite for Velocity.
-// Copyright (C) 2020 Mariell Hoversholm
+// Copyright (C) 2021 Mariell Hoversholm
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
@@ -42,7 +42,7 @@ public final class HttpUtils {
   private final @NonNull HttpClient httpClient;
 
   @Inject
-  public HttpUtils(final @BanAsyncExecutor @NonNull Executor executor) {
+  HttpUtils(final @BanAsyncExecutor @NonNull Executor executor) {
     this.httpClient = HttpClient.newBuilder()
         .executor(executor)
         .version(Version.HTTP_2)

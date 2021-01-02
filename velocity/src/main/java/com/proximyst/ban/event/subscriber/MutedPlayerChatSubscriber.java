@@ -1,6 +1,6 @@
 //
 // ban - A punishment suite for Velocity.
-// Copyright (C) 2020 Mariell Hoversholm
+// Copyright (C) 2021 Mariell Hoversholm
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
@@ -32,7 +32,7 @@ public class MutedPlayerChatSubscriber {
   private final @NonNull MessageService messageService;
 
   @Inject
-  public MutedPlayerChatSubscriber(final @NonNull IPunishmentService punishmentService,
+  MutedPlayerChatSubscriber(final @NonNull IPunishmentService punishmentService,
       final @NonNull MessageService messageService) {
     this.punishmentService = punishmentService;
     this.messageService = messageService;

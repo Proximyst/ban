@@ -1,6 +1,6 @@
 //
 // ban - A punishment suite for Velocity.
-// Copyright (C) 2020 Mariell Hoversholm
+// Copyright (C) 2021 Mariell Hoversholm
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
@@ -32,7 +32,7 @@ public final class VelocityBanSchedulerExecutor implements Executor {
   private final @NonNull ProxyServer proxyServer;
 
   @Inject
-  public VelocityBanSchedulerExecutor(final @NonNull BanPlugin main,
+  VelocityBanSchedulerExecutor(final @NonNull BanPlugin main,
       final @NonNull ProxyServer proxyServer) {
     this.main = main;
     this.proxyServer = proxyServer;

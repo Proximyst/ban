@@ -1,6 +1,6 @@
 //
 // ban - A punishment suite for Velocity.
-// Copyright (C) 2020 Mariell Hoversholm
+// Copyright (C) 2021 Mariell Hoversholm
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
@@ -59,7 +59,7 @@ public final class ImplPunishmentService implements IPunishmentService {
           .build();
 
   @Inject
-  public ImplPunishmentService(final @NonNull IDataService dataService,
+  ImplPunishmentService(final @NonNull IDataService dataService,
       final @NonNull MessageService messageService,
       final @NonNull @BanAsyncExecutor Executor executor,
       final @NonNull IBanServer banServer) {

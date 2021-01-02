@@ -16,23 +16,16 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-package com.proximyst.ban.message;
+package com.proximyst.ban.inject.annotation;
 
-import java.util.concurrent.CompletableFuture;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.dataflow.qual.Pure;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import javax.inject.Qualifier;
 
-public interface IMessageComponent {
-  /**
-   * @return The name of this message component.
-   */
-  @Pure
-  @NonNull String name();
-
-  /**
-   * @return A future that is eventually completed with the component this future represents. It may be {@code null} iff
-   * {@link #name()} is not {@code null}.
-   */
-  @NonNull CompletableFuture<@Nullable ?> await();
+@Qualifier
+@Target({ElementType.TYPE_USE, ElementType.METHOD, ElementType.PARAMETER, ElementType.FIELD})
+@Retention(RetentionPolicy.RUNTIME)
+public @interface PluginData {
 }

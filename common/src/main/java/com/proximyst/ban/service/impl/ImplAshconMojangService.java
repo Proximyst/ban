@@ -1,6 +1,6 @@
 //
 // ban - A punishment suite for Velocity.
-// Copyright (C) 2020 Mariell Hoversholm
+// Copyright (C) 2021 Mariell Hoversholm
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
@@ -66,7 +66,7 @@ public final class ImplAshconMojangService implements IMojangService {
       .build();
 
   @Inject
-  public ImplAshconMojangService(final @NonNull HttpUtils httpUtils) {
+  ImplAshconMojangService(final @NonNull HttpUtils httpUtils) {
     this.httpUtils = httpUtils;
   }
 

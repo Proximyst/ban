@@ -1,6 +1,6 @@
 //
 // ban - A punishment suite for Velocity.
-// Copyright (C) 2020 Mariell Hoversholm
+// Copyright (C) 2021 Mariell Hoversholm
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
@@ -92,21 +92,18 @@ public final class Punishment {
    */
   private @Nullable UUID liftedBy;
 
-  public Punishment(
-      final @NonNull PunishmentType punishmentType,
+  public Punishment(final @NonNull PunishmentType punishmentType,
       final @NonNull UUID target,
       final @NonNull UUID punisher,
       final @Nullable String reason,
       final boolean lifted,
       final @Nullable UUID liftedBy,
       final long time,
-      final long duration
-  ) {
+      final long duration) {
     this(-1, punishmentType, target, punisher, reason, lifted, liftedBy, time, duration);
   }
 
-  public Punishment(
-      final long id,
+  public Punishment(final long id,
       final @NonNull PunishmentType punishmentType,
       final @NonNull UUID target,
       final @NonNull UUID punisher,
@@ -114,8 +111,7 @@ public final class Punishment {
       final boolean lifted,
       final @Nullable UUID liftedBy,
       final long time,
-      final long duration
-  ) {
+      final long duration) {
     if (!lifted && liftedBy != null) {
       throw new IllegalArgumentException("liftedBy must be null if lifted is false");
     }

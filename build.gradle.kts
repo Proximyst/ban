@@ -1,9 +1,6 @@
 import com.github.jengelman.gradle.plugins.shadow.ShadowPlugin
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-import com.proximyst.ban.BanGradlePlugin
-import com.proximyst.ban.CLOUD_VER
-import com.proximyst.ban.GUICE_VER
-import com.proximyst.ban.ban
+import com.proximyst.ban.*
 import java.util.Calendar
 import nl.javadude.gradle.plugins.license.LicensePlugin
 import org.checkerframework.gradle.plugin.CheckerFrameworkPlugin
@@ -77,16 +74,16 @@ subprojects {
         }
         implementation("org.flywaydb:flyway-core:7.1.1")
 
-        compileOnlyApi("net.kyori:adventure-api:4.3.0")
-        implementation("net.kyori:adventure-text-minimessage:4.0.0-SNAPSHOT") {
-            // We get adventure through velocity-api
-            isTransitive = false
+        compileOnlyApi("net.kyori:adventure-api:$ADVENTURE_VER")
+        implementation("net.kyori:adventure-text-minimessage:4.1.0-SNAPSHOT") {
+            // We already get adventure elsewhere.
+            exclude("net.kyori", "adventure-api")
         }
 
         // TODO: Include apache commons lang per-platform; see what Bukkit uses here...
-        compileOnly("org.apache.commons:commons-lang3:3.11")
+        compileOnly("org.apache.commons:commons-lang3:$COMMONS_LANG_VER")
 
-        compileOnly("com.google.code.gson:gson:2.8.6")
+        compileOnly("com.google.code.gson:gson:$GSON_VER")
 
         implementation("cloud.commandframework:cloud-core:$CLOUD_VER")
 
@@ -97,7 +94,8 @@ subprojects {
             isTransitive = false
         }
 
-        compileOnlyApi("org.spongepowered:configurate-core:3.7.1")
+        compileOnlyApi("org.spongepowered:configurate-core:$CONFIGURATE_VER")
+        compileOnlyApi("org.spongepowered:configurate-hocon:$CONFIGURATE_VER")
     }
 
     tasks {

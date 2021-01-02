@@ -1,6 +1,6 @@
 //
 // ban - A punishment suite for Velocity.
-// Copyright (C) 2020 Mariell Hoversholm
+// Copyright (C) 2021 Mariell Hoversholm
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
@@ -36,7 +36,7 @@ public class VelocityServer implements IBanServer, ForwardingAudience.Single {
   private final @NonNull ProxyServer proxyServer;
 
   @Inject
-  public VelocityServer(final @NonNull ProxyServer proxyServer) {
+  VelocityServer(final @NonNull ProxyServer proxyServer) {
     this.proxyServer = proxyServer;
   }
 

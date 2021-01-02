@@ -1,6 +1,6 @@
 //
 // ban - A punishment suite for Velocity.
-// Copyright (C) 2020 Mariell Hoversholm
+// Copyright (C) 2021 Mariell Hoversholm
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
@@ -22,15 +22,17 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.proximyst.ban.BanPlugin;
-import com.proximyst.ban.config.Configuration;
 import com.proximyst.ban.inject.annotation.BanAsyncExecutor;
+import com.proximyst.ban.inject.annotation.PluginData;
 import com.proximyst.ban.platform.IBanPlugin;
 import com.proximyst.ban.platform.IBanServer;
 import com.proximyst.ban.platform.VelocityBanSchedulerExecutor;
 import com.proximyst.ban.platform.VelocityServer;
+import com.velocitypowered.api.plugin.annotation.DataDirectory;
+import java.io.File;
+import java.nio.file.Path;
 import java.util.concurrent.Executor;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.jdbi.v3.core.Jdbi;
 
 public class PlatformModule extends AbstractModule {
   @Singleton
@@ -47,20 +49,22 @@ public class PlatformModule extends AbstractModule {
 
   @Singleton
   @Provides
-  @BanAsyncExecutor
-  @NonNull Executor asyncExecutor(final @NonNull VelocityBanSchedulerExecutor executorImpl) {
+  @BanAsyncExecutor @NonNull Executor asyncExecutor(final @NonNull VelocityBanSchedulerExecutor executorImpl) {
     return executorImpl;
   }
 
   @Singleton
   @Provides
-  @NonNull Configuration configuration(final @NonNull BanPlugin banPlugin) {
-    return banPlugin.getConfiguration();
+  @PluginData @NonNull Path dataDirectory(final @NonNull @DataDirectory Path dataDirectory) {
+    return dataDirectory;
   }
 
+  @SuppressWarnings("ResultOfMethodCallIgnored")
   @Singleton
   @Provides
-  @NonNull Jdbi jdbi(final @NonNull BanPlugin plugin) {
-    return plugin.getJdbi();
+  @PluginData @NonNull File dataDirectoryFile(final @NonNull @DataDirectory Path dataDirectory) {
+    final File file = dataDirectory.toFile();
+    file.mkdirs();
+    return file;
   }
 }
