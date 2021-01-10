@@ -149,7 +149,10 @@ public final class ImplAshconMojangService implements IMojangService {
     return CompletableFuture.supplyAsync(() -> this.ashconMojangApi.getUser(identifier), this.executor)
         .thenApply(opt -> {
           final Optional<BanUser> user = opt.map(IAshconMojangApi.AshconUser::toBanUser);
-          user.ifPresent(banUser -> this.usernameUuidCache.put(banUser.getUsername(), banUser.getUuid()));
+          user.ifPresent(banUser -> {
+            this.usernameUuidCache.put(banUser.getUsername(), banUser.getUuid());
+            this.banUserCache.put(banUser.getUuid(), banUser);
+          });
 
           return user;
         })
