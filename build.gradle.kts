@@ -65,6 +65,7 @@ subprojects {
 
     dependencies {
         compileOnlyApi("org.slf4j:slf4j-api:$SLF4J_VER") // The API shouldn't change too drastically...
+        testImplementation("org.slf4j:slf4j-api:$SLF4J_VER") // The API shouldn't change too drastically...
         implementation("org.jdbi:jdbi3-core:3.17.0") {
             exclude("org.slf4j")
         }
@@ -75,6 +76,7 @@ subprojects {
         implementation("org.flywaydb:flyway-core:7.1.1")
 
         compileOnlyApi("net.kyori:adventure-api:$ADVENTURE_VER")
+        testImplementation("net.kyori:adventure-api:$ADVENTURE_VER")
         implementation("net.kyori:adventure-text-minimessage:4.1.0-SNAPSHOT") {
             // We already get adventure elsewhere.
             exclude("net.kyori", "adventure-api")
@@ -82,12 +84,21 @@ subprojects {
 
         // TODO: Include apache commons lang per-platform; see what Bukkit uses here...
         compileOnly("org.apache.commons:commons-lang3:$COMMONS_LANG_VER")
+        testImplementation("org.apache.commons:commons-lang3:$COMMONS_LANG_VER")
 
         compileOnly("com.google.code.gson:gson:$GSON_VER")
+        testImplementation("com.google.code.gson:gson:$GSON_VER")
 
         implementation("cloud.commandframework:cloud-core:$CLOUD_VER")
 
+        implementation("io.github.openfeign:feign-core:11.0")
+        implementation("io.github.openfeign:feign-java11:10.12")
+        implementation("io.github.openfeign:feign-gson:11.0") {
+            exclude("com.google.code.gson")
+        }
+
         compileOnlyApi("com.google.inject:guice:$GUICE_VER")
+        testImplementation("com.google.inject:guice:$GUICE_VER")
         implementation("com.google.inject.extensions:guice-assistedinject:$GUICE_VER") {
             // Only the deps provided by the artifact directly are wanted;
             // Guice will be provided as shown above. Its shadowing state is set by the platform.
@@ -96,6 +107,13 @@ subprojects {
 
         compileOnlyApi("org.spongepowered:configurate-core:$CONFIGURATE_VER")
         compileOnlyApi("org.spongepowered:configurate-hocon:$CONFIGURATE_VER")
+        testImplementation("org.spongepowered:configurate-core:$CONFIGURATE_VER")
+        testImplementation("org.spongepowered:configurate-hocon:$CONFIGURATE_VER")
+
+        testImplementation("org.junit.jupiter:junit-jupiter:5.+")
+        testImplementation("org.mockito:mockito-core:3.+")
+        testImplementation("org.mockito:mockito-junit-jupiter:3.+")
+        testImplementation("org.assertj:assertj-core:3.+")
     }
 
     tasks {
@@ -133,7 +151,8 @@ subprojects {
                 "cloud.commandframework",
                 "com.google.inject.extensions.assistedinject",
                 "com.google.inject.assistedinject",
-                "org.flyway"
+                "org.flyway",
+                "feign"
             )
             doFirst {
                 reloc(*ban.relocations.toTypedArray())
@@ -149,6 +168,10 @@ subprojects {
                 compilerArgs.add("-Xlint:all")
                 compilerArgs.add("-parameters")
             }
+        }
+
+        test {
+            useJUnitPlatform()
         }
 
         javadoc {

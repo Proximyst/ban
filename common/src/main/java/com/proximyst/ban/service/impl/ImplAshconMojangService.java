@@ -20,30 +20,27 @@ package com.proximyst.ban.service.impl;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.google.gson.Gson;
-import com.google.gson.annotations.SerializedName;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.proximyst.ban.factory.IBanExceptionalFutureLoggerFactory;
+import com.proximyst.ban.inject.annotation.BanAsyncExecutor;
 import com.proximyst.ban.model.BanUser;
 import com.proximyst.ban.model.UsernameHistory;
+import com.proximyst.ban.rest.IAshconMojangApi;
 import com.proximyst.ban.service.IMojangService;
-import com.proximyst.ban.utils.HttpUtils;
+import com.proximyst.ban.utils.BanExceptionalFutureLogger;
 import com.proximyst.ban.utils.StringUtils;
 import com.proximyst.ban.utils.ThrowableUtils;
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import org.checkerframework.checker.index.qual.NonNegative;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 @Singleton
 public final class ImplAshconMojangService implements IMojangService {
-  private static final @NonNull Gson GSON = new Gson();
-  private static final @NonNull String API_BASE = "https://api.ashcon.app/mojang/v2/";
   private static final @NonNegative int MAXIMUM_BAN_USER_CACHE_CAPACITY =
       Integer.getInteger("ban.maxBanUserCacheCapacity", 512);
   private static final @NonNegative int MAXIMUM_USERNAME_TO_UUID_CACHE_CAPACITY =
@@ -51,7 +48,9 @@ public final class ImplAshconMojangService implements IMojangService {
   private static final @NonNull CompletableFuture<@NonNull Optional<@NonNull BanUser>> CONSOLE_USER =
       CompletableFuture.completedFuture(Optional.of(BanUser.CONSOLE));
 
-  private final @NonNull HttpUtils httpUtils;
+  private final @NonNull IAshconMojangApi ashconMojangApi;
+  private final @NonNull Executor executor;
+  private final @NonNull BanExceptionalFutureLogger<?> banExceptionalFutureLogger;
 
   private final @NonNull Cache<@NonNull UUID, @NonNull BanUser> banUserCache = CacheBuilder.newBuilder()
       .initialCapacity(512)
@@ -66,8 +65,12 @@ public final class ImplAshconMojangService implements IMojangService {
       .build();
 
   @Inject
-  ImplAshconMojangService(final @NonNull HttpUtils httpUtils) {
-    this.httpUtils = httpUtils;
+  ImplAshconMojangService(final @NonNull IAshconMojangApi ashconMojangApi,
+      final @NonNull @BanAsyncExecutor Executor executor,
+      final @NonNull IBanExceptionalFutureLoggerFactory banExceptionalFutureLoggerFactory) {
+    this.ashconMojangApi = ashconMojangApi;
+    this.executor = executor;
+    this.banExceptionalFutureLogger = banExceptionalFutureLoggerFactory.createLogger(this.getClass());
   }
 
   @Override
@@ -143,33 +146,13 @@ public final class ImplAshconMojangService implements IMojangService {
 
   private @NonNull CompletableFuture<@NonNull Optional<@NonNull BanUser>> fetchFromIdentifier(
       final @NonNull String identifier) {
-    return this.httpUtils.get(API_BASE + "user/" + identifier)
+    return CompletableFuture.supplyAsync(() -> this.ashconMojangApi.getUser(identifier), this.executor)
         .thenApply(opt -> {
-          final Optional<BanUser> user = opt.map(json -> GSON.fromJson(json, AshconUser.class).toBanUser());
+          final Optional<BanUser> user = opt.map(IAshconMojangApi.AshconUser::toBanUser);
           user.ifPresent(banUser -> this.usernameUuidCache.put(banUser.getUsername(), banUser.getUuid()));
 
           return user;
-        });
-  }
-
-  @NonNull
-  static class AshconUser {
-    @SerializedName("uuid")
-    UUID uuid;
-
-    @SerializedName("username")
-    String username;
-
-    @SerializedName("username_history")
-    @Nullable List<UsernameHistory.@NonNull Entry> history;
-
-    @NonNull BanUser toBanUser() {
-      return new BanUser(this.uuid,
-          this.username,
-          new UsernameHistory(this.uuid,
-              this.history == null
-                  ? Collections.singleton(new UsernameHistory.Entry(this.username, null))
-                  : this.history));
-    }
+        })
+        .exceptionally(this.banExceptionalFutureLogger.cast());
   }
 }

@@ -19,8 +19,11 @@
 package com.proximyst.ban.model;
 
 import java.util.Collections;
+import java.util.Objects;
 import java.util.UUID;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class BanUser {
   /**
@@ -69,5 +72,33 @@ public final class BanUser {
    */
   public @NonNull UsernameHistory getUsernameHistory() {
     return this.usernameHistory;
+  }
+
+  @Override
+  public boolean equals(final @Nullable Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || this.getClass() != o.getClass()) {
+      return false;
+    }
+    final BanUser banUser = (BanUser) o;
+    return this.getUuid().equals(banUser.getUuid()) &&
+        this.getUsername().equals(banUser.getUsername()) &&
+        this.getUsernameHistory().equals(banUser.getUsernameHistory());
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(this.getUuid(), this.getUsername(), this.getUsernameHistory());
+  }
+
+  @Override
+  public String toString() {
+    return new ToStringBuilder(this)
+        .append("uuid", this.uuid)
+        .append("username", this.username)
+        .append("usernameHistory", this.usernameHistory)
+        .toString();
   }
 }

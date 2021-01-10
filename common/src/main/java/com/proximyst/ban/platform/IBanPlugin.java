@@ -31,6 +31,7 @@ import com.proximyst.ban.commands.UnmuteCommand;
 import com.proximyst.ban.commands.cloud.BaseCommand;
 import com.proximyst.ban.inject.ConfigurationModule;
 import com.proximyst.ban.inject.FactoryModule;
+import com.proximyst.ban.inject.FeignModule;
 import com.proximyst.ban.inject.ServiceModule;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.dataflow.qual.Pure;
@@ -47,6 +48,7 @@ public interface IBanPlugin {
       new ConfigurationModule(),
       new FactoryModule(),
       new ServiceModule(),
+      new FeignModule(),
       new BanPluginImplModule()
   };
 
