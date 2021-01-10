@@ -64,7 +64,7 @@ subprojects {
     }
 
     dependencies {
-        compileOnlyApi("org.slf4j:slf4j-api:1.7.30") // The API shouldn't change too drastically...
+        compileOnlyApi("org.slf4j:slf4j-api:$SLF4J_VER") // The API shouldn't change too drastically...
         implementation("org.jdbi:jdbi3-core:3.17.0") {
             exclude("org.slf4j")
         }

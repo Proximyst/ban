@@ -1,6 +1,6 @@
 package com.proximyst.ban
 
-const val CLOUD_VER = "1.2.0"
+const val CLOUD_VER = "1.3.0"
 const val GUICE_VER = "4.2.3"
 const val CONFIGURATE_VER = "3.7.1"
 const val SLF4J_VER = "1.7.30"
