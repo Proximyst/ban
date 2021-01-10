@@ -69,6 +69,7 @@ class AshconMojangServiceTest {
 
     Optional<BanUser> optional = this.service.getUser(TestSetup.USER_NAME).join();
     verify(this.ashconMojangApi).getUser(TestSetup.USER_NAME);
+    verifyNoMoreInteractions(this.ashconMojangApi);
     assertThat(optional).isPresent();
     assertThat(optional).get().isEqualTo(this.validUser.toBanUser());
 
@@ -90,6 +91,7 @@ class AshconMojangServiceTest {
 
     Optional<BanUser> optional = this.service.getUser(TestSetup.USER_UUID).join();
     verify(this.ashconMojangApi).getUser(TestSetup.USER_UUID.toString());
+    verifyNoMoreInteractions(this.ashconMojangApi);
     assertThat(optional).isPresent();
     assertThat(optional).get().isEqualTo(this.validUser.toBanUser());
 
