@@ -12,6 +12,7 @@ plugins {
     id("com.github.johnrengelman.shadow") version "6.0.0"
     id("com.github.hierynomus.license") version "0.15.0"
     id("org.checkerframework") version "0.5.12"
+    jacoco
     ban
 }
 
@@ -29,6 +30,7 @@ subprojects {
         plugin<LicensePlugin>()
         plugin<CheckerFrameworkPlugin>()
         plugin<BanGradlePlugin>()
+        plugin<JacocoPlugin>()
     }
 
     repositories {
@@ -170,8 +172,18 @@ subprojects {
             }
         }
 
+        val jacocoTestReport by getting(JacocoReport::class)
         test {
             useJUnitPlatform()
+            finalizedBy(jacocoTestReport)
+        }
+
+        jacocoTestReport {
+            dependsOn(test)
+            reports {
+                xml.isEnabled = true
+                html.isEnabled = false
+            }
         }
 
         javadoc {
@@ -216,6 +228,10 @@ allprojects {
         val configRoot = rootProject.projectDir
         configDirectory.set(configRoot)
         configProperties["basedir"] = configRoot.absolutePath
+    }
+
+    jacoco {
+        reportsDir = rootProject.buildDir.resolve("reports").resolve("jacoco")
     }
 }
 

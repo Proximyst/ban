@@ -22,6 +22,10 @@ jobs:
           restore-keys: ${{ runner.os }}-${{ matrix.java }}-gradle
       - name: Build
         run: ./gradlew build test
+      - name: CodeCov
+        uses: codecov/codecov-action@v1
+        with:
+          directory: build/reports/jacoco/
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
         with:
