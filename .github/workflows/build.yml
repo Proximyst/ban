@@ -22,3 +22,8 @@ jobs:
           restore-keys: ${{ runner.os }}-${{ matrix.java }}-gradle
       - name: Build
         run: ./gradlew build test
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: ban-jdk-${{ matrix.java }}
+          path: '**/build/libs/*.jar'
