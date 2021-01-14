@@ -18,60 +18,92 @@
 
 package com.proximyst.ban.service.impl;
 
-import cloud.commandframework.types.tuples.Pair;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import com.google.common.collect.ImmutableList;
 import com.proximyst.ban.config.SqlConfig;
-import com.proximyst.ban.model.BanUser;
+import com.proximyst.ban.factory.IIdentityFactory;
+import com.proximyst.ban.model.BanIdentity;
+import com.proximyst.ban.model.BanIdentity.ConsoleIdentity;
+import com.proximyst.ban.model.BanIdentity.IpIdentity;
+import com.proximyst.ban.model.BanIdentity.UuidIdentity;
 import com.proximyst.ban.model.Punishment;
-import com.proximyst.ban.model.UsernameHistory;
-import com.proximyst.ban.model.UsernameHistory.Entry;
+import com.proximyst.ban.model.PunishmentBuilder;
+import com.proximyst.ban.model.sql.IdentityType;
+import com.proximyst.ban.model.sql.IpAddressType;
+import com.proximyst.ban.platform.IBanAudience.IBanConsole;
 import com.proximyst.ban.service.IDataService;
 import com.proximyst.ban.utils.ResourceReader;
 import com.proximyst.ban.utils.ThrowableUtils;
 import com.proximyst.ban.utils.ThrowingConsumer;
+import java.net.Inet4Address;
+import java.net.InetAddress;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.result.RowView;
-import org.jdbi.v3.core.statement.Update;
 
 @Singleton
 public final class ImplGenericSqlDataService implements IDataService {
+  private final @NonNull ConsoleIdentity consoleIdentity;
+  private final @NonNull IIdentityFactory identityFactory;
+
   private final @NonNull Jdbi jdbi;
   private final @NonNull String path;
 
   private final @NonNull Query queryCreatePunishment;
+  private final @NonNull Query queryForgetUserByUuid;
+  private final @NonNull Query queryLiftPunishment;
+  private final @NonNull Query querySaveIdentity;
+  private final @NonNull Query querySaveIpAddress;
   private final @NonNull Query querySaveUser;
-  private final @NonNull Query querySaveUserName;
+  private final @NonNull Query querySelectIdentityById;
+  private final @NonNull Query querySelectIdentityByIp;
+  private final @NonNull Query querySelectIdentityByUsername;
+  private final @NonNull Query querySelectIdentityByUuid;
   private final @NonNull Query querySelectPunishmentsByTarget;
   private final @NonNull Query querySelectUserByUsername;
   private final @NonNull Query querySelectUserByUuid;
-  private final @NonNull Query querySelectUsernameHistoryByUuid;
+  private final @NonNull Query querySelectUsersByIp;
+  private final @NonNull Query queryUpdateExpirations;
 
   @Inject
-  ImplGenericSqlDataService(final @NonNull Jdbi jdbi,
+  ImplGenericSqlDataService(final @NonNull ConsoleIdentity consoleIdentity,
+      final @NonNull IIdentityFactory identityFactory,
+      final @NonNull Jdbi jdbi,
       final @NonNull SqlConfig sqlConfig) {
+    this.consoleIdentity = consoleIdentity;
+    this.identityFactory = identityFactory;
+
     this.jdbi = jdbi;
     this.path = "sql/" + SqlDialect.parse(sqlConfig.dialect).getPath() + "/";
 
     this.queryCreatePunishment = new Query("create-punishment.sql", this.path);
+    this.queryForgetUserByUuid = new Query("forget-user-by-uuid.sql", this.path);
+    this.queryLiftPunishment = new Query("lift-punishment.sql", this.path);
+    this.querySaveIdentity = new Query("save-identity.sql", this.path);
+    this.querySaveIpAddress = new Query("save-ip-address.sql", this.path);
     this.querySaveUser = new Query("save-user.sql", this.path);
-    this.querySaveUserName = new Query("save-user-name.sql", this.path);
+    this.querySelectIdentityById = new Query("select-identity-by-id.sql", this.path);
+    this.querySelectIdentityByIp = new Query("select-identity-by-ip.sql", this.path);
+    this.querySelectIdentityByUsername = new Query("select-identity-by-username.sql", this.path);
+    this.querySelectIdentityByUuid = new Query("select-identity-by-uuid.sql", this.path);
     this.querySelectPunishmentsByTarget = new Query("select-punishments-by-target.sql", this.path);
     this.querySelectUserByUsername = new Query("select-user-by-username.sql", this.path);
     this.querySelectUserByUuid = new Query("select-user-by-uuid.sql", this.path);
-    this.querySelectUsernameHistoryByUuid = new Query("select-username-history-by-uuid.sql", this.path);
+    this.querySelectUsersByIp = new Query("select-users-by-ip.sql", this.path);
+    this.queryUpdateExpirations = new Query("update-expirations.sql", this.path);
   }
 
   @Override
@@ -80,10 +112,10 @@ public final class ImplGenericSqlDataService implements IDataService {
   }
 
   @Override
-  public @NonNull List<@NonNull Punishment> getPunishmentsForTarget(final @NonNull UUID target) {
+  public @NonNull List<@NonNull Punishment> getPunishmentsForTarget(final @NonNull BanIdentity identity) {
     return this.jdbi.withHandle(handle ->
         handle.createQuery(this.querySelectPunishmentsByTarget.getQuery())
-            .bind("target", target)
+            .bind("target", identity.getId())
             .mapTo(Punishment.class)
             .stream()
             .sorted(Comparator.comparingLong(Punishment::getTime))
@@ -92,114 +124,164 @@ public final class ImplGenericSqlDataService implements IDataService {
   }
 
   @Override
-  public void savePunishment(final @NonNull Punishment punishment) {
-    this.jdbi.useHandle(handle -> {
-      final Update update = handle.createUpdate(this.queryCreatePunishment.getQuery())
-          .bind("id", punishment.getId().orElse(null))
-          .bind("type", punishment.getPunishmentType().getId())
-          .bind("target", punishment.getTarget())
-          .bind("punisher", punishment.getPunisher())
+  public @NonNull Punishment savePunishment(final @NonNull PunishmentBuilder punishment) {
+    return this.jdbi.inTransaction(handle -> {
+      final long id = handle.createUpdate(this.queryCreatePunishment.getQuery())
+          .bind("type", punishment.getType().getId())
+          .bind("target", punishment.getTarget().getId())
+          .bind("punisher", punishment.getPunisher().getId())
           .bind("reason", punishment.getReason())
           .bind("lifted", punishment.isLifted())
           .bind("lifted_by", punishment.getLiftedBy())
           .bind("time", punishment.getTime())
-          .bind("duration", punishment.getDuration());
+          .bind("duration", punishment.getDuration())
+          .executeAndReturnGeneratedKeys("id")
+          .map((RowView row) -> row.getColumn("id", Long.class))
+          .one();
 
-      punishment.getId().ifPresentOrElse($ -> update.execute(),
-          () -> punishment.setId(
-              update.executeAndReturnGeneratedKeys("id")
-                  .map((RowView row) -> row.getColumn("id", Long.class))
-                  .one()));
+      return new Punishment(id,
+          punishment.getType(),
+          punishment.getTarget(),
+          punishment.getPunisher(),
+          punishment.getReason(),
+          punishment.isLifted(),
+          punishment.getLiftedBy(),
+          punishment.getTime(),
+          punishment.getDuration());
     });
   }
 
   @Override
-  public @NonNull Optional<@NonNull BanUser> getUser(final @NonNull UUID uuid) {
-    return this.jdbi.withHandle(handle -> {
-      final UsernameHistory history = new UsernameHistory(
-          uuid,
-          handle.createQuery(this.querySelectUsernameHistoryByUuid.getQuery())
-              .bind("uuid", uuid)
-              .mapTo(UsernameHistory.Entry.class)
-              .list()
-      );
-
-      return handle.createQuery(this.querySelectUserByUuid.getQuery())
-          .bind("uuid", uuid)
-          .setMaxRows(1)
-          .map((RowView rowView) -> new BanUser(
-              uuid,
-              rowView.getColumn("username", String.class),
-              history
-          ))
-          .findOne();
-    });
+  public void liftPunishment(final @NonNull Punishment punishment, final @Nullable UUID liftedBy) {
+    this.jdbi.useTransaction(handle ->
+        handle.createUpdate(this.queryLiftPunishment.getQuery())
+            .bind("lifted", true)
+            .bind("lifted_by", liftedBy)
+            .bind("id", punishment.getId())
+            .execute());
   }
 
   @Override
-  public @NonNull Optional<@NonNull BanUser> getUser(final @NonNull String username) {
-    return this.jdbi.withHandle(handle -> {
-      final Pair<UUID, String> user = handle.createQuery(this.querySelectUserByUsername.getQuery())
-          .bind("username", username)
-          .setMaxRows(1)
-          .map((RowView rowView) -> Pair.of(
-              rowView.getColumn("uuid", UUID.class),
-              rowView.getColumn("username", String.class)
-          ))
-          .findOne()
-          .orElse(null);
-      if (user == null) {
-        return Optional.empty();
-      }
+  public @NonNull Optional<@NonNull BanIdentity> getUser(final @NonNull UUID uuid) {
+    if (IBanConsole.UUID.equals(uuid)) {
+      return Optional.of(this.consoleIdentity);
+    }
 
-      final UsernameHistory history = new UsernameHistory(
-          user.getFirst(),
-          handle.createQuery(this.querySelectUsernameHistoryByUuid.getQuery())
-              .bind("uuid", user.getFirst())
-              .map(UsernameHistory.Entry::fromRow)
-              .list()
-      );
+    return this.jdbi.withHandle(handle -> handle.createQuery(this.querySelectIdentityByUuid.getQuery())
+        .bind("uuid", uuid)
+        .setMaxRows(1)
+        .mapTo(BanIdentity.class)
+        .findOne());
+  }
 
-      return Optional.of(new BanUser(
-          user.getFirst(),
-          user.getSecond(),
-          history
-      ));
-    });
+  @Override
+  public @NonNull Optional<@NonNull BanIdentity> getUser(final @NonNull String username) {
+    return this.jdbi.withHandle(handle -> handle.createQuery(this.querySelectIdentityByUsername.getQuery())
+        .bind("username", username)
+        .setMaxRows(1)
+        .mapTo(BanIdentity.class)
+        .findOne());
+  }
+
+  @Override
+  public @NonNull Optional<@NonNull BanIdentity> getUser(final long id) {
+    return this.jdbi.withHandle(handle -> handle.createQuery(this.querySelectIdentityById.getQuery())
+        .bind("id", id)
+        .setMaxRows(1)
+        .mapTo(BanIdentity.class)
+        .findOne());
+  }
+
+  @Override
+  public @NonNull ImmutableList<@NonNull UuidIdentity> getUsersByIp(final @NonNull InetAddress address) {
+    final byte[] bytes = address.getAddress();
+
+    return this.jdbi.withHandle(handle -> handle.createQuery(this.querySelectUsersByIp.getQuery())
+        .bind("address", bytes)
+        .mapTo(BanIdentity.class)
+        .reduce(ImmutableList.<UuidIdentity>builder(), (builder, identity) -> {
+          identity.asUuidIdentity().ifPresent(builder::add);
+          return builder;
+        })
+        .build());
+  }
+
+  @Override
+  public @NonNull Optional<@NonNull Long> getUserCacheDate(final long id) {
+    if (id == 0) {
+      return Optional.empty();
+    }
+
+    return this.jdbi.withHandle(handle ->
+        handle.createQuery(this.querySelectIdentityById.getQuery())
+            .bind("id", id)
+            .setMaxRows(1)
+            .map((RowView rowView) -> rowView.getColumn("timestamp", Timestamp.class))
+            .findOne()
+            .map(Timestamp::getTime));
   }
 
   @Override
   public @NonNull Optional<@NonNull Long> getUserCacheDate(final @NonNull UUID uuid) {
+    if (IBanConsole.UUID.equals(uuid)) {
+      return Optional.empty();
+    }
+
     return this.jdbi.withHandle(handle ->
-        handle.createQuery(this.querySelectUserByUuid.getQuery())
+        handle.createQuery(this.querySelectIdentityByUuid.getQuery())
             .bind("uuid", uuid)
             .setMaxRows(1)
             .map((RowView rowView) -> rowView.getColumn("timestamp", Timestamp.class))
             .findOne()
-            .map(Timestamp::getTime)
-    );
+            .map(Timestamp::getTime));
   }
 
   @Override
-  public void saveUser(final @NonNull BanUser user) {
-    if (user == BanUser.CONSOLE) {
-      return;
-    }
+  public @NonNull UuidIdentity createIdentity(final @NonNull UUID uuid, final @NonNull String username) {
+    return this.jdbi.inTransaction(handle -> {
+      final long id = handle.createUpdate(this.querySaveIdentity.getQuery())
+          .bind("type", IdentityType.UUID.type())
+          .bind("uuid", uuid)
+          .bindNull("address", Types.BINARY)
+          .executeAndReturnGeneratedKeys("id")
+          .map(row -> row.getColumn("id", Long.class))
+          .one();
 
-    this.jdbi.useTransaction(handle -> {
-      handle.createUpdate(this.querySaveUser.getQuery())
-          .bind("uuid", user.getUuid())
-          .bind("username", user.getUsername())
-          .execute();
-
-      for (final Entry entry : user.getUsernameHistory().getEntries()) {
-        handle.createUpdate(this.querySaveUserName.getQuery())
-            .bind("uuid", user.getUuid())
-            .bind("username", entry.getUsername())
-            .bind("timestamp", entry.getChangedAt().map(Date::getTime).map(Timestamp::new))
-            .execute();
-      }
+      return this.identityFactory.uuid(id, uuid, username);
     });
+  }
+
+  @Override
+  public @NonNull IpIdentity createIdentity(final @NonNull InetAddress address,
+      final @NonNull UuidIdentity @NonNull ... identities) {
+    final IpAddressType type = address instanceof Inet4Address ? IpAddressType.IPV4 : IpAddressType.IPV6;
+    final byte[] bytes = address.getAddress();
+
+    return this.jdbi.inTransaction(handle -> {
+      final long id = handle.createUpdate(this.querySaveIdentity.getQuery())
+          .bind("type", type.type())
+          .bindNull("uuid", Types.CHAR)
+          .bind("address", bytes)
+          .executeAndReturnGeneratedKeys("id")
+          .map(row -> row.getColumn("id", Long.class))
+          .one();
+
+      final IpIdentity identity = this.identityFactory.ip(id, address);
+
+      for (final UuidIdentity uuidIdentity : identities) {
+        handle.createUpdate(this.querySaveIpAddress.getQuery())
+            .bind("type", type.type())
+            .bind("address", bytes)
+            .bind("uuid", uuidIdentity.uuid());
+      }
+
+      return identity;
+    });
+  }
+
+  @Override
+  public void updateExpirations() {
+    this.jdbi.useTransaction(handle -> handle.createUpdate(this.queryUpdateExpirations.getQuery()));
   }
 
   private static final class Query {

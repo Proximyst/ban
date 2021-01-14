@@ -16,23 +16,15 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-package com.proximyst.ban.data.jdbi;
+package com.proximyst.ban.message;
 
-import com.proximyst.ban.model.UsernameHistory;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.Date;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.jdbi.v3.core.mapper.RowMapper;
-import org.jdbi.v3.core.statement.StatementContext;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-public final class UsernameHistoryEntryJdbiRowMapper implements RowMapper<UsernameHistory.Entry> {
-  @Override
-  public UsernameHistory.@NonNull Entry map(final @NonNull ResultSet rs, final @NonNull StatementContext ctx)
-      throws SQLException {
-    return new UsernameHistory.Entry(rs.getString("username"),
-        rs.getObject("timestamp") == null
-            ? null
-            : Date.from(rs.getTimestamp("timestamp").toInstant()));
-  }
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface ServerReceiver {
+  String permission() default "";
 }

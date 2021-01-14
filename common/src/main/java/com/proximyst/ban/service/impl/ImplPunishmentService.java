@@ -18,89 +18,48 @@
 
 package com.proximyst.ban.service.impl;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import com.proximyst.ban.inject.annotation.BanAsyncExecutor;
+import com.proximyst.ban.model.BanIdentity;
 import com.proximyst.ban.model.Punishment;
-import com.proximyst.ban.platform.IBanAudience;
-import com.proximyst.ban.platform.IBanServer;
+import com.proximyst.ban.model.PunishmentBuilder;
 import com.proximyst.ban.service.IDataService;
+import com.proximyst.ban.service.IMessageService;
 import com.proximyst.ban.service.IPunishmentService;
-import com.proximyst.ban.service.MessageService;
-import com.proximyst.ban.utils.ThrowableUtils;
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.concurrent.TimeUnit;
-import net.kyori.adventure.identity.Identity;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 @Singleton
 public final class ImplPunishmentService implements IPunishmentService {
-  private static final int MAXIMUM_PUNISHMENT_CACHE_CAPACITY =
-      Integer.getInteger("ban.maximumPunishmentCacheCapacity", 512);
-
   private final @NonNull IDataService dataService;
-  private final @NonNull MessageService messageService;
+  private final @NonNull IMessageService messageService;
   private final @NonNull Executor executor;
-  private final @NonNull IBanServer banServer;
-
-  private final @NonNull Cache<@NonNull UUID, @NonNull List<@NonNull Punishment>> punishmentCache =
-      CacheBuilder.newBuilder()
-          .initialCapacity(512)
-          .maximumSize(MAXIMUM_PUNISHMENT_CACHE_CAPACITY)
-          .expireAfterAccess(5, TimeUnit.MINUTES)
-          .build();
 
   @Inject
   ImplPunishmentService(final @NonNull IDataService dataService,
-      final @NonNull MessageService messageService,
-      final @NonNull @BanAsyncExecutor Executor executor,
-      final @NonNull IBanServer banServer) {
+      final @NonNull IMessageService messageService,
+      final @NonNull @BanAsyncExecutor Executor executor) {
     this.dataService = dataService;
     this.messageService = messageService;
     this.executor = executor;
-    this.banServer = banServer;
   }
 
   @Override
   public @NonNull CompletableFuture<@NonNull ImmutableList<@NonNull Punishment>> getPunishments(
-      final @NonNull UUID target) {
-    final List<Punishment> existingPunishments = this.punishmentCache.getIfPresent(target);
-    if (existingPunishments != null) {
-      return CompletableFuture.completedFuture(ImmutableList.copyOf(existingPunishments));
-    }
-
-    // Okay, we've got to load them and cache them thereafter.
-    return ThrowableUtils.supplyAsyncSneaky(() -> ImmutableList.copyOf(this.punishmentCache
-            .get(target, () -> this.dataService.getPunishmentsForTarget(target))),
-        this.executor);
+      final @NonNull BanIdentity identity) {
+    return CompletableFuture.supplyAsync(() -> ImmutableList.copyOf(
+        this.dataService.getPunishmentsForTarget(identity)), this.executor);
   }
 
   @Override
-  public @NonNull CompletableFuture<@Nullable Void> savePunishment(final @NonNull Punishment punishment) {
-    return this.getPunishments(punishment.getTarget()) // Ensure we have their punishments loaded
-        .thenComposeAsync($ -> {
-          this.punishmentCache.asMap().compute(punishment.getTarget(), (uuid, list) -> {
-            if (list == null) {
-              return Lists.newArrayList(punishment);
-            }
-
-            if (!list.contains(punishment)) { // Referential comparison
-              list.add(punishment);
-            }
-            return list;
-          });
-
-          this.dataService.savePunishment(punishment);
-          return CompletableFuture.completedFuture(null);
-        }, this.executor);
+  public @NonNull CompletableFuture<@NonNull Punishment> savePunishment(
+      final @NonNull PunishmentBuilder punishmentBuilder) {
+    return CompletableFuture.supplyAsync(() -> this.dataService.savePunishment(punishmentBuilder), this.executor);
   }
 
   @Override
@@ -109,40 +68,21 @@ public final class ImplPunishmentService implements IPunishmentService {
       return CompletableFuture.completedFuture(null);
     }
 
-    final IBanAudience target = this.banServer
-        .audienceOf(punishment.getTarget());
-    if (target == null) {
-      // We have no-one to apply the punishment on.
-      return CompletableFuture.completedFuture(null);
-    }
+    // TODO(Mariell Hoversholm)
+    return CompletableFuture.completedFuture(null);
+  }
 
-    final String bypassPermission = punishment.getPunishmentType().getBypassPermission().orElse(null);
-    if (bypassPermission != null && target.hasPermission(bypassPermission)) {
-      // Don't apply the punishment; they can bypass it.
-      return CompletableFuture.completedFuture(null);
-    }
+  @Override
+  public @NonNull CompletableFuture<@Nullable Void> liftPunishment(final @NonNull Punishment punishment,
+      final @Nullable UUID liftedBy) {
+    return CompletableFuture.supplyAsync(() -> {
+      this.dataService.liftPunishment(punishment, liftedBy);
+      return null;
+    }, this.executor);
+  }
 
-    return this.messageService.punishmentMessage(
-        punishment
-            .getPunishmentType()
-            .getApplicationMessage(punishment.getReason().isPresent())
-            .orElseThrow(() -> new IllegalStateException("Applicable punishment without punishment type")),
-        punishment)
-        .component()
-        .thenAccept(component -> {
-          switch (punishment.getPunishmentType()) {
-            case BAN:
-              // Fall through.
-            case KICK:
-              target.disconnect(component);
-              break;
-
-            case MUTE:
-              // Fall through.
-            default:
-              target.sendMessage(Identity.nil(), component);
-              break;
-          }
-        });
+  @Override
+  public void announcePunishment(final @NonNull Punishment punishment) {
+    // TODO(Mariell Hoversholm)
   }
 }

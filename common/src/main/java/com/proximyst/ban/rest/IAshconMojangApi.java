@@ -19,17 +19,11 @@
 package com.proximyst.ban.rest;
 
 import com.google.gson.annotations.SerializedName;
-import com.proximyst.ban.model.BanUser;
-import com.proximyst.ban.model.UsernameHistory;
-import com.proximyst.ban.model.UsernameHistory.Entry;
 import feign.Param;
 import feign.RequestLine;
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 public interface IAshconMojangApi {
   @RequestLine("GET /user/{identifier}")
@@ -42,17 +36,5 @@ public interface IAshconMojangApi {
 
     @SerializedName("username")
     public String username;
-
-    @SerializedName("username_history")
-    public @Nullable List<@NonNull Entry> history;
-
-    public @NonNull BanUser toBanUser() {
-      return new BanUser(this.uuid,
-          this.username,
-          new UsernameHistory(this.uuid,
-              this.history == null
-                  ? Collections.singleton(new UsernameHistory.Entry(this.username, null))
-                  : this.history));
-    }
   }
 }

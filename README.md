@@ -18,7 +18,7 @@ usage.
 
 1. Clone the repository.
 1. Run the `build` task: `./gradlew build`.
-1. Get the jar file in `build/libs/`.
+1. Get the jar file in `{platform of choice}/build/libs/`.
 
 ## Licence
 

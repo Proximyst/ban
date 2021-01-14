@@ -21,10 +21,8 @@ package com.proximyst.ban;
 import cloud.commandframework.CommandManager;
 import cloud.commandframework.execution.AsynchronousCommandExecutionCoordinator;
 import cloud.commandframework.velocity.VelocityCommandManager;
-import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Key;
-import com.google.inject.Singleton;
 import com.proximyst.ban.commands.cloud.BaseCommand;
 import com.proximyst.ban.event.subscriber.BannedPlayerJoinSubscriber;
 import com.proximyst.ban.event.subscriber.CacheUpdatePlayerSubscriber;
@@ -32,15 +30,20 @@ import com.proximyst.ban.event.subscriber.MutedPlayerChatSubscriber;
 import com.proximyst.ban.inject.PlatformModule;
 import com.proximyst.ban.inject.annotation.BanAsyncExecutor;
 import com.proximyst.ban.platform.IBanAudience;
+import com.proximyst.ban.platform.IBanAudience.IBanConsole;
 import com.proximyst.ban.platform.IBanPlugin;
-import com.proximyst.ban.platform.VelocityAudience;
+import com.proximyst.ban.platform.VelocityPlayerAudience;
+import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
 import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.plugin.PluginContainer;
+import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import java.util.concurrent.Executor;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import org.apache.commons.lang3.ArrayUtils;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -114,11 +117,13 @@ public final class BanPlugin implements IBanPlugin {
             .withAsynchronousParsing()
             .withExecutor(this.injector.getInstance(Key.get(Executor.class, BanAsyncExecutor.class)))
             .build(),
-        VelocityAudience::getAudience,
-        audience -> audience.<VelocityAudience>castAudience().getCommandSource()
+        (CommandSource sender) -> sender instanceof Player
+            ? VelocityPlayerAudience.getAudience((Player) sender)
+            : this.injector.getInstance(IBanConsole.class),
+        (IBanAudience audience) -> audience instanceof VelocityPlayerAudience
+            ? ((VelocityPlayerAudience) audience).player()
+            : this.proxyServer.getConsoleCommandSource()
     );
-    // Cache the audience for the console.
-    VelocityAudience.getAudience(this.proxyServer.getConsoleCommandSource());
 
     this.proxyServer.getEventManager()
         .register(this, this.injector.getInstance(BannedPlayerJoinSubscriber.class));

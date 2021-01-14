@@ -18,21 +18,17 @@
 
 package com.proximyst.ban.message;
 
-import java.util.concurrent.CompletableFuture;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.dataflow.qual.Pure;
+import com.proximyst.moonshine.message.IMessageParser;
+import com.proximyst.moonshine.message.ParsingContext;
+import javax.inject.Singleton;
+import net.kyori.adventure.audience.Audience;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 
-public interface IMessageComponent {
-  /**
-   * @return The name of this message component.
-   */
-  @Pure
-  @NonNull String name();
-
-  /**
-   * @return A future that is eventually completed with the component this future represents. It may be {@code null} iff
-   * {@link #name()} is not {@code null}.
-   */
-  @NonNull CompletableFuture<@Nullable ?> await();
+@Singleton
+public final class BanMessageParser implements IMessageParser<String, Component, Audience> {
+  @Override
+  public Component parse(final String message, final ParsingContext<Audience> parsingContext) {
+    return MiniMessage.get().parse(message, parsingContext.placeholders());
+  }
 }

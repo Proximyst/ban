@@ -18,51 +18,48 @@
 
 package com.proximyst.ban.event.subscriber;
 
-import com.google.inject.Inject;
 import com.proximyst.ban.factory.IBanExceptionalFutureLoggerFactory;
-import com.proximyst.ban.platform.VelocityAudience;
-import com.proximyst.ban.service.IPunishmentService;
+import com.proximyst.ban.platform.VelocityPlayerAudience;
 import com.proximyst.ban.service.IUserService;
 import com.proximyst.ban.utils.BanExceptionalFutureLogger;
 import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.connection.LoginEvent;
+import javax.inject.Inject;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class CacheUpdatePlayerSubscriber {
   private final @NonNull BanExceptionalFutureLogger<?> banExceptionalFutureLogger;
   private final @NonNull IUserService userService;
-  private final @NonNull IPunishmentService punishmentService;
 
   @Inject
   CacheUpdatePlayerSubscriber(final @NonNull IBanExceptionalFutureLoggerFactory banExceptionalFutureLoggerFactory,
-      final @NonNull IUserService userService,
-      final @NonNull IPunishmentService punishmentService) {
+      final @NonNull IUserService userService) {
     this.banExceptionalFutureLogger = banExceptionalFutureLoggerFactory.createLogger(this.getClass());
     this.userService = userService;
-    this.punishmentService = punishmentService;
   }
 
-  @Subscribe
+  @Subscribe(order = PostOrder.EARLY)
   public void onJoinServer(final @NonNull LoginEvent event) {
-    this.userService.getUserUpdated(event.getPlayer().getUniqueId())
-        .exceptionally(this.banExceptionalFutureLogger.cast());
-    this.punishmentService.getPunishments(event.getPlayer().getUniqueId()) // Get the punishments of the user.
-        .exceptionally(this.banExceptionalFutureLogger.cast());
+    this.userService.saveUser(event.getPlayer().getUniqueId(), event.getPlayer().getUsername())
+        .exceptionally(this.banExceptionalFutureLogger.cast())
+        .join(); // We _need_ this data.
   }
 
   @Subscribe(order = PostOrder.LAST)
   public void onJoinServerUpdateAudience(final @NonNull LoginEvent event) {
     if (event.getResult().isAllowed()) {
       // Cache the audience.
-      VelocityAudience.getAudience(event.getPlayer());
+      VelocityPlayerAudience.getAudience(event.getPlayer());
     }
   }
 
   @Subscribe
   public void onLeaveServerUpdateAudience(final @NonNull DisconnectEvent event) {
     // We don't care how far along they were; they're gone.
-    VelocityAudience.AUDIENCE_CACHE.remove(event.getPlayer().getUniqueId());
+    VelocityPlayerAudience.AUDIENCE_CACHE.remove(event.getPlayer().getUniqueId());
+
+    this.userService.uncachePlayer(event.getPlayer().getUniqueId());
   }
 }

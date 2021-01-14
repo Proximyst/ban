@@ -18,10 +18,10 @@
 
 package com.proximyst.ban.platform;
 
-import com.google.inject.Inject;
 import com.proximyst.ban.BanPlugin;
 import com.velocitypowered.api.proxy.ProxyServer;
 import java.util.concurrent.Executor;
+import javax.inject.Inject;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**

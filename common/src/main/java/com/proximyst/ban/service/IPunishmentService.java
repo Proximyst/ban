@@ -19,8 +19,9 @@
 package com.proximyst.ban.service;
 
 import com.google.common.collect.ImmutableList;
-import com.proximyst.ban.model.BanUser;
+import com.proximyst.ban.model.BanIdentity;
 import com.proximyst.ban.model.Punishment;
+import com.proximyst.ban.model.PunishmentBuilder;
 import com.proximyst.ban.model.PunishmentType;
 import java.util.Comparator;
 import java.util.Optional;
@@ -33,29 +34,19 @@ public interface IPunishmentService {
   /**
    * Get the punishments of a user.
    *
-   * @param target The target whose punishments are requested.
+   * @param identity The target whose punishments are requested.
    * @return An immutable copy of the punishments of the player where order is not guaranteed.
    */
-  @NonNull CompletableFuture<@NonNull ImmutableList<@NonNull Punishment>> getPunishments(final @NonNull UUID target);
+  @NonNull CompletableFuture<@NonNull ImmutableList<@NonNull Punishment>> getPunishments(
+      final @NonNull BanIdentity identity);
 
   /**
-   * Get the punishments of a user.
+   * Save the given punishment data as a new punishment.
    *
-   * @param target The target whose punishments are requested.
-   * @return An immutable copy of the punishments of the player where order is not guaranteed.
+   * @param punishmentBuilder The punishment data to save.
+   * @see IDataService#savePunishment(PunishmentBuilder)
    */
-  default @NonNull CompletableFuture<@NonNull ImmutableList<@NonNull Punishment>> getPunishments(
-      final @NonNull BanUser target) {
-    return this.getPunishments(target.getUuid());
-  }
-
-  /**
-   * Save the given punishment.
-   *
-   * @param punishment The punishment to save.
-   * @see IDataService#savePunishment(Punishment)
-   */
-  @NonNull CompletableFuture<@Nullable Void> savePunishment(final @NonNull Punishment punishment);
+  @NonNull CompletableFuture<@NonNull Punishment> savePunishment(final @NonNull PunishmentBuilder punishmentBuilder);
 
   /**
    * Apply the punishment to the target if they are online.
@@ -67,13 +58,38 @@ public interface IPunishmentService {
   @NonNull CompletableFuture<@Nullable Void> applyPunishment(final @NonNull Punishment punishment);
 
   /**
+   * Lift a punishment if possible.
+   *
+   * @param punishment The punishment to lift.
+   * @param liftedBy The entity who lifted the punishment.
+   */
+  @NonNull CompletableFuture<@Nullable Void> liftPunishment(final @NonNull Punishment punishment, final @Nullable UUID liftedBy);
+
+  /**
+   * Lift a punishment if possible.
+   *
+   * @param punishment The punishment to lift.
+   */
+  default @NonNull CompletableFuture<@Nullable Void> liftPunishment(final @NonNull Punishment punishment) {
+    return this.liftPunishment(punishment, null);
+  }
+
+  /**
+   * Announce a punishment application.
+   *
+   * @param punishment The punishment to announce.
+   */
+  void announcePunishment(final @NonNull Punishment punishment);
+
+  /**
    * Get the current active ban on a target, if any.
    *
-   * @param target The target of the ban.
+   * @param identity The target of the ban.
    * @return An optional of the punishment record of this ban.
    */
-  default @NonNull CompletableFuture<@NonNull Optional<@NonNull Punishment>> getActiveBan(final @NonNull UUID target) {
-    return this.getPunishments(target)
+  default @NonNull CompletableFuture<@NonNull Optional<@NonNull Punishment>> getActiveBan(
+      final @NonNull BanIdentity identity) {
+    return this.getPunishments(identity)
         .thenApply(list -> list.stream()
             .filter(punishment -> punishment.getPunishmentType() == PunishmentType.BAN
                 && punishment.currentlyApplies())
@@ -84,11 +100,12 @@ public interface IPunishmentService {
   /**
    * Get the current active mute on a target, if any.
    *
-   * @param target The target of the mute.
+   * @param identity The target of the mute.
    * @return An optional of the punishment record of this mute.
    */
-  default @NonNull CompletableFuture<@NonNull Optional<@NonNull Punishment>> getActiveMute(final @NonNull UUID target) {
-    return this.getPunishments(target)
+  default @NonNull CompletableFuture<@NonNull Optional<@NonNull Punishment>> getActiveMute(
+      final @NonNull BanIdentity identity) {
+    return this.getPunishments(identity)
         .thenApply(list -> list.stream()
             .filter(punishment -> punishment.getPunishmentType() == PunishmentType.MUTE
                 && punishment.currentlyApplies())
@@ -99,12 +116,13 @@ public interface IPunishmentService {
   /**
    * Get all notes applied to a target.
    *
-   * @param target The target to get the notes of.
+   * @param identity The target to get the notes of.
    * @return The notes of the target. The list will never be {@code null}, but may be {@link ImmutableList#isEmpty()
    * empty}.
    */
-  default @NonNull CompletableFuture<@NonNull ImmutableList<@NonNull Punishment>> getNotes(final @NonNull UUID target) {
-    return this.getPunishments(target)
+  default @NonNull CompletableFuture<@NonNull ImmutableList<@NonNull Punishment>> getNotes(
+      final @NonNull BanIdentity identity) {
+    return this.getPunishments(identity)
         .thenApply(list -> list.stream()
             .filter(punishment -> punishment.getPunishmentType() == PunishmentType.NOTE)
             .sorted(Comparator.comparingLong(Punishment::getTime))

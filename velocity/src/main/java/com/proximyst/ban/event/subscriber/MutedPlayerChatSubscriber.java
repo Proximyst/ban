@@ -18,23 +18,28 @@
 
 package com.proximyst.ban.event.subscriber;
 
-import com.google.inject.Inject;
 import com.proximyst.ban.BanPermissions;
+import com.proximyst.ban.model.BanIdentity;
+import com.proximyst.ban.service.IMessageService;
 import com.proximyst.ban.service.IPunishmentService;
-import com.proximyst.ban.service.MessageService;
+import com.proximyst.ban.service.IUserService;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.player.PlayerChatEvent;
 import com.velocitypowered.api.event.player.PlayerChatEvent.ChatResult;
+import javax.inject.Inject;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class MutedPlayerChatSubscriber {
   private final @NonNull IPunishmentService punishmentService;
-  private final @NonNull MessageService messageService;
+  private final @NonNull IUserService userService;
+  private final @NonNull IMessageService messageService;
 
   @Inject
   MutedPlayerChatSubscriber(final @NonNull IPunishmentService punishmentService,
-      final @NonNull MessageService messageService) {
+      final @NonNull IUserService userService,
+      final @NonNull IMessageService messageService) {
     this.punishmentService = punishmentService;
+    this.userService = userService;
     this.messageService = messageService;
   }
 
@@ -45,15 +50,15 @@ public class MutedPlayerChatSubscriber {
       return;
     }
 
-    this.punishmentService.getActiveMute(event.getPlayer().getUniqueId())
+    final BanIdentity identity = this.userService.getUser(event.getPlayer().getUniqueId())
+        .join() // They're currently online, so this'll be completed instantly.
+        .orElseThrow(() -> new IllegalStateException("online players must have identities"));
+    this.punishmentService.getActiveMute(identity)
         .join() // This *should* be fast, and only on one player's connection thread
         .ifPresent(mute -> {
           event.setResult(ChatResult.denied());
 
-          mute.getPunishmentType()
-              .getApplicationMessage(mute.getReason().isPresent())
-              .ifPresent(key -> this.messageService.punishmentMessage(key, mute)
-                  .send(event.getPlayer()));
+          // TODO(Mariell Hoversholm): Send message
         });
   }
 }

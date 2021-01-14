@@ -20,18 +20,20 @@ package com.proximyst.ban.inject;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
-import com.google.inject.Singleton;
 import com.proximyst.ban.BanPlugin;
 import com.proximyst.ban.inject.annotation.BanAsyncExecutor;
 import com.proximyst.ban.inject.annotation.PluginData;
+import com.proximyst.ban.platform.IBanAudience.IBanConsole;
 import com.proximyst.ban.platform.IBanPlugin;
 import com.proximyst.ban.platform.IBanServer;
 import com.proximyst.ban.platform.VelocityBanSchedulerExecutor;
+import com.proximyst.ban.platform.VelocityConsoleAudience;
 import com.proximyst.ban.platform.VelocityServer;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.concurrent.Executor;
+import javax.inject.Singleton;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class PlatformModule extends AbstractModule {
@@ -66,5 +68,11 @@ public class PlatformModule extends AbstractModule {
     final File file = dataDirectory.toFile();
     file.mkdirs();
     return file;
+  }
+
+  @Singleton
+  @Provides
+  @NonNull IBanConsole banConsole(final @NonNull VelocityConsoleAudience velocityConsoleAudience) {
+    return velocityConsoleAudience;
   }
 }

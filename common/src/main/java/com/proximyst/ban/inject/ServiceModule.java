@@ -20,8 +20,16 @@ package com.proximyst.ban.inject;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
-import com.google.inject.Singleton;
+import com.proximyst.ban.message.BanIdentityPlaceholderResolver;
+import com.proximyst.ban.message.BanMessageParser;
+import com.proximyst.ban.message.BanMessageSender;
+import com.proximyst.ban.message.BanMessageSource;
+import com.proximyst.ban.message.CompletableFuturePlaceholderResolver;
+import com.proximyst.ban.message.ComponentPlaceholderResolver;
+import com.proximyst.ban.message.ServerReceiverResolver;
+import com.proximyst.ban.model.BanIdentity;
 import com.proximyst.ban.service.IDataService;
+import com.proximyst.ban.service.IMessageService;
 import com.proximyst.ban.service.IMojangService;
 import com.proximyst.ban.service.IPunishmentService;
 import com.proximyst.ban.service.IUserService;
@@ -29,6 +37,11 @@ import com.proximyst.ban.service.impl.ImplAshconMojangService;
 import com.proximyst.ban.service.impl.ImplGenericSqlDataService;
 import com.proximyst.ban.service.impl.ImplPunishmentService;
 import com.proximyst.ban.service.impl.ImplUserService;
+import com.proximyst.moonshine.Moonshine;
+import java.util.concurrent.CompletableFuture;
+import javax.inject.Singleton;
+import net.kyori.adventure.audience.Audience;
+import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public final class ServiceModule extends AbstractModule {
@@ -56,5 +69,25 @@ public final class ServiceModule extends AbstractModule {
   @Singleton
   @NonNull IUserService userService(final @NonNull ImplUserService userService) {
     return userService;
+  }
+
+  @Provides
+  @Singleton
+  @NonNull IMessageService messageService(final @NonNull ServerReceiverResolver serverReceiverResolver,
+      final @NonNull CompletableFuturePlaceholderResolver<Audience> completableFuturePlaceholderResolver,
+      final @NonNull ComponentPlaceholderResolver<Audience> componentPlaceholderResolver,
+      final @NonNull BanIdentityPlaceholderResolver<Audience> banIdentityPlaceholderResolver,
+      final @NonNull BanMessageSource banMessageSource,
+      final @NonNull BanMessageParser banMessageParser,
+      final @NonNull BanMessageSender banMessageSender) {
+    return Moonshine.<Audience>builder()
+        .receiver(serverReceiverResolver)
+        .placeholder(CompletableFuture.class, completableFuturePlaceholderResolver)
+        .placeholder(Component.class, componentPlaceholderResolver)
+        .placeholder(BanIdentity.class, banIdentityPlaceholderResolver)
+        .source(banMessageSource)
+        .parser(banMessageParser)
+        .sender(banMessageSender)
+        .create(IMessageService.class, this.getClass().getClassLoader());
   }
 }

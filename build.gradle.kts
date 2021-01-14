@@ -61,6 +61,15 @@ subprojects {
             }
         }
 
+        maven {
+            name = "proxi-nexus"
+            url = uri("https://nexus.proximyst.com/repository/maven-any/")
+
+            content {
+                includeGroup("com.proximyst.moonshine")
+            }
+        }
+
         jcenter()
         mavenCentral()
     }
@@ -106,6 +115,9 @@ subprojects {
             // Guice will be provided as shown above. Its shadowing state is set by the platform.
             isTransitive = false
         }
+
+        compileOnlyApi("com.proximyst.moonshine:core:$MOONSHINE_VER")
+        testImplementation("com.proximyst.moonshine:core:$MOONSHINE_VER")
 
         compileOnlyApi("org.spongepowered:configurate-core:$CONFIGURATE_VER")
         compileOnlyApi("org.spongepowered:configurate-hocon:$CONFIGURATE_VER")
@@ -172,6 +184,14 @@ subprojects {
             }
         }
 
+        compileTestJava {
+            this.options.apply {
+                isFork = true
+                compilerArgs.add("-Xlint:all")
+                compilerArgs.add("-parameters")
+            }
+        }
+
         val jacocoTestReport by getting(JacocoReport::class)
         test {
             useJUnitPlatform()
@@ -213,6 +233,7 @@ allprojects {
     configure<JavaPluginConvention> {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = sourceCompatibility
+        disableAutoTargetJvm()
     }
 
     license {
@@ -236,5 +257,5 @@ allprojects {
 }
 
 repositories {
-    jcenter() // Gradle plugins.
+    mavenCentral()
 }

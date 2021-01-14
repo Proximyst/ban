@@ -28,7 +28,4 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 public final class Configuration {
   @Setting
   public SqlConfig sql = new SqlConfig();
-
-  @Setting
-  public MessagesConfig messages = new MessagesConfig();
 }

@@ -20,41 +20,39 @@ package com.proximyst.ban.service.impl;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import com.proximyst.ban.factory.IBanExceptionalFutureLoggerFactory;
 import com.proximyst.ban.inject.annotation.BanAsyncExecutor;
-import com.proximyst.ban.model.BanUser;
-import com.proximyst.ban.model.UsernameHistory;
+import com.proximyst.ban.model.BanIdentity.UuidIdentity;
 import com.proximyst.ban.rest.IAshconMojangApi;
+import com.proximyst.ban.service.IDataService;
 import com.proximyst.ban.service.IMojangService;
 import com.proximyst.ban.utils.BanExceptionalFutureLogger;
 import com.proximyst.ban.utils.StringUtils;
-import com.proximyst.ban.utils.ThrowableUtils;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import org.checkerframework.checker.index.qual.NonNegative;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 @Singleton
 public final class ImplAshconMojangService implements IMojangService {
-  private static final @NonNegative int MAXIMUM_BAN_USER_CACHE_CAPACITY =
+  private static final @NonNegative int MAXIMUM_UUID_IDENTITY_CACHE_CAPACITY =
       Integer.getInteger("ban.maxBanUserCacheCapacity", 512);
   private static final @NonNegative int MAXIMUM_USERNAME_TO_UUID_CACHE_CAPACITY =
       Integer.getInteger("ban.maxUsernameToUuidCacheCapacity", 512);
-  private static final @NonNull CompletableFuture<@NonNull Optional<@NonNull BanUser>> CONSOLE_USER =
-      CompletableFuture.completedFuture(Optional.of(BanUser.CONSOLE));
 
   private final @NonNull IAshconMojangApi ashconMojangApi;
   private final @NonNull Executor executor;
   private final @NonNull BanExceptionalFutureLogger<?> banExceptionalFutureLogger;
+  private final @NonNull IDataService dataService;
 
-  private final @NonNull Cache<@NonNull UUID, @NonNull BanUser> banUserCache = CacheBuilder.newBuilder()
+  private final @NonNull Cache<@NonNull UUID, @NonNull UuidIdentity> uuidIdentityCache = CacheBuilder.newBuilder()
       .initialCapacity(512)
-      .maximumSize(MAXIMUM_BAN_USER_CACHE_CAPACITY)
+      .maximumSize(MAXIMUM_UUID_IDENTITY_CACHE_CAPACITY)
       .expireAfterWrite(2, TimeUnit.MINUTES)
       .build();
 
@@ -67,44 +65,38 @@ public final class ImplAshconMojangService implements IMojangService {
   @Inject
   ImplAshconMojangService(final @NonNull IAshconMojangApi ashconMojangApi,
       final @NonNull @BanAsyncExecutor Executor executor,
-      final @NonNull IBanExceptionalFutureLoggerFactory banExceptionalFutureLoggerFactory) {
+      final @NonNull IBanExceptionalFutureLoggerFactory banExceptionalFutureLoggerFactory,
+      final @NonNull IDataService dataService) {
     this.ashconMojangApi = ashconMojangApi;
     this.executor = executor;
     this.banExceptionalFutureLogger = banExceptionalFutureLoggerFactory.createLogger(this.getClass());
+    this.dataService = dataService;
   }
 
   @Override
-  public @NonNull CompletableFuture<@NonNull Optional<@NonNull BanUser>> getUser(final @NonNull UUID uuid) {
-    if (uuid.equals(BanUser.CONSOLE.getUuid())) {
-      return CONSOLE_USER;
-    }
-
+  public @NonNull CompletableFuture<@NonNull Optional<@NonNull UuidIdentity>> getUser(final @NonNull UUID uuid) {
     if (uuid.version() != 4) {
-      return CompletableFuture.failedFuture(
-          new IllegalArgumentException("UUID \"" + uuid + "\" is not an online-mode UUID"));
+      return CompletableFuture.completedFuture(Optional.empty());
     }
 
-    final BanUser cachedUser = this.banUserCache.getIfPresent(uuid);
-    if (cachedUser != null) {
-      return CompletableFuture.completedFuture(Optional.of(cachedUser));
+    final UuidIdentity uuidIdentity = this.uuidIdentityCache.getIfPresent(uuid);
+    if (uuidIdentity != null) {
+      return CompletableFuture.completedFuture(Optional.of(uuidIdentity));
     }
 
     return this.fetchFromIdentifier(uuid.toString());
   }
 
   @Override
-  public @NonNull CompletableFuture<@NonNull Optional<@NonNull BanUser>> getUser(@NonNull String identifier) {
+  public @NonNull CompletableFuture<@NonNull Optional<@NonNull UuidIdentity>> getUser(@NonNull String identifier) {
     if (identifier.length() < 3) {
-      // Too short to be a username.
-      return CompletableFuture.failedFuture(
-          new IllegalArgumentException("Username \"" + identifier + "\" is too short."));
+      return CompletableFuture.completedFuture(Optional.empty());
     }
 
     if (identifier.length() > 16) {
       // Too long to be a username.
       if (identifier.length() != 32 && identifier.length() != 36) {
-        return CompletableFuture.failedFuture(
-            new IllegalArgumentException("Username/UUID \"" + identifier + "\" has an invalid length."));
+        return CompletableFuture.completedFuture(Optional.empty());
       }
 
       if (identifier.length() == 32) {
@@ -112,8 +104,11 @@ public final class ImplAshconMojangService implements IMojangService {
       }
 
       final String finalIdentifier = identifier; // Lambda requires effectively final
-      return ThrowableUtils.supplySneaky(() -> UUID.fromString(finalIdentifier))
-          .thenCompose(this::getUser);
+      try {
+        return this.getUser(UUID.fromString(finalIdentifier));
+      } catch (final IllegalArgumentException ignored) {
+        return CompletableFuture.completedFuture(Optional.empty());
+      }
     }
 
     // This is a name. Let's check if they're already cached.
@@ -128,34 +123,28 @@ public final class ImplAshconMojangService implements IMojangService {
   @Override
   public @NonNull CompletableFuture<@NonNull Optional<@NonNull UUID>> getUuid(final @NonNull String identifier) {
     return this.getUser(identifier)
-        .thenApply(opt -> opt.map(BanUser::getUuid));
+        .thenApply(opt -> opt.map(UuidIdentity::uuid));
   }
 
   @Override
   public @NonNull CompletableFuture<@NonNull Optional<@NonNull String>> getUsername(final @NonNull UUID uuid) {
     return this.getUser(uuid)
-        .thenApply(opt -> opt.map(BanUser::getUsername));
+        .thenApply(opt -> opt.map(UuidIdentity::username));
   }
 
-  @Override
-  public @NonNull CompletableFuture<@NonNull Optional<@NonNull UsernameHistory>> getUsernameHistory(
-      final @NonNull UUID uuid) {
-    return this.getUser(uuid)
-        .thenApply(opt -> opt.map(BanUser::getUsernameHistory));
-  }
-
-  private @NonNull CompletableFuture<@NonNull Optional<@NonNull BanUser>> fetchFromIdentifier(
+  private @NonNull CompletableFuture<@NonNull Optional<@NonNull UuidIdentity>> fetchFromIdentifier(
       final @NonNull String identifier) {
     return CompletableFuture.supplyAsync(() -> this.ashconMojangApi.getUser(identifier), this.executor)
-        .thenApply(opt -> {
-          final Optional<BanUser> user = opt.map(IAshconMojangApi.AshconUser::toBanUser);
-          user.ifPresent(banUser -> {
-            this.usernameUuidCache.put(banUser.getUsername(), banUser.getUuid());
-            this.banUserCache.put(banUser.getUuid(), banUser);
+        .thenApplyAsync(opt -> {
+          final Optional<UuidIdentity> user = opt.map(ashconUser ->
+              this.dataService.createIdentity(ashconUser.uuid, ashconUser.username));
+          user.ifPresent(ident -> {
+            this.usernameUuidCache.put(ident.username(), ident.uuid());
+            this.uuidIdentityCache.put(ident.uuid(), ident);
           });
 
           return user;
-        })
+        }, this.executor)
         .exceptionally(this.banExceptionalFutureLogger.cast());
   }
 }

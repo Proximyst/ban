@@ -20,19 +20,11 @@ package com.proximyst.ban.inject;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
-import com.google.inject.Singleton;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
-import com.google.inject.name.Names;
 import com.proximyst.ban.factory.IBanExceptionalFutureLoggerFactory;
 import com.proximyst.ban.factory.ICloudArgumentFactory;
-import com.proximyst.ban.factory.IMessageFactory;
-import com.proximyst.ban.message.IMessage;
-import com.proximyst.ban.message.IMessageComponent;
-import com.proximyst.ban.message.MessageComponent;
-import com.proximyst.ban.message.MessageKeyComponent;
-import com.proximyst.ban.message.MessageMessageComponentComponent;
-import com.proximyst.ban.message.PlaceholderMessage;
-import com.proximyst.ban.message.StaticMessage;
+import com.proximyst.ban.factory.IIdentityFactory;
+import javax.inject.Singleton;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public final class FactoryModule extends AbstractModule {
@@ -41,13 +33,7 @@ public final class FactoryModule extends AbstractModule {
     install(new FactoryModuleBuilder()
         .build(ICloudArgumentFactory.class));
     install(new FactoryModuleBuilder()
-        .implement(IMessageComponent.class, Names.named("MessageComponent"), MessageComponent.class)
-        .implement(IMessageComponent.class, Names.named("MessageKeyComponent"), MessageKeyComponent.class)
-        .implement(IMessageComponent.class, Names.named("MessageMessageComponentComponent"),
-            MessageMessageComponentComponent.class)
-        .implement(IMessage.class, Names.named("StaticMessage"), StaticMessage.class)
-        .implement(IMessage.class, Names.named("PlaceholderMessage"), PlaceholderMessage.class)
-        .build(IMessageFactory.class));
+        .build(IIdentityFactory.class));
   }
 
   @Provides

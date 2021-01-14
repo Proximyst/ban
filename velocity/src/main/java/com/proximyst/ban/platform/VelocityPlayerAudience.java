@@ -18,8 +18,7 @@
 
 package com.proximyst.ban.platform;
 
-import com.proximyst.ban.model.BanUser;
-import com.velocitypowered.api.command.CommandSource;
+import com.proximyst.ban.platform.IBanAudience.IBanPlayer;
 import com.velocitypowered.api.proxy.Player;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,62 +29,48 @@ import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.dataflow.qual.Pure;
 
-public class VelocityAudience implements IBanAudience, ForwardingAudience.Single {
-  public static final @NonNull Map<UUID, VelocityAudience> AUDIENCE_CACHE = new HashMap<>();
+public class VelocityPlayerAudience implements IBanPlayer, ForwardingAudience.Single {
+  public static final @NonNull Map<UUID, VelocityPlayerAudience> AUDIENCE_CACHE = new HashMap<>();
 
-  private final @NonNull CommandSource commandSource;
-  private final @NonNull UUID uuid;
-  private final @NonNull String username;
+  private final @NonNull Player player;
 
-  private VelocityAudience(final @NonNull CommandSource commandSource) {
-    this.commandSource = commandSource;
-    this.uuid = getSourceUuid(this.commandSource);
-    this.username = getSourceName(this.commandSource);
+  private VelocityPlayerAudience(final @NonNull Player player) {
+    this.player = player;
   }
 
-  public static @NonNull VelocityAudience getAudience(final @NonNull CommandSource source) {
-    return AUDIENCE_CACHE.computeIfAbsent(getSourceUuid(source), $ -> new VelocityAudience(source));
+  public static @NonNull VelocityPlayerAudience getAudience(final @NonNull Player source) {
+    return AUDIENCE_CACHE.computeIfAbsent(source.getUniqueId(), $ -> new VelocityPlayerAudience(source));
   }
 
   @Pure
-  public @NonNull CommandSource getCommandSource() {
-    return this.commandSource;
+  public @NonNull Player player() {
+    return this.player;
   }
 
   @Override
   @Pure
   public @NonNull UUID uuid() {
-    return this.uuid;
+    return this.player.getUniqueId();
   }
 
   @Override
   @Pure
   public @NonNull String username() {
-    return this.username;
+    return this.player.getUsername();
   }
 
   @Override
   public @NonNull Audience audience() {
-    return this.commandSource;
+    return this.player;
   }
 
   @Override
   public boolean hasPermission(final @NonNull String permission) {
-    return this.commandSource.hasPermission(permission);
+    return this.player.hasPermission(permission);
   }
 
   @Override
   public void disconnect(final @NonNull Component reason) {
-    if (this.commandSource instanceof Player) {
-      ((Player) this.commandSource).disconnect(reason);
-    }
-  }
-
-  private static @NonNull String getSourceName(final @NonNull CommandSource source) {
-    return source instanceof Player ? ((Player) source).getUsername() : BanUser.CONSOLE.getUsername();
-  }
-
-  private static @NonNull UUID getSourceUuid(final @NonNull CommandSource source) {
-    return source instanceof Player ? ((Player) source).getUniqueId() : BanUser.CONSOLE.getUuid();
+    this.player.disconnect(reason);
   }
 }

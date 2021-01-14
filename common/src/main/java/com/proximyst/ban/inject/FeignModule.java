@@ -21,12 +21,12 @@ package com.proximyst.ban.inject;
 import com.google.gson.Gson;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
-import com.google.inject.Singleton;
 import com.proximyst.ban.rest.IAshconMojangApi;
 import feign.Feign;
 import feign.gson.GsonDecoder;
 import feign.gson.GsonEncoder;
 import feign.http2client.Http2Client;
+import javax.inject.Singleton;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public final class FeignModule extends AbstractModule {

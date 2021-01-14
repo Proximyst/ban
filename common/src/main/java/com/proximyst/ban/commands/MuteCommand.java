@@ -19,69 +19,85 @@
 package com.proximyst.ban.commands;
 
 import cloud.commandframework.CommandManager;
+import cloud.commandframework.arguments.CommandArgument;
 import cloud.commandframework.arguments.standard.StringArgument;
+import cloud.commandframework.arguments.standard.StringArgument.StringMode;
 import cloud.commandframework.context.CommandContext;
-import com.google.inject.Inject;
 import com.proximyst.ban.BanPermissions;
+import com.proximyst.ban.IdentityMustExistException;
+import com.proximyst.ban.commands.cloud.BanIdentityArgument;
 import com.proximyst.ban.commands.cloud.BaseCommand;
 import com.proximyst.ban.factory.IBanExceptionalFutureLoggerFactory;
 import com.proximyst.ban.factory.ICloudArgumentFactory;
-import com.proximyst.ban.model.BanUser;
-import com.proximyst.ban.model.Punishment;
+import com.proximyst.ban.model.BanIdentity;
+import com.proximyst.ban.model.BanIdentity.UuidIdentity;
 import com.proximyst.ban.model.PunishmentBuilder;
 import com.proximyst.ban.model.PunishmentType;
 import com.proximyst.ban.platform.IBanAudience;
+import com.proximyst.ban.service.IMessageService;
 import com.proximyst.ban.service.IPunishmentService;
-import com.proximyst.ban.service.MessageService;
+import com.proximyst.ban.service.IUserService;
 import com.proximyst.ban.utils.BanExceptionalFutureLogger;
+import javax.inject.Inject;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class MuteCommand extends BaseCommand {
   private final @NonNull BanExceptionalFutureLogger<?> banExceptionalFutureLogger;
-  private final @NonNull ICloudArgumentFactory cloudArgumentFactory;
   private final @NonNull IPunishmentService punishmentService;
-  private final @NonNull MessageService messageService;
+  private final @NonNull IMessageService messageService;
+  private final @NonNull IUserService userService;
+
+  private final BanIdentityArgument<? extends BanIdentity> argTarget;
+  private final CommandArgument<IBanAudience, String> argReason;
 
   @Inject
   MuteCommand(final @NonNull IBanExceptionalFutureLoggerFactory banExceptionalFutureLoggerFactory,
       final @NonNull ICloudArgumentFactory cloudArgumentFactory,
       final @NonNull IPunishmentService punishmentService,
-      final @NonNull MessageService messageService) {
+      final @NonNull IMessageService messageService,
+      final @NonNull IUserService userService) {
     this.banExceptionalFutureLogger = banExceptionalFutureLoggerFactory.createLogger(this.getClass());
-    this.cloudArgumentFactory = cloudArgumentFactory;
     this.punishmentService = punishmentService;
     this.messageService = messageService;
+    this.userService = userService;
+
+    this.argTarget = cloudArgumentFactory.banIdentity("target", true);
+    this.argReason = StringArgument.optional("reason", StringMode.GREEDY);
   }
 
   @Override
   public void register(final @NonNull CommandManager<@NonNull IBanAudience> commandManager) {
     commandManager.command(commandManager.commandBuilder("mute")
         .permission(BanPermissions.COMMAND_MUTE)
-        .argument(this.cloudArgumentFactory.banUser("target", true))
-        .argument(StringArgument.optional("reason", StringArgument.StringMode.GREEDY))
+        .argument(this.argTarget)
+        .argument(this.argReason)
         .handler(this::execute));
   }
 
   private void execute(final @NonNull CommandContext<IBanAudience> ctx) {
-    final BanUser target = ctx.get("target");
-    final @Nullable String reason = ctx.getOrDefault("reason", null);
+    final BanIdentity target = ctx.get(this.argTarget);
+    final @Nullable String reason = ctx.getOrDefault(this.argReason, null);
 
-    this.messageService.commandsFeedbackMute(target)
-        .send(ctx.getSender());
+    this.messageService.feedbackMute(ctx.getSender(), target);
 
-    final Punishment punishment =
-        new PunishmentBuilder()
-            .type(PunishmentType.MUTE)
-            .punisher(ctx.getSender().uuid())
-            .target(target.getUuid())
-            .reason(reason)
-            .build();
-    this.punishmentService.savePunishment(punishment)
-        .exceptionally(this.banExceptionalFutureLogger.cast());
-    this.punishmentService.applyPunishment(punishment)
-        .exceptionally(this.banExceptionalFutureLogger.cast());
-    this.messageService.announceNewPunishment(punishment)
-        .exceptionally(this.banExceptionalFutureLogger.cast());
+    this.userService.getUser(ctx.getSender().uuid())
+        .thenAccept(optIdentity -> {
+          final UuidIdentity identity = optIdentity.orElseThrow(IdentityMustExistException::new);
+
+          final PunishmentBuilder builder =
+              new PunishmentBuilder()
+                  .type(PunishmentType.MUTE)
+                  .punisher(identity)
+                  .target(target)
+                  .reason(reason);
+          this.punishmentService.savePunishment(builder)
+              .thenAccept(punishment -> {
+                this.punishmentService.applyPunishment(punishment)
+                    .exceptionally(this.banExceptionalFutureLogger.cast());
+                this.punishmentService.announcePunishment(punishment);
+              })
+              .exceptionally(this.banExceptionalFutureLogger.cast());
+        });
   }
 }

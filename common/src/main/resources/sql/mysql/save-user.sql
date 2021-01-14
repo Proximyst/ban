@@ -1,5 +1,3 @@
 REPLACE INTO users
-(uuid,
- username,
- timestamp)
-VALUES (:uuid, :username, CURRENT_TIMESTAMP);
+    (uuid, username, identity)
+VALUES (:uuid, :username, :identity);

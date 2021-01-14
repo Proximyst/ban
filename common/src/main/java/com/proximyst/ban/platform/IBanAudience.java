@@ -18,7 +18,6 @@
 
 package com.proximyst.ban.platform;
 
-import com.proximyst.ban.model.BanUser;
 import java.util.UUID;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.identity.Identified;
@@ -36,19 +35,15 @@ import org.checkerframework.dataflow.qual.SideEffectFree;
 public interface IBanAudience extends Identified, Identity, Audience {
   /**
    * The UUID of this user.
-   * <p>
-   * This will be referentially equal to {@link BanUser#CONSOLE}'s UUID if it is the console.
    *
    * @return The UUID of the user.
    */
   @Override
-  @Pure
+  @SideEffectFree
   @NonNull UUID uuid();
 
   /**
    * The username of this user.
-   * <p>
-   * This will be referentially equal to {@link BanUser#CONSOLE}'s username if it is the console.
    *
    * @return The username of this user; this is not a deterministic result.
    */
@@ -89,6 +84,7 @@ public interface IBanAudience extends Identified, Identity, Audience {
    * @return The platform-specific {@link IBanAudience}.
    */
   @SuppressWarnings("unchecked") // This is intentional.
+  @Pure
   default <A extends IBanAudience> @NonNull @This A castAudience() {
     return (A) this;
   }
@@ -97,5 +93,13 @@ public interface IBanAudience extends Identified, Identity, Audience {
   @Pure
   default @NonNull Identity identity() {
     return this;
+  }
+
+  interface IBanConsole extends IBanAudience {
+    @NonNull String USERNAME = "CONSOLE";
+    @NonNull UUID UUID = new UUID(0, 0);
+  }
+
+  interface IBanPlayer extends IBanAudience {
   }
 }

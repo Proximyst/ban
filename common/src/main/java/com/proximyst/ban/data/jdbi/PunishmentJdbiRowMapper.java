@@ -18,18 +18,26 @@
 
 package com.proximyst.ban.data.jdbi;
 
+import com.proximyst.ban.model.BanIdentity;
 import com.proximyst.ban.model.Punishment;
-import com.proximyst.ban.model.PunishmentBuilder;
 import com.proximyst.ban.model.PunishmentType;
+import com.proximyst.ban.service.IDataService;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
+import javax.inject.Provider;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jdbi.v3.core.mapper.ColumnMapper;
 import org.jdbi.v3.core.mapper.RowMapper;
 import org.jdbi.v3.core.statement.StatementContext;
 
 public final class PunishmentJdbiRowMapper implements RowMapper<Punishment> {
+  private final @NonNull Provider<@NonNull IDataService> dataService;
+
+  public PunishmentJdbiRowMapper(final @NonNull Provider<@NonNull IDataService> dataService) {
+    this.dataService = dataService;
+  }
+
   @Override
   public @NonNull Punishment map(final @NonNull ResultSet rs, final @NonNull StatementContext ctx)
       throws SQLException {
@@ -37,21 +45,31 @@ public final class PunishmentJdbiRowMapper implements RowMapper<Punishment> {
         .orElseThrow(() -> new IllegalStateException("no column mapper for UUID"));
 
     final long id = rs.getLong("id");
-    final byte type = rs.getByte("type");
+    final byte rawType = rs.getByte("type");
+    final long targetId = rs.getLong("target");
+    final long punisherId = rs.getLong("punisher");
+    final String reason = rs.getString("reason");
+    final boolean lifted = rs.getBoolean("lifted");
+    final UUID liftedBy = lifted ? uuidMapper.map(rs, "lifted_by", ctx) : null;
+    final long time = rs.getLong("time");
+    final long duration = rs.getLong("duration");
 
-    return new PunishmentBuilder()
-        .id(id)
-        .type(
-            PunishmentType.getById(type)
-                .orElseThrow(() -> new IllegalStateException("punishment (" + id + ") type id " + type + " is unknown"))
-        )
-        .target(uuidMapper.map(rs, "target", ctx))
-        .punisher(uuidMapper.map(rs, "punisher", ctx))
-        .reason(rs.getString("reason"))
-        .lifted(rs.getBoolean("lifted"))
-        .liftedBy(rs.getObject("lifted_by") == null ? null : uuidMapper.map(rs, "lifted_by", ctx))
-        .time(rs.getLong("time"))
-        .duration(rs.getLong("duration"))
-        .build();
+    final IDataService dataService = this.dataService.get();
+    final PunishmentType type = PunishmentType.getById(rawType)
+        .orElseThrow(() -> new IllegalStateException("punishment (" + id + "): type id " + rawType + " is unknown"));
+    final BanIdentity target = dataService.getUser(targetId)
+        .orElseThrow(() -> new IllegalStateException("punishment (" + id + "): target id " + targetId + " is unknown"));
+    final BanIdentity punisher = dataService.getUser(punisherId)
+        .orElseThrow(() -> new IllegalStateException("punishment (" + id + "): target id " + targetId + " is unknown"));
+
+    return new Punishment(id,
+        type,
+        target,
+        punisher,
+        reason,
+        lifted,
+        liftedBy,
+        time,
+        duration);
   }
 }
