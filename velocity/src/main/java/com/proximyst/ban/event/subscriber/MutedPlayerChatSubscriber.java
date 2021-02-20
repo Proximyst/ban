@@ -20,6 +20,8 @@ package com.proximyst.ban.event.subscriber;
 
 import com.proximyst.ban.BanPermissions;
 import com.proximyst.ban.model.BanIdentity;
+import com.proximyst.ban.platform.IBanAudience;
+import com.proximyst.ban.platform.VelocityPlayerAudience;
 import com.proximyst.ban.service.IMessageService;
 import com.proximyst.ban.service.IPunishmentService;
 import com.proximyst.ban.service.IUserService;
@@ -50,6 +52,7 @@ public class MutedPlayerChatSubscriber {
       return;
     }
 
+    final IBanAudience audience = VelocityPlayerAudience.getAudience(event.getPlayer());
     final BanIdentity identity = this.userService.getUser(event.getPlayer().getUniqueId())
         .join() // They're currently online, so this'll be completed instantly.
         .orElseThrow(() -> new IllegalStateException("online players must have identities"));
@@ -58,7 +61,9 @@ public class MutedPlayerChatSubscriber {
         .ifPresent(mute -> {
           event.setResult(ChatResult.denied());
 
-          // TODO(Mariell Hoversholm): Send message
+          if (mute.getReason().isPresent()) {
+            this.messageService.applicationsReasonedMute(audience, mute);
+          }
         });
   }
 }

@@ -27,7 +27,6 @@ import com.velocitypowered.api.event.ResultedEvent.ComponentResult;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.LoginEvent;
 import javax.inject.Inject;
-import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class BannedPlayerJoinSubscriber {
@@ -57,7 +56,10 @@ public class BannedPlayerJoinSubscriber {
     this.punishmentService.getActiveBan(identity)
         .join() // This *should* be fast, and only on one player's connection thread
         .ifPresent(ban ->
-            // TODO(Mariell Hoversholm)
-            event.setResult(ComponentResult.denied(Component.text("banned"))));
+            event.setResult(ComponentResult.denied(
+                ban.getReason().isPresent()
+                    ? this.messageService.applicationsReasonedBan(ban)
+                    : this.messageService.applicationsReasonlessBan(ban)
+            )));
   }
 }
