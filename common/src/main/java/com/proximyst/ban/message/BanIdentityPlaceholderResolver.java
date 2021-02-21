@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.proximyst.ban.model.BanIdentity;
+import com.proximyst.ban.model.BanIdentity.IpIdentity;
 import com.proximyst.ban.platform.IBanAudience;
 import com.proximyst.moonshine.component.placeholder.IPlaceholderResolver;
 import com.proximyst.moonshine.component.placeholder.PlaceholderContext;
@@ -38,8 +39,18 @@ public final class BanIdentityPlaceholderResolver<R> implements IPlaceholderReso
   public ResolveResult resolve(final String placeholderName, final BanIdentity value,
       final PlaceholderContext<R> ctx, final Multimap<String, @Nullable Object> flags) {
     final IBanAudience[] audiences = Iterables.toArray(value.audiences().join(), IBanAudience.class);
-    final String name = Arrays.stream(audiences).map(IBanAudience::username).collect(Collectors.joining(", "));
-    final String uuid = Arrays.stream(audiences).map(a -> a.uuid().toString()).collect(Collectors.joining(", "));
+
+    final String name;
+    final String uuid;
+
+    if (value instanceof IpIdentity) {
+      final IpIdentity ipIdentity = (IpIdentity) value;
+      name = ipIdentity.address().getHostAddress();
+      uuid = "";
+    } else {
+      name = Arrays.stream(audiences).map(IBanAudience::username).collect(Collectors.joining(", "));
+      uuid = Arrays.stream(audiences).map(a -> a.uuid().toString()).collect(Collectors.joining(", "));
+    }
 
     final Map<String, Object> extra = value.asIpIdentity()
         .map(identity -> ImmutableMap.<String, Object>of(placeholderName + "Ip", identity.address().getHostAddress()))

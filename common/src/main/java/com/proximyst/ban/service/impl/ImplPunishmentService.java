@@ -31,6 +31,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -64,12 +65,48 @@ public final class ImplPunishmentService implements IPunishmentService {
 
   @Override
   public @NonNull CompletableFuture<@Nullable Void> applyPunishment(final @NonNull Punishment punishment) {
-    if (!punishment.getPunishmentType().isApplicable()) {
+    if (!punishment.getPunishmentType().isApplicable()
+        || punishment.getPunishmentType().canBeLifted() && punishment.isLifted()) {
       return CompletableFuture.completedFuture(null);
     }
 
-    // TODO(Mariell Hoversholm)
-    return CompletableFuture.completedFuture(null);
+    return punishment.getTarget().audiences()
+        .thenAccept(target -> {
+          switch (punishment.getPunishmentType()) {
+            case BAN: {
+              final Component reason = punishment.getReason().isPresent()
+                  ? this.messageService.applicationsReasonedBan(punishment)
+                  : this.messageService.applicationsReasonlessBan(punishment);
+              target.forEach(audience -> audience.disconnect(reason));
+              break;
+            }
+            case KICK: {
+              final Component reason = punishment.getReason().isPresent()
+                  ? this.messageService.applicationsReasonedKick(punishment)
+                  : this.messageService.applicationsReasonlessKick(punishment);
+              target.forEach(audience -> audience.disconnect(reason));
+              break;
+            }
+            case WARNING:
+              if (punishment.getReason().isPresent()) {
+                target.forEach(audience -> this.messageService.applicationsReasonedWarn(audience, punishment));
+              } else {
+                target.forEach(audience -> this.messageService.applicationsReasonlessWarn(audience, punishment));
+              }
+              break;
+            case MUTE:
+              if (punishment.getReason().isPresent()) {
+                target.forEach(audience -> this.messageService.applicationsReasonedMute(audience, punishment));
+              } else {
+                target.forEach(audience -> this.messageService.applicationsReasonlessMute(audience, punishment));
+              }
+              break;
+
+            case NOTE:
+              // Fall-through
+            default:
+          }
+        });
   }
 
   @Override
