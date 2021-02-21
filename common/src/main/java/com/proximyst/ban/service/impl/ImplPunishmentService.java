@@ -83,6 +83,43 @@ public final class ImplPunishmentService implements IPunishmentService {
 
   @Override
   public void announcePunishment(final @NonNull Punishment punishment) {
-    // TODO(Mariell Hoversholm)
+    switch (punishment.getPunishmentType()) {
+      case BAN:
+        if (!punishment.isLifted() && punishment.getReason().isPresent()) {
+          this.messageService.broadcastsReasonedBan(punishment);
+        } else if (!punishment.isLifted()) {
+          this.messageService.broadcastsReasonlessBan(punishment);
+        } else {
+          this.messageService.broadcastsUnban(punishment);
+        }
+        break;
+      case KICK:
+        if (punishment.getReason().isPresent()) {
+          this.messageService.broadcastsReasonedKick(punishment);
+        } else {
+          this.messageService.broadcastsReasonlessKick(punishment);
+        }
+        break;
+      case MUTE:
+        if (!punishment.isLifted() && punishment.getReason().isPresent()) {
+          this.messageService.broadcastsReasonedMute(punishment);
+        } else if (!punishment.isLifted()) {
+          this.messageService.broadcastsReasonlessMute(punishment);
+        } else {
+          this.messageService.broadcastsUnmute(punishment);
+        }
+        break;
+      case WARNING:
+        if (punishment.getReason().isPresent()) {
+          this.messageService.broadcastsReasonedWarn(punishment);
+        } else {
+          this.messageService.broadcastsReasonlessWarn(punishment);
+        }
+        break;
+
+      case NOTE:
+        // Fall-through
+      default:
+    }
   }
 }
