@@ -75,19 +75,24 @@ subprojects {
     }
 
     dependencies {
+        runtimeOnly("com.github.ben-manes.caffeine:caffeine:2.8.8") {
+            exclude("com.google.errorprone", "error_prone_annotations")
+        }
         compileOnlyApi("org.slf4j:slf4j-api:$SLF4J_VER") // The API shouldn't change too drastically...
         testImplementation("org.slf4j:slf4j-api:$SLF4J_VER") // The API shouldn't change too drastically...
-        implementation("org.jdbi:jdbi3-core:3.17.0") {
+        implementation("org.jdbi:jdbi3-core:$JDBI_VER") {
             exclude("org.slf4j")
+            exclude("com.github.ben-manes.caffeine")
         }
-        implementation("org.jdbi:jdbi3-postgres:3.17.0") {
+        implementation("org.jdbi:jdbi3-postgres:$JDBI_VER") {
             exclude("org.slf4j")
+            exclude("com.github.ben-manes.caffeine")
         }
         implementation("org.postgresql:postgresql:42.2.19")
-        implementation("com.zaxxer:HikariCP:3.4.5") {
+        implementation("com.zaxxer:HikariCP:4.0.3") {
             exclude("org.slf4j")
         }
-        implementation("org.flywaydb:flyway-core:7.1.1")
+        implementation("org.flywaydb:flyway-core:7.7.0")
 
         compileOnlyApi("net.kyori:adventure-api:$ADVENTURE_VER")
         testImplementation("net.kyori:adventure-api:$ADVENTURE_VER")
@@ -176,7 +181,9 @@ subprojects {
                 reloc(*ban.relocations.toTypedArray())
             }
             mergeServiceFiles()
-            minimize()
+            minimize {
+                exclude(dependency("com.github.ben-manes.caffeine:caffeine"))
+            }
         }
 
         named("build").get().dependsOn(withType<ShadowJar>())

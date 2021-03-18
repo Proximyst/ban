@@ -48,6 +48,7 @@ import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.statement.SqlLogger;
 import org.jdbi.v3.core.statement.StatementContext;
 import org.jdbi.v3.postgres.PostgresPlugin;
+import org.postgresql.ds.PGSimpleDataSource;
 import org.slf4j.Logger;
 
 /**
@@ -114,10 +115,13 @@ public final class BanPluginImpl {
     }
 
     final HikariConfig hikariConfig = new HikariConfig();
-    hikariConfig.setJdbcUrl(this.configuration.sql.jdbcUri);
+    hikariConfig.setDataSourceClassName(PGSimpleDataSource.class.getName());
     hikariConfig.setUsername(this.configuration.sql.username);
     hikariConfig.setPassword(this.configuration.sql.password);
     hikariConfig.setMaximumPoolSize(this.configuration.sql.maxConnections);
+    hikariConfig.addDataSourceProperty("serverName", this.configuration.sql.hostname);
+    hikariConfig.addDataSourceProperty("portNumber", this.configuration.sql.port);
+    hikariConfig.addDataSourceProperty("databaseName", this.configuration.sql.database);
     this.hikariDataSource = new HikariDataSource(hikariConfig);
     this.jdbi = Jdbi.create(this.hikariDataSource)
         .installPlugin(new PostgresPlugin())

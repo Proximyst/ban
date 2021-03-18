@@ -6,8 +6,8 @@ import com.proximyst.ban.ban
 dependencies {
     api(project(":common"))
 
-    compileOnly("com.velocitypowered:velocity-api:1.1.3")
-    annotationProcessor("com.velocitypowered:velocity-api:1.1.3")
+    compileOnly("com.velocitypowered:velocity-api:1.1.4")
+    annotationProcessor("com.velocitypowered:velocity-api:1.1.4")
 
     implementation("cloud.commandframework:cloud-velocity:$CLOUD_VER")
 
