@@ -55,7 +55,7 @@ public final class BanMessageSource implements IMessageSource<String, Audience> 
     }
 
     boolean write = !file.isFile();
-    try (final InputStream stream = plugin.getClass().getResourceAsStream("/message-en.properties")) {
+    try (final InputStream stream = plugin.getClass().getResourceAsStream("/messages-en.properties")) {
       final Properties packaged = new Properties();
       packaged.load(stream);
       for (final Entry<Object, Object> entry : packaged.entrySet()) {

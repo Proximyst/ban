@@ -135,19 +135,16 @@ public final class ImplUserService implements IUserService {
           }
 
           return mojangUserSupplier.get()
-              .thenApply(mojangUser -> {
-                mojangUser.ifPresent(ident -> {
-                  this.executor.execute(() ->
-                      this.dataService.createIdentity(ident.uuid(), ident.username()));
-                  this.usernameUuidCache.put(ident.username(), ident.uuid());
+              .thenApplyAsync(mojangUser -> mojangUser
+                  .map(identity -> {
+                    this.usernameUuidCache.put(identity.username(), identity.uuid());
 
-                  if (this.banServer.audienceOf(ident.uuid()) != null) {
-                    this.uuidIdentityCache.put(ident.uuid(), ident);
-                  }
-                });
+                    if (this.banServer.audienceOf(identity.uuid()) != null) {
+                      this.uuidIdentityCache.put(identity.uuid(), identity);
+                    }
 
-                return mojangUser;
-              });
+                    return identity;
+                  }), this.executor);
         });
   }
 }

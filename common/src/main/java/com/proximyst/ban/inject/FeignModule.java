@@ -34,6 +34,7 @@ public final class FeignModule extends AbstractModule {
   @Provides
   @NonNull IAshconMojangApi ashconMojangApi(final @NonNull Gson gson) {
     return Feign.builder()
+        .decode404()
         .encoder(new GsonEncoder(gson))
         .decoder(new GsonDecoder(gson))
         .client(new Http2Client())

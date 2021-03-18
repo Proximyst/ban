@@ -14,7 +14,7 @@ dependencies {
     // allprojects dependencies that need to be shaded in on this platform:
     implementation("org.apache.commons:commons-lang3:$COMMONS_LANG_VER")
     implementation("com.proximyst.moonshine:core:$MOONSHINE_VER") {
-        exclude("com.google.code", "guava")
+        exclude("com.google.guava", "guava")
     }
 }
 

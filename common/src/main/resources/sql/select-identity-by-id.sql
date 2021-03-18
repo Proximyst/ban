@@ -1,3 +1,3 @@
 SELECT id, type, uuid, address
-FROM identities
+FROM ban.identities
 WHERE id = :id;

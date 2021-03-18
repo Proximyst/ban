@@ -47,6 +47,7 @@ import org.flywaydb.core.Flyway;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.statement.SqlLogger;
 import org.jdbi.v3.core.statement.StatementContext;
+import org.jdbi.v3.postgres.PostgresPlugin;
 import org.slf4j.Logger;
 
 /**
@@ -106,7 +107,7 @@ public final class BanPluginImpl {
     }
 
     try {
-      DriverManager.registerDriver(new org.mariadb.jdbc.Driver());
+      DriverManager.registerDriver(new org.postgresql.Driver());
     } catch (final SQLException ex) {
       this.logger.error("Could not register a data driver", ex);
       return false;
@@ -119,6 +120,7 @@ public final class BanPluginImpl {
     hikariConfig.setMaximumPoolSize(this.configuration.sql.maxConnections);
     this.hikariDataSource = new HikariDataSource(hikariConfig);
     this.jdbi = Jdbi.create(this.hikariDataSource)
+        .installPlugin(new PostgresPlugin())
         .setSqlLogger(new SqlLogger() {
           @Override
           public void logException(@Nullable final StatementContext context, @NonNull final SQLException ex) {

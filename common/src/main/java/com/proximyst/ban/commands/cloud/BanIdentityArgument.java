@@ -115,7 +115,7 @@ public final class BanIdentityArgument<I extends BanIdentity> extends
       // We have to accept IPv6 addresses to just fall-through.
       // IPv4 addresses can be max 15 characters long, therefore aren't necessary to care about.
       if (input.length() > 16 && input.indexOf(':') == -1) {
-        if (!UuidIdentity.class.isAssignableFrom(this.type)) {
+        if (!this.type.isAssignableFrom(UuidIdentity.class)) {
           return ArgumentParseResult.failure(INVALID_TYPE);
         }
 
@@ -146,8 +146,8 @@ public final class BanIdentityArgument<I extends BanIdentity> extends
                 new InvalidPlayerIdentifierException("Invalid UUID '" + input + "'")));
       }
 
-      if (!IpIdentity.class.isAssignableFrom(this.type)
-          && !UuidIdentity.class.isAssignableFrom(this.type)) {
+      if (!this.type.isAssignableFrom(IpIdentity.class)
+          && !this.type.isAssignableFrom(UuidIdentity.class)) {
         return ArgumentParseResult.failure(INVALID_TYPE);
       }
 
@@ -156,7 +156,7 @@ public final class BanIdentityArgument<I extends BanIdentity> extends
       // No `:` in usernames, but they are required in IPv6 addresses.
       if (input.indexOf('.') != -1 || input.indexOf(':') != -1) {
         // This is an IP address.
-        if (!IpIdentity.class.isAssignableFrom(this.type)) {
+        if (!this.type.isAssignableFrom(IpIdentity.class)) {
           return ArgumentParseResult.failure(INVALID_TYPE);
         }
 
@@ -174,7 +174,7 @@ public final class BanIdentityArgument<I extends BanIdentity> extends
         return ArgumentParseResult.success(this.type.cast(identity));
       } else {
         // This is a username.
-        if (!UuidIdentity.class.isAssignableFrom(this.type)) {
+        if (!this.type.isAssignableFrom(UuidIdentity.class)) {
           return ArgumentParseResult.failure(INVALID_TYPE);
         }
 

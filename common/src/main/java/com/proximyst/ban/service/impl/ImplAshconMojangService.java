@@ -135,9 +135,9 @@ public final class ImplAshconMojangService implements IMojangService {
   private @NonNull CompletableFuture<@NonNull Optional<@NonNull UuidIdentity>> fetchFromIdentifier(
       final @NonNull String identifier) {
     return CompletableFuture.supplyAsync(() -> this.ashconMojangApi.getUser(identifier), this.executor)
-        .thenApplyAsync(opt -> {
-          final Optional<UuidIdentity> user = opt.map(ashconUser ->
-              this.dataService.createIdentity(ashconUser.uuid, ashconUser.username));
+        .thenApplyAsync(response -> {
+          final Optional<UuidIdentity> user = Optional.ofNullable(response)
+              .map(ashconUser -> this.dataService.createIdentity(ashconUser.uuid, ashconUser.username));
           user.ifPresent(ident -> {
             this.usernameUuidCache.put(ident.username(), ident.uuid());
             this.uuidIdentityCache.put(ident.uuid(), ident);

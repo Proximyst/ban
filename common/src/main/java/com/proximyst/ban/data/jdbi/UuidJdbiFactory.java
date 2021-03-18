@@ -20,6 +20,7 @@ package com.proximyst.ban.data.jdbi;
 
 import java.sql.Types;
 import java.util.UUID;
+import javax.inject.Inject;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jdbi.v3.core.argument.AbstractArgumentFactory;
@@ -27,7 +28,8 @@ import org.jdbi.v3.core.argument.Argument;
 import org.jdbi.v3.core.config.ConfigRegistry;
 
 public final class UuidJdbiFactory extends AbstractArgumentFactory<UUID> {
-  public UuidJdbiFactory() {
+  @Inject
+  UuidJdbiFactory() {
     super(Types.CHAR);
   }
 

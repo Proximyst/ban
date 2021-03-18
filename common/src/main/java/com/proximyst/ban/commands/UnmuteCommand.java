@@ -30,17 +30,14 @@ import com.proximyst.ban.model.Punishment;
 import com.proximyst.ban.platform.IBanAudience;
 import com.proximyst.ban.service.IMessageService;
 import com.proximyst.ban.service.IPunishmentService;
-import com.proximyst.ban.service.IUserService;
 import com.proximyst.ban.utils.BanExceptionalFutureLogger;
 import javax.inject.Inject;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public final class UnmuteCommand extends BaseCommand {
   private final @NonNull BanExceptionalFutureLogger<?> banExceptionalFutureLogger;
-  private final @NonNull ICloudArgumentFactory cloudArgumentFactory;
   private final @NonNull IPunishmentService punishmentService;
   private final @NonNull IMessageService messageService;
-  private final @NonNull IUserService userService;
 
   private final BanIdentityArgument<? extends BanIdentity> argTarget;
 
@@ -48,15 +45,12 @@ public final class UnmuteCommand extends BaseCommand {
   UnmuteCommand(final @NonNull IBanExceptionalFutureLoggerFactory banExceptionalFutureLoggerFactory,
       final @NonNull ICloudArgumentFactory cloudArgumentFactory,
       final @NonNull IPunishmentService punishmentService,
-      final @NonNull IMessageService messageService,
-      final @NonNull IUserService userService) {
+      final @NonNull IMessageService messageService) {
     this.banExceptionalFutureLogger = banExceptionalFutureLoggerFactory.createLogger(this.getClass());
-    this.cloudArgumentFactory = cloudArgumentFactory;
     this.punishmentService = punishmentService;
     this.messageService = messageService;
-    this.userService = userService;
 
-    this.argTarget = cloudArgumentFactory.banIdentity("target", true);
+    this.argTarget = cloudArgumentFactory.banIdentity("target", true, BanIdentity.class);
   }
 
   @Override

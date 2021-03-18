@@ -25,6 +25,7 @@ import com.proximyst.ban.service.IDataService;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
+import javax.inject.Inject;
 import javax.inject.Provider;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jdbi.v3.core.mapper.ColumnMapper;
@@ -34,7 +35,8 @@ import org.jdbi.v3.core.statement.StatementContext;
 public final class PunishmentJdbiRowMapper implements RowMapper<Punishment> {
   private final @NonNull Provider<@NonNull IDataService> dataService;
 
-  public PunishmentJdbiRowMapper(final @NonNull Provider<@NonNull IDataService> dataService) {
+  @Inject
+  PunishmentJdbiRowMapper(final @NonNull Provider<@NonNull IDataService> dataService) {
     this.dataService = dataService;
   }
 

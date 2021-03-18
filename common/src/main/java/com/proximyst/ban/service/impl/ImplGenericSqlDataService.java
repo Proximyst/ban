@@ -42,11 +42,9 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -63,7 +61,6 @@ public final class ImplGenericSqlDataService implements IDataService {
   private final @NonNull String path;
 
   private final @NonNull Query queryCreatePunishment;
-  private final @NonNull Query queryForgetUserByUuid;
   private final @NonNull Query queryLiftPunishment;
   private final @NonNull Query querySaveIdentity;
   private final @NonNull Query querySaveIpAddress;
@@ -87,10 +84,9 @@ public final class ImplGenericSqlDataService implements IDataService {
     this.identityFactory = identityFactory;
 
     this.jdbi = jdbi;
-    this.path = "sql/" + SqlDialect.parse(sqlConfig.dialect).getPath() + "/";
+    this.path = "sql/";
 
     this.queryCreatePunishment = new Query("create-punishment.sql", this.path);
-    this.queryForgetUserByUuid = new Query("forget-user-by-uuid.sql", this.path);
     this.queryLiftPunishment = new Query("lift-punishment.sql", this.path);
     this.querySaveIdentity = new Query("save-identity.sql", this.path);
     this.querySaveIpAddress = new Query("save-ip-address.sql", this.path);
@@ -326,54 +322,6 @@ public final class ImplGenericSqlDataService implements IDataService {
         } catch (final SQLException ex) {
           ThrowableUtils.sneakyThrow(ex);
         }
-      }
-    }
-  }
-
-  private enum SqlDialect {
-    MYSQL("mysql"),
-    MARIADB("mysql"),
-    POSTGRESQL("postgresql"),
-    ;
-
-    private final @NonNull String path;
-
-    SqlDialect(final @NonNull String path) {
-      this.path = path;
-    }
-
-    @NonNull String getPath() {
-      return this.path;
-    }
-
-    static @NonNull SqlDialect parse(final @NonNull String name) {
-      switch (name.toLowerCase(Locale.ENGLISH)) {
-        case "mysql":
-        case "my":
-        case "msql":
-          return MYSQL;
-
-        case "mariadb":
-        case "maria":
-        case "mdb":
-          return MARIADB;
-
-        case "postgresql":
-        case "postgressql":
-        case "pgsql":
-        case "pg":
-        case "psql":
-        case "postgres":
-        case "postgre":
-        case "postgress":
-          // Dear child has many names.
-          return POSTGRESQL;
-
-        default:
-          throw new IllegalArgumentException(
-              "Unknown SQL dialect: `" + name + "`; only "
-                  + Stream.of(SqlDialect.values()).map(d -> '`' + d.getPath() + "`").collect(Collectors.joining(", "))
-                  + " are valid");
       }
     }
   }

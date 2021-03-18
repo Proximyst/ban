@@ -21,13 +21,13 @@ package com.proximyst.ban.rest;
 import com.google.gson.annotations.SerializedName;
 import feign.Param;
 import feign.RequestLine;
-import java.util.Optional;
 import java.util.UUID;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public interface IAshconMojangApi {
   @RequestLine("GET /user/{identifier}")
-  @NonNull Optional<@NonNull AshconUser> getUser(final @NonNull @Param("identifier") String identifier);
+  @Nullable AshconUser getUser(final @NonNull @Param("identifier") String identifier);
 
   @NonNull
   class AshconUser {

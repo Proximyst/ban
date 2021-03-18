@@ -22,6 +22,7 @@ import com.proximyst.ban.BanPermissions;
 import com.proximyst.ban.message.ServerReceiver;
 import com.proximyst.ban.model.BanIdentity;
 import com.proximyst.ban.model.Punishment;
+import com.proximyst.ban.model.PunishmentType;
 import com.proximyst.ban.platform.IBanAudience;
 import com.proximyst.moonshine.annotation.Message;
 import com.proximyst.moonshine.annotation.Placeholder;
@@ -165,4 +166,21 @@ public interface IMessageService {
 
   @Message("formatting.verbs.past.note")
   @NonNull Component formattingVerbsPastNote();
+
+  default @NonNull Component formattingVerbsPast(final @NonNull PunishmentType type) {
+    switch (type) {
+      case BAN:
+        return this.formattingVerbsPastBan();
+      case KICK:
+        return this.formattingVerbsPastKick();
+      case WARNING:
+        return this.formattingVerbsPastWarn();
+      case MUTE:
+        return this.formattingVerbsPastMute();
+      case NOTE:
+        return this.formattingVerbsPastNote();
+    }
+
+    throw new IllegalStateException("Unknown type; open an issue at https://github.com/Proximyst/ban");
+  }
 }

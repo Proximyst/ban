@@ -26,8 +26,11 @@ import com.proximyst.ban.message.BanMessageSender;
 import com.proximyst.ban.message.BanMessageSource;
 import com.proximyst.ban.message.CompletableFuturePlaceholderResolver;
 import com.proximyst.ban.message.ComponentPlaceholderResolver;
+import com.proximyst.ban.message.DatePlaceholderResolver;
+import com.proximyst.ban.message.PunishmentPlaceholderResolver;
 import com.proximyst.ban.message.ServerReceiverResolver;
 import com.proximyst.ban.model.BanIdentity;
+import com.proximyst.ban.model.Punishment;
 import com.proximyst.ban.service.IDataService;
 import com.proximyst.ban.service.IMessageService;
 import com.proximyst.ban.service.IMojangService;
@@ -38,6 +41,7 @@ import com.proximyst.ban.service.impl.ImplGenericSqlDataService;
 import com.proximyst.ban.service.impl.ImplPunishmentService;
 import com.proximyst.ban.service.impl.ImplUserService;
 import com.proximyst.moonshine.Moonshine;
+import java.util.Date;
 import java.util.concurrent.CompletableFuture;
 import javax.inject.Singleton;
 import net.kyori.adventure.audience.Audience;
@@ -77,6 +81,8 @@ public final class ServiceModule extends AbstractModule {
       final @NonNull CompletableFuturePlaceholderResolver<Audience> completableFuturePlaceholderResolver,
       final @NonNull ComponentPlaceholderResolver<Audience> componentPlaceholderResolver,
       final @NonNull BanIdentityPlaceholderResolver<Audience> banIdentityPlaceholderResolver,
+      final @NonNull DatePlaceholderResolver<Audience> datePlaceholderResolver,
+      final @NonNull PunishmentPlaceholderResolver<Audience> punishmentPlaceholderResolver,
       final @NonNull BanMessageSource banMessageSource,
       final @NonNull BanMessageParser banMessageParser,
       final @NonNull BanMessageSender banMessageSender) {
@@ -85,6 +91,8 @@ public final class ServiceModule extends AbstractModule {
         .placeholder(CompletableFuture.class, completableFuturePlaceholderResolver)
         .placeholder(Component.class, componentPlaceholderResolver)
         .placeholder(BanIdentity.class, banIdentityPlaceholderResolver)
+        .placeholder(Date.class, datePlaceholderResolver)
+        .placeholder(Punishment.class, punishmentPlaceholderResolver)
         .source(banMessageSource)
         .parser(banMessageParser)
         .sender(banMessageSender)

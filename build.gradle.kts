@@ -80,7 +80,10 @@ subprojects {
         implementation("org.jdbi:jdbi3-core:3.17.0") {
             exclude("org.slf4j")
         }
-        implementation("org.mariadb.jdbc:mariadb-java-client:2.7.0")
+        implementation("org.jdbi:jdbi3-postgres:3.17.0") {
+            exclude("org.slf4j")
+        }
+        implementation("org.postgresql:postgresql:42.2.19")
         implementation("com.zaxxer:HikariCP:3.4.5") {
             exclude("org.slf4j")
         }
@@ -156,7 +159,7 @@ subprojects {
             // Some relocations are just always going to be applied, so apply those first.
             reloc(
                 "com.zaxxer.hikari",
-                "org.mariadb.jdbc",
+                "org.postgresql",
                 "net.kyori.adventure.text.minimessage",
                 "org.jdbi",
                 "com.github.benmanes.caffeine",
@@ -166,12 +169,14 @@ subprojects {
                 "com.google.inject.extensions.assistedinject",
                 "com.google.inject.assistedinject",
                 "org.flyway",
-                "feign"
+                "feign",
+                "com.proximyst.moonshine"
             )
             doFirst {
                 reloc(*ban.relocations.toTypedArray())
             }
             mergeServiceFiles()
+            minimize()
         }
 
         named("build").get().dependsOn(withType<ShadowJar>())

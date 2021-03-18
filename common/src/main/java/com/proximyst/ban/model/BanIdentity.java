@@ -269,7 +269,7 @@ public abstract class BanIdentity {
 
     @Inject
     ConsoleIdentity(final @NonNull IBanServer banServer) {
-      super(0, IBanConsole.UUID, IBanConsole.USERNAME, banServer);
+      super(1, IBanConsole.UUID, IBanConsole.USERNAME, banServer);
       this.audience = banServer.consoleAudience();
     }
 

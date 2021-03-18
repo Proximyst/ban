@@ -62,7 +62,7 @@ public class KickCommand extends BaseCommand {
     this.messageService = messageService;
     this.userService = userService;
 
-    this.argTarget = cloudArgumentFactory.banIdentity("target", true, true);
+    this.argTarget = cloudArgumentFactory.banIdentity("target", true, true, BanIdentity.class);
     this.argReason = StringArgument.optional("reason", StringMode.GREEDY);
   }
 

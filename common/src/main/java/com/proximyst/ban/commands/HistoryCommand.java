@@ -49,7 +49,7 @@ public final class HistoryCommand extends BaseCommand {
     this.punishmentService = punishmentService;
     this.messageService = messageService;
 
-    this.argTarget = cloudArgumentFactory.banIdentity("target", true);
+    this.argTarget = cloudArgumentFactory.banIdentity("target", true, BanIdentity.class);
   }
 
   @Override

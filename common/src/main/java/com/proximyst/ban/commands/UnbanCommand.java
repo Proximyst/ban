@@ -54,7 +54,7 @@ public final class UnbanCommand extends BaseCommand {
     this.messageService = messageService;
     this.userService = userService;
 
-    this.argTarget = cloudArgumentFactory.banIdentity("target", true);
+    this.argTarget = cloudArgumentFactory.banIdentity("target", true, BanIdentity.class);
   }
 
   @Override
