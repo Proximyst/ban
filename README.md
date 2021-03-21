@@ -1,8 +1,7 @@
 # ban
 
-![GitHub Workflow Status](https://img.shields.io/github/workflow/status/Incendo/ban/build?style=flat-square)
-[![Discord](https://img.shields.io/discord/766366162388123678?logo=discord&style=flat-square)](https://discord.gg/aykZu32)
-[![CodeFactor](https://www.codefactor.io/repository/github/incendo/ban/badge)](https://www.codefactor.io/repository/github/incendo/ban)
+![GitHub Workflow Status](https://img.shields.io/github/workflow/status/Proximyst/ban/build?style=flat-square)
+[![CodeFactor](https://www.codefactor.io/repository/github/proximyst/ban/badge)](https://www.codefactor.io/repository/github/proximyst/ban)
 
 *ban: the simple punishment suite, built for your sake*
 
