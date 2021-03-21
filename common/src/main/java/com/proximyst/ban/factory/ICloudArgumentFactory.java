@@ -19,14 +19,17 @@
 package com.proximyst.ban.factory;
 
 import com.google.inject.assistedinject.Assisted;
-import com.proximyst.ban.commands.cloud.BanUserArgument;
+import com.proximyst.ban.commands.cloud.BanIdentityArgument;
+import com.proximyst.ban.model.BanIdentity;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public interface ICloudArgumentFactory {
-  @NonNull BanUserArgument banUser(final @Assisted("name") @NonNull String name,
-      final @Assisted("required") boolean required);
-
-  @NonNull BanUserArgument banUser(final @Assisted("name") @NonNull String name,
+  @NonNull BanIdentityArgument<? extends BanIdentity> banIdentity(final @Assisted("name") @NonNull String name,
       final @Assisted("required") boolean required,
-      final @Assisted("online") boolean online);
+      final @Assisted("type") Class<? extends BanIdentity> type);
+
+  @NonNull BanIdentityArgument<? extends BanIdentity> banIdentity(final @Assisted("name") @NonNull String name,
+      final @Assisted("required") boolean required,
+      final @Assisted("online") boolean online,
+      final @Assisted("type") Class<? extends BanIdentity> type);
 }

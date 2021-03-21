@@ -18,8 +18,7 @@
 
 package com.proximyst.ban.service;
 
-import com.proximyst.ban.model.BanUser;
-import com.proximyst.ban.model.UsernameHistory;
+import com.proximyst.ban.model.BanIdentity.UuidIdentity;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -46,26 +45,18 @@ public interface IMojangService {
   @NonNull CompletableFuture<@NonNull Optional<@NonNull String>> getUsername(final @NonNull UUID uuid);
 
   /**
-   * Get the username history of a UUID.
-   *
-   * @param uuid The UUID to get the username history of.
-   * @return The username history of the UUID, unsorted.
-   */
-  @NonNull CompletableFuture<@NonNull Optional<@NonNull UsernameHistory>> getUsernameHistory(final @NonNull UUID uuid);
-
-  /**
-   * Get a populated {@link BanUser} for the user given.
+   * Get a populated {@link UuidIdentity} for the user given.
    *
    * @param identifier Either the UUID of the user in string form (with or without hyphens), or their username.
    * @return Data about the user, fully populated with known data.
    */
-  @NonNull CompletableFuture<@NonNull Optional<@NonNull BanUser>> getUser(final @NonNull String identifier);
+  @NonNull CompletableFuture<@NonNull Optional<@NonNull UuidIdentity>> getUser(final @NonNull String identifier);
 
   /**
-   * Get a populated {@link BanUser} from the user given.
+   * Get a populated {@link UuidIdentity} from the user given.
    *
    * @param uuid The UUID of the user.
    * @return Data about the user, fully populated with known data.
    */
-  @NonNull CompletableFuture<@NonNull Optional<@NonNull BanUser>> getUser(final @NonNull UUID uuid);
+  @NonNull CompletableFuture<@NonNull Optional<@NonNull UuidIdentity>> getUser(final @NonNull UUID uuid);
 }

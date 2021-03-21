@@ -18,21 +18,21 @@
 
 package com.proximyst.ban.service;
 
-import com.proximyst.ban.model.BanUser;
+import com.proximyst.ban.model.BanIdentity.UuidIdentity;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 public interface IUserService {
   /**
    * Save the given user.
    *
-   * @param user The user to update the database with.
-   * @see IDataService#saveUser(BanUser)
+   * @param uuid The {@link UUID} of the user to save.
+   * @param username The username of the user to save.
+   * @see IDataService#createIdentity(UUID, String)
    */
-  @NonNull CompletableFuture<@Nullable Void> saveUser(final @NonNull BanUser user);
+  @NonNull CompletableFuture<@NonNull UuidIdentity> saveUser(final @NonNull UUID uuid, final @NonNull String username);
 
   /**
    * Get the user data of a user with the given name, if they exist.
@@ -40,7 +40,7 @@ public interface IUserService {
    * @param name The name of the user to get the data of.
    * @return The user data of the user.
    */
-  @NonNull CompletableFuture<@NonNull Optional<@NonNull BanUser>> getUser(final @NonNull String name);
+  @NonNull CompletableFuture<@NonNull Optional<@NonNull UuidIdentity>> getUser(final @NonNull String name);
 
   /**
    * Get the user data of a user with the given UUID, if they exist.
@@ -48,7 +48,7 @@ public interface IUserService {
    * @param uuid The UUID of the user to get the data of.
    * @return The user data of the user.
    */
-  @NonNull CompletableFuture<@NonNull Optional<@NonNull BanUser>> getUser(final @NonNull UUID uuid);
+  @NonNull CompletableFuture<@NonNull Optional<@NonNull UuidIdentity>> getUser(final @NonNull UUID uuid);
 
   /**
    * Schedule an update on the data of a user, only if necessary.
@@ -60,11 +60,16 @@ public interface IUserService {
 
   /**
    * Get the user data of a user with the given UUID, if they exist.
-   * <p>
-   * This will always fetch the latest data about the user.
    *
    * @param uuid The UUID of the user to get the data of.
    * @return The user data of the user.
    */
-  @NonNull CompletableFuture<@NonNull Optional<@NonNull BanUser>> getUserUpdated(final @NonNull UUID uuid);
+  @NonNull CompletableFuture<@NonNull Optional<@NonNull UuidIdentity>> getUserUpdated(final @NonNull UUID uuid);
+
+  /**
+   * Remove the player from the caches, if they were there.
+   *
+   * @param uuid The UUID of the player to remove.
+   */
+  void uncachePlayer(final @NonNull UUID uuid);
 }

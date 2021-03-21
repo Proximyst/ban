@@ -19,15 +19,12 @@
 package com.proximyst.ban;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
-import com.google.inject.Singleton;
 import com.proximyst.ban.config.ConfigUtil;
 import com.proximyst.ban.config.Configuration;
+import com.proximyst.ban.data.jdbi.BanIdentityJdbiRowMapper;
 import com.proximyst.ban.data.jdbi.PunishmentJdbiRowMapper;
-import com.proximyst.ban.data.jdbi.UsernameHistoryEntryJdbiRowMapper;
-import com.proximyst.ban.data.jdbi.UuidJdbiFactory;
 import com.proximyst.ban.inject.annotation.PluginData;
 import com.proximyst.ban.platform.IBanServer;
 import com.proximyst.ban.service.IDataService;
@@ -37,6 +34,9 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.text.MessageFormat;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
@@ -47,6 +47,7 @@ import org.flywaydb.core.Flyway;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.statement.SqlLogger;
 import org.jdbi.v3.core.statement.StatementContext;
+import org.jdbi.v3.postgres.PostgresPlugin;
 import org.slf4j.Logger;
 
 /**
@@ -76,10 +77,9 @@ public final class BanPluginImpl {
 
   public boolean enable() {
     if (!this.banServer.isOnlineMode()) {
-      this.logger.error("This plugin cannot function on offline mode.");
-      this.logger.error("This plugin depends on Mojang's API and the presence of online mode players.");
-      this.logger.error("Please either enable online mode, or find a new punishments plugin.");
-      return false;
+      this.logger.warn("This plugin will not provide any kind of support for offline mode.");
+      this.logger.warn("This plugin may not function whatsoever on offline mode.");
+      this.logger.warn("You may not receive any kind of support while running offline mode.");
     }
 
     // Just to ensure the parents exist.
@@ -107,28 +107,34 @@ public final class BanPluginImpl {
     }
 
     try {
-      DriverManager.registerDriver(new org.mariadb.jdbc.Driver());
+      DriverManager.registerDriver(new org.postgresql.Driver());
     } catch (final SQLException ex) {
       this.logger.error("Could not register a data driver", ex);
       return false;
     }
 
     final HikariConfig hikariConfig = new HikariConfig();
-    hikariConfig.setJdbcUrl(this.configuration.sql.jdbcUri);
+    hikariConfig.setDriverClassName(org.postgresql.Driver.class.getName());
+    hikariConfig.setJdbcUrl(new MessageFormat("jdbc:postgresql://{0}:{1}/{2}")
+        .format(new String[]{
+            this.configuration.sql.hostname,
+            String.valueOf(this.configuration.sql.port),
+            this.configuration.sql.database
+        }));
     hikariConfig.setUsername(this.configuration.sql.username);
     hikariConfig.setPassword(this.configuration.sql.password);
     hikariConfig.setMaximumPoolSize(this.configuration.sql.maxConnections);
     this.hikariDataSource = new HikariDataSource(hikariConfig);
     this.jdbi = Jdbi.create(this.hikariDataSource)
+        .installPlugin(new PostgresPlugin())
         .setSqlLogger(new SqlLogger() {
           @Override
           public void logException(@Nullable final StatementContext context, @NonNull final SQLException ex) {
             BanPluginImpl.this.logger.warn("Could not execute JDBI statement.", ex);
           }
         })
-        .registerArgument(this.injector.getInstance(UuidJdbiFactory.class))
         .registerRowMapper(this.injector.getInstance(PunishmentJdbiRowMapper.class))
-        .registerRowMapper(this.injector.getInstance(UsernameHistoryEntryJdbiRowMapper.class));
+        .registerRowMapper(this.injector.getInstance(BanIdentityJdbiRowMapper.class));
 
     try {
       final IDataService service = this.injector.getInstance(IDataService.class);

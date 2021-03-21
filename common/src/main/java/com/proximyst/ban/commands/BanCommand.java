@@ -19,78 +19,91 @@
 package com.proximyst.ban.commands;
 
 import cloud.commandframework.CommandManager;
+import cloud.commandframework.arguments.CommandArgument;
 import cloud.commandframework.arguments.standard.StringArgument;
+import cloud.commandframework.arguments.standard.StringArgument.StringMode;
 import cloud.commandframework.context.CommandContext;
-import com.google.inject.Inject;
+import cloud.commandframework.types.tuples.Pair;
 import com.proximyst.ban.BanPermissions;
+import com.proximyst.ban.IdentityMustExistException;
+import com.proximyst.ban.commands.cloud.BanIdentityArgument;
 import com.proximyst.ban.commands.cloud.BaseCommand;
 import com.proximyst.ban.factory.IBanExceptionalFutureLoggerFactory;
 import com.proximyst.ban.factory.ICloudArgumentFactory;
-import com.proximyst.ban.model.BanUser;
+import com.proximyst.ban.model.BanIdentity;
+import com.proximyst.ban.model.BanIdentity.UuidIdentity;
 import com.proximyst.ban.model.Punishment;
 import com.proximyst.ban.model.PunishmentBuilder;
 import com.proximyst.ban.model.PunishmentType;
 import com.proximyst.ban.platform.IBanAudience;
+import com.proximyst.ban.service.IMessageService;
 import com.proximyst.ban.service.IPunishmentService;
-import com.proximyst.ban.service.MessageService;
+import com.proximyst.ban.service.IUserService;
 import com.proximyst.ban.utils.BanExceptionalFutureLogger;
+import java.util.Optional;
+import javax.inject.Inject;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class BanCommand extends BaseCommand {
   private final @NonNull BanExceptionalFutureLogger<?> banExceptionalFutureLogger;
-  private final @NonNull ICloudArgumentFactory cloudArgumentFactory;
   private final @NonNull IPunishmentService punishmentService;
-  private final @NonNull MessageService messageService;
+  private final @NonNull IMessageService messageService;
+  private final @NonNull IUserService userService;
+
+  private final BanIdentityArgument<? extends BanIdentity> argTarget;
+  private final CommandArgument<IBanAudience, String> argReason;
 
   @Inject
   BanCommand(final @NonNull IBanExceptionalFutureLoggerFactory banExceptionalFutureLoggerFactory,
       final @NonNull ICloudArgumentFactory cloudArgumentFactory,
       final @NonNull IPunishmentService punishmentService,
-      final @NonNull MessageService messageService) {
+      final @NonNull IMessageService messageService,
+      final @NonNull IUserService userService) {
     this.banExceptionalFutureLogger = banExceptionalFutureLoggerFactory.createLogger(this.getClass());
-    this.cloudArgumentFactory = cloudArgumentFactory;
     this.punishmentService = punishmentService;
     this.messageService = messageService;
+    this.userService = userService;
+
+    this.argTarget = cloudArgumentFactory.banIdentity("target", true, BanIdentity.class);
+    this.argReason = StringArgument.optional("reason", StringMode.GREEDY);
   }
 
   @Override
   public void register(final @NonNull CommandManager<@NonNull IBanAudience> commandManager) {
     commandManager.command(commandManager.commandBuilder("ban")
         .permission(BanPermissions.COMMAND_BAN)
-        .argument(this.cloudArgumentFactory.banUser("target", true))
-        .argument(StringArgument.optional("reason", StringArgument.StringMode.GREEDY))
+        .argument(this.argTarget)
+        .argument(this.argReason)
         .handler(this::execute));
   }
 
-  private void execute(final @NonNull CommandContext<@NonNull ? extends IBanAudience> ctx) {
-    final BanUser target = ctx.get("target");
-    final @Nullable String reason = ctx.getOrDefault("reason", null);
+  private void execute(final @NonNull CommandContext<@NonNull IBanAudience> ctx) {
+    final BanIdentity target = ctx.get(this.argTarget);
+    final @Nullable String reason = ctx.getOrDefault(this.argReason, null);
 
-    this.messageService.commandsFeedbackBan(target)
-        .send(ctx.getSender(), ctx.getSender().identity());
+    this.messageService.feedbackBan(ctx.getSender(), target);
 
     // We have to lift their previous punishment.
-    this.punishmentService.getActiveBan(target.getUuid())
-        .thenAccept(optExisting -> {
-          optExisting.ifPresent(existing -> {
-            existing.setLiftedBy(ctx.getSender().uuid());
-            this.punishmentService.savePunishment(existing)
-                .exceptionally(this.banExceptionalFutureLogger.cast());
-          });
+    this.punishmentService.getActiveBan(target)
+        .thenCombine(this.userService.getUser(ctx.getSender().uuid()), Pair::of)
+        .thenAccept(pair -> {
+          final Optional<Punishment> optExisting = pair.getFirst();
+          final UuidIdentity senderIdentity = pair.getSecond().orElseThrow(IdentityMustExistException::new);
 
-          final Punishment punishment =
-              new PunishmentBuilder()
-                  .type(PunishmentType.BAN)
-                  .punisher(ctx.getSender().uuid())
-                  .target(target.getUuid())
-                  .reason(reason)
-                  .build();
-          this.punishmentService.savePunishment(punishment)
-              .exceptionally(this.banExceptionalFutureLogger.cast());
-          this.punishmentService.applyPunishment(punishment)
-              .exceptionally(this.banExceptionalFutureLogger.cast());
-          this.messageService.announceNewPunishment(punishment)
+          optExisting.ifPresent(this.punishmentService::liftPunishment);
+
+          final PunishmentBuilder builder = new PunishmentBuilder()
+              .type(PunishmentType.BAN)
+              .punisher(senderIdentity)
+              .target(target)
+              .reason(reason);
+          this.punishmentService.savePunishment(builder)
+              .thenAccept(punishment -> {
+                this.punishmentService.applyPunishment(punishment)
+                    .exceptionally(this.banExceptionalFutureLogger.cast());
+                this.punishmentService.announcePunishment(punishment);
+              })
               .exceptionally(this.banExceptionalFutureLogger.cast());
         })
         .exceptionally(this.banExceptionalFutureLogger.cast());

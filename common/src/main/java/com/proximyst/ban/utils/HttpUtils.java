@@ -19,8 +19,6 @@
 package com.proximyst.ban.utils;
 
 import com.google.common.base.Charsets;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import com.proximyst.ban.inject.annotation.BanAsyncExecutor;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -31,6 +29,8 @@ import java.net.http.HttpResponse.BodySubscribers;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 @Singleton

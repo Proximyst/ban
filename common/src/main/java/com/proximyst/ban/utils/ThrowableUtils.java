@@ -44,18 +44,6 @@ public final class ThrowableUtils {
     throw (T) throwable;
   }
 
-  public static <T> @NonNull CompletableFuture<T> supplySneaky(final @NonNull Callable<T> callable) {
-    final CompletableFuture<T> future = new CompletableFuture<>();
-    try {
-      future.complete(callable.call());
-    } catch (final ExecutionException ex) {
-      future.completeExceptionally(ex.getCause() == null ? ex : ex.getCause());
-    } catch (final Throwable throwable) {
-      future.completeExceptionally(throwable);
-    }
-    return future;
-  }
-
   public static <T> @NonNull CompletableFuture<@NonNull T> supplyAsyncSneaky(final @NonNull Callable<T> callable,
       final @NonNull Executor executor) {
     return CompletableFuture.supplyAsync(() -> {

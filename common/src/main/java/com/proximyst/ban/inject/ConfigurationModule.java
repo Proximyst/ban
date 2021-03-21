@@ -20,19 +20,12 @@ package com.proximyst.ban.inject;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
-import com.google.inject.Singleton;
 import com.proximyst.ban.config.Configuration;
-import com.proximyst.ban.config.MessagesConfig;
 import com.proximyst.ban.config.SqlConfig;
+import javax.inject.Singleton;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public final class ConfigurationModule extends AbstractModule {
-  @Singleton
-  @Provides
-  @NonNull MessagesConfig messagesConfig(final @NonNull Configuration configuration) {
-    return configuration.messages;
-  }
-
   @Singleton
   @Provides
   @NonNull SqlConfig sqlConfig(final @NonNull Configuration configuration) {

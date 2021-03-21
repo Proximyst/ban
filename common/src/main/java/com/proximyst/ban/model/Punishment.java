@@ -18,16 +18,12 @@
 
 package com.proximyst.ban.model;
 
-import com.google.common.base.Preconditions;
 import java.util.Date;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import org.checkerframework.checker.index.qual.NonNegative;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-
-// TODO(Proximyst): Google autovalues?
 
 /**
  * A punishment enacted on a player.
@@ -39,18 +35,19 @@ public final class Punishment {
   private final @NonNull PunishmentType punishmentType;
 
   /**
-   * The target of this punishment.
-   * <p>
-   * This is the punished player.
+   * The ID of the punishment in the database.
    */
-  private final @NonNull UUID target;
+  private final long id;
+
+  /**
+   * The target of this punishment.
+   */
+  private final @NonNull BanIdentity target;
 
   /**
    * The punisher of this punishment.
-   * <p>
-   * This is the one handing out and enforcing the punishment.
    */
-  private final @NonNull UUID punisher;
+  private final @NonNull BanIdentity punisher;
 
   /**
    * The time at which this punishment was created.
@@ -67,83 +64,49 @@ public final class Punishment {
   private final @NonNegative long duration;
 
   /**
-   * The ID of the punishment in the database.
-   */
-  private long id;
-
-  /**
    * The reason for the punishment if one is specified.
-   * <p>
-   * This must be a maximum of {@code 255} bytes long.
    */
-  private @Nullable String reason;
+  private final @Nullable String reason;
 
   /**
    * Whether the punishment has been lifted.
    * <p>
    * May only be {@code true} if {@link PunishmentType#canBeLifted()} is {@code true}.
    */
-  private boolean lifted;
+  private final boolean lifted;
 
   /**
    * By whom the punishment has been lifted if anyone.
    * <p>
    * This is {@code null} if the punishment has not been lifted or has simply expired.
    */
-  private @Nullable UUID liftedBy;
-
-  public Punishment(final @NonNull PunishmentType punishmentType,
-      final @NonNull UUID target,
-      final @NonNull UUID punisher,
-      final @Nullable String reason,
-      final boolean lifted,
-      final @Nullable UUID liftedBy,
-      final long time,
-      final long duration) {
-    this(-1, punishmentType, target, punisher, reason, lifted, liftedBy, time, duration);
-  }
+  private final @Nullable UUID liftedBy;
 
   public Punishment(final long id,
       final @NonNull PunishmentType punishmentType,
-      final @NonNull UUID target,
-      final @NonNull UUID punisher,
+      final @NonNull BanIdentity target,
+      final @NonNull BanIdentity punisher,
       final @Nullable String reason,
       final boolean lifted,
       final @Nullable UUID liftedBy,
       final long time,
       final long duration) {
-    if (!lifted && liftedBy != null) {
-      throw new IllegalArgumentException("liftedBy must be null if lifted is false");
-    }
-
-    this.id = Math.max(id, -1);
-    this.punishmentType = Objects.requireNonNull(punishmentType, "type must be specified");
-    this.target = Objects.requireNonNull(target, "target must be specified");
-    this.punisher = Objects.requireNonNull(punisher, "punisher must be specified");
+    this.id = id;
+    this.punishmentType = punishmentType;
+    this.target = target;
+    this.punisher = punisher;
     this.reason = reason;
     this.lifted = lifted;
     this.liftedBy = liftedBy;
-    this.time = time <= 0 ? System.currentTimeMillis() : time;
-    this.duration = Math.max(duration, 0);
+    this.time = time;
+    this.duration = duration;
   }
 
   /**
    * @return The ID of this punishment, or an empty optional if none is known.
    */
-  public @NonNull Optional<@NonNull @NonNegative Long> getId() {
-    return this.id < 0 ? Optional.empty() : Optional.of(this.id);
-  }
-
-  /**
-   * @param id Set the ID of this punishment.
-   * @throws IllegalStateException If this punishment already has an ID.
-   */
-  public void setId(final long id) {
-    this.getId().ifPresentOrElse(
-        $ -> {
-          throw new IllegalStateException("Cannot set ID of punishment with a pre-existing ID");
-        },
-        () -> this.id = id);
+  public long getId() {
+    return this.id;
   }
 
   /**
@@ -155,37 +118,23 @@ public final class Punishment {
 
   /**
    * @return The target of this punishment.
-   * <p>
-   * This is the punished player.
    */
-  public @NonNull UUID getTarget() {
+  public @NonNull BanIdentity getTarget() {
     return this.target;
   }
 
   /**
    * @return The punisher of this punishment.
-   * <p>
-   * This is the one handing out and enforcing the punishment.
    */
-  public @NonNull UUID getPunisher() {
+  public @NonNull BanIdentity getPunisher() {
     return this.punisher;
   }
 
   /**
-   * @return The reason for the punishment if one is specified, or {@code null} otherwise.
-   * <p>
-   * This is a maximum of {@code 255} bytes long.
+   * @return The reason for the punishment if one is specified.
    */
   public @NonNull Optional<@NonNull String> getReason() {
     return Optional.ofNullable(this.reason);
-  }
-
-  /**
-   * @param reason The reason for the punishment or {@code null} otherwise. This must be a maximum of 255 bytes long.
-   */
-  public void setReason(final @Nullable String reason) {
-    Preconditions.checkArgument(reason != null && reason.getBytes().length <= 255, "reason must be <= 255 bytes");
-    this.reason = reason;
   }
 
   /**
@@ -227,16 +176,6 @@ public final class Punishment {
    */
   public @NonNull Optional<@NonNull UUID> getLiftedBy() {
     return Optional.ofNullable(this.liftedBy);
-  }
-
-  /**
-   * Sets the user who lifted the punishment.
-   *
-   * @param liftedBy The user who lifted this punishment.
-   */
-  public void setLiftedBy(final @NonNull UUID liftedBy) {
-    this.lifted = true;
-    this.liftedBy = liftedBy;
   }
 
   /**
@@ -288,13 +227,7 @@ public final class Punishment {
       return !this.isLifted();
     }
 
-    if (this.getExpiration() > System.currentTimeMillis()) {
-      // Expiration is in the future and not lifted, we'll have to wait.
-      return true;
-    }
-
-    this.lifted = true;
-    this.liftedBy = null; // Expired, no-one lifted it.
-    return false;
+    // Expiration is in the future and not lifted, we'll have to wait.
+    return this.getExpiration() > System.currentTimeMillis();
   }
 }

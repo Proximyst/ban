@@ -35,6 +35,12 @@ subprojects {
 
     repositories {
         maven {
+            // This also acts as a mirror, so as to not spam other repos with requests.
+            name = "proxi-nexus"
+            url = uri("https://nexus.proximyst.com/repository/maven-any/")
+        }
+
+        maven {
             name = "sonatype"
             url = uri("https://oss.sonatype.org/content/repositories/snapshots")
 
@@ -66,16 +72,24 @@ subprojects {
     }
 
     dependencies {
+        runtimeOnly("com.github.ben-manes.caffeine:caffeine:2.8.8") {
+            exclude("com.google.errorprone", "error_prone_annotations")
+        }
         compileOnlyApi("org.slf4j:slf4j-api:$SLF4J_VER") // The API shouldn't change too drastically...
         testImplementation("org.slf4j:slf4j-api:$SLF4J_VER") // The API shouldn't change too drastically...
-        implementation("org.jdbi:jdbi3-core:3.17.0") {
+        implementation("org.jdbi:jdbi3-core:$JDBI_VER") {
+            exclude("org.slf4j")
+            exclude("com.github.ben-manes.caffeine")
+        }
+        implementation("org.jdbi:jdbi3-postgres:$JDBI_VER") {
+            exclude("org.slf4j")
+            exclude("com.github.ben-manes.caffeine")
+        }
+        implementation("org.postgresql:postgresql:42.2.19")
+        implementation("com.zaxxer:HikariCP:4.0.3") {
             exclude("org.slf4j")
         }
-        implementation("org.mariadb.jdbc:mariadb-java-client:2.7.0")
-        implementation("com.zaxxer:HikariCP:3.4.5") {
-            exclude("org.slf4j")
-        }
-        implementation("org.flywaydb:flyway-core:7.1.1")
+        implementation("org.flywaydb:flyway-core:7.7.0")
 
         compileOnlyApi("net.kyori:adventure-api:$ADVENTURE_VER")
         testImplementation("net.kyori:adventure-api:$ADVENTURE_VER")
@@ -106,6 +120,9 @@ subprojects {
             // Guice will be provided as shown above. Its shadowing state is set by the platform.
             isTransitive = false
         }
+
+        compileOnlyApi("com.proximyst.moonshine:core:$MOONSHINE_VER")
+        testImplementation("com.proximyst.moonshine:core:$MOONSHINE_VER")
 
         compileOnlyApi("org.spongepowered:configurate-core:$CONFIGURATE_VER")
         compileOnlyApi("org.spongepowered:configurate-hocon:$CONFIGURATE_VER")
@@ -144,7 +161,7 @@ subprojects {
             // Some relocations are just always going to be applied, so apply those first.
             reloc(
                 "com.zaxxer.hikari",
-                "org.mariadb.jdbc",
+                "org.postgresql",
                 "net.kyori.adventure.text.minimessage",
                 "org.jdbi",
                 "com.github.benmanes.caffeine",
@@ -154,17 +171,29 @@ subprojects {
                 "com.google.inject.extensions.assistedinject",
                 "com.google.inject.assistedinject",
                 "org.flyway",
-                "feign"
+                "feign",
+                "com.proximyst.moonshine"
             )
             doFirst {
                 reloc(*ban.relocations.toTypedArray())
             }
             mergeServiceFiles()
+            minimize {
+                exclude(dependency("com.github.ben-manes.caffeine:caffeine"))
+            }
         }
 
         named("build").get().dependsOn(withType<ShadowJar>())
 
         compileJava {
+            this.options.apply {
+                isFork = true
+                compilerArgs.add("-Xlint:all")
+                compilerArgs.add("-parameters")
+            }
+        }
+
+        compileTestJava {
             this.options.apply {
                 isFork = true
                 compilerArgs.add("-Xlint:all")
@@ -213,6 +242,7 @@ allprojects {
     configure<JavaPluginConvention> {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = sourceCompatibility
+        disableAutoTargetJvm()
     }
 
     license {
@@ -236,5 +266,5 @@ allprojects {
 }
 
 repositories {
-    jcenter() // Gradle plugins.
+    mavenCentral()
 }

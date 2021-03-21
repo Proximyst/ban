@@ -18,23 +18,28 @@
 
 package com.proximyst.ban.event.subscriber;
 
-import com.google.inject.Inject;
 import com.proximyst.ban.BanPermissions;
+import com.proximyst.ban.model.BanIdentity;
+import com.proximyst.ban.service.IMessageService;
 import com.proximyst.ban.service.IPunishmentService;
-import com.proximyst.ban.service.MessageService;
+import com.proximyst.ban.service.IUserService;
 import com.velocitypowered.api.event.ResultedEvent.ComponentResult;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.LoginEvent;
+import javax.inject.Inject;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class BannedPlayerJoinSubscriber {
   private final @NonNull IPunishmentService punishmentService;
-  private final @NonNull MessageService messageService;
+  private final @NonNull IUserService userService;
+  private final @NonNull IMessageService messageService;
 
   @Inject
   BannedPlayerJoinSubscriber(final @NonNull IPunishmentService punishmentService,
-      final @NonNull MessageService messageService) {
+      final @NonNull IUserService userService,
+      final @NonNull IMessageService messageService) {
     this.punishmentService = punishmentService;
+    this.userService = userService;
     this.messageService = messageService;
   }
 
@@ -45,16 +50,16 @@ public class BannedPlayerJoinSubscriber {
       return;
     }
 
-    this.punishmentService.getActiveBan(event.getPlayer().getUniqueId())
+    final BanIdentity identity = this.userService.getUser(event.getPlayer().getUniqueId())
+        .join() // They're currently online, so this should be completed instantly.
+        .orElseThrow(() -> new IllegalStateException("online players must have identities"));
+    this.punishmentService.getActiveBan(identity)
         .join() // This *should* be fast, and only on one player's connection thread
         .ifPresent(ban ->
             event.setResult(ComponentResult.denied(
-                this.messageService.punishmentMessage(ban.getPunishmentType()
-                        .getApplicationMessage(ban.getReason().isPresent())
-                        .orElseThrow(() -> new IllegalStateException("application message must exist")),
-                    ban)
-                    // We're about to deny them access; the time it takes to fetch the data doesn't matter.
-                    .component().join()
+                ban.getReason().isPresent()
+                    ? this.messageService.applicationsReasonedBan(ban)
+                    : this.messageService.applicationsReasonlessBan(ban)
             )));
   }
 }

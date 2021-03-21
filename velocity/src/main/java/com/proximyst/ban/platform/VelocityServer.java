@@ -19,12 +19,13 @@
 package com.proximyst.ban.platform;
 
 import com.google.common.collect.Iterators;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.proximyst.ban.model.BanUser;
+import com.proximyst.ban.platform.IBanAudience.IBanConsole;
+import com.proximyst.ban.platform.IBanAudience.IBanPlayer;
 import com.velocitypowered.api.proxy.ProxyServer;
 import java.util.Objects;
 import java.util.UUID;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.audience.ForwardingAudience;
 import org.checkerframework.checker.index.qual.NonNegative;
@@ -34,10 +35,13 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 @Singleton
 public class VelocityServer implements IBanServer, ForwardingAudience.Single {
   private final @NonNull ProxyServer proxyServer;
+  private final @NonNull VelocityConsoleAudience velocityConsoleAudience;
 
   @Inject
-  VelocityServer(final @NonNull ProxyServer proxyServer) {
+  VelocityServer(final @NonNull ProxyServer proxyServer,
+      final @NonNull VelocityConsoleAudience velocityConsoleAudience) {
     this.proxyServer = proxyServer;
+    this.velocityConsoleAudience = velocityConsoleAudience;
   }
 
   @Override
@@ -46,14 +50,14 @@ public class VelocityServer implements IBanServer, ForwardingAudience.Single {
   }
 
   @Override
-  public @NonNull Iterable<? extends IBanAudience> onlineAudiences() {
+  public @NonNull Iterable<? extends IBanPlayer> onlineAudiences() {
     return () -> Iterators.transform(this.proxyServer.getAllPlayers().iterator(),
-        pl -> VelocityAudience.getAudience(Objects.requireNonNull(pl)));
+        pl -> VelocityPlayerAudience.getAudience(Objects.requireNonNull(pl)));
   }
 
   @Override
-  public @NonNull IBanAudience consoleAudience() {
-    return VelocityAudience.getAudience(this.proxyServer.getConsoleCommandSource());
+  public @NonNull IBanConsole consoleAudience() {
+    return this.velocityConsoleAudience;
   }
 
   @Override
@@ -62,20 +66,16 @@ public class VelocityServer implements IBanServer, ForwardingAudience.Single {
   }
 
   @Override
-  public @Nullable IBanAudience audienceOf(final @NonNull UUID uuid) {
-    if (uuid.equals(BanUser.CONSOLE.getUuid())) {
-      return this.consoleAudience();
-    }
-
+  public @Nullable IBanPlayer audienceOf(final @NonNull UUID uuid) {
     return this.proxyServer.getPlayer(uuid)
-        .map(VelocityAudience::getAudience)
+        .map(VelocityPlayerAudience::getAudience)
         .orElse(null);
   }
 
   @Override
-  public @Nullable IBanAudience audienceOf(final @NonNull String username) {
+  public @Nullable IBanPlayer audienceOf(final @NonNull String username) {
     return this.proxyServer.getPlayer(username)
-        .map(VelocityAudience::getAudience)
+        .map(VelocityPlayerAudience::getAudience)
         .orElse(null);
   }
 
