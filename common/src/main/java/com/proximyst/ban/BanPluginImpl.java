@@ -25,7 +25,6 @@ import com.proximyst.ban.config.ConfigUtil;
 import com.proximyst.ban.config.Configuration;
 import com.proximyst.ban.data.jdbi.BanIdentityJdbiRowMapper;
 import com.proximyst.ban.data.jdbi.PunishmentJdbiRowMapper;
-import com.proximyst.ban.data.jdbi.UuidJdbiFactory;
 import com.proximyst.ban.inject.annotation.PluginData;
 import com.proximyst.ban.platform.IBanServer;
 import com.proximyst.ban.service.IDataService;
@@ -78,7 +77,7 @@ public final class BanPluginImpl {
 
   public boolean enable() {
     if (!this.banServer.isOnlineMode()) {
-      this.logger.warn("This plugin will not provide any kind of support on offline mode.");
+      this.logger.warn("This plugin will not provide any kind of support for offline mode.");
       this.logger.warn("This plugin may not function whatsoever on offline mode.");
       this.logger.warn("You may not receive any kind of support while running offline mode.");
     }
@@ -134,7 +133,6 @@ public final class BanPluginImpl {
             BanPluginImpl.this.logger.warn("Could not execute JDBI statement.", ex);
           }
         })
-        .registerArgument(this.injector.getInstance(UuidJdbiFactory.class))
         .registerRowMapper(this.injector.getInstance(PunishmentJdbiRowMapper.class))
         .registerRowMapper(this.injector.getInstance(BanIdentityJdbiRowMapper.class));
 

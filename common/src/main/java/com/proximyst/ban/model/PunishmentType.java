@@ -19,8 +19,6 @@
 package com.proximyst.ban.model;
 
 import com.proximyst.ban.BanPermissions;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -38,7 +36,6 @@ public enum PunishmentType {
    * A warning on the player.
    */
   WARNING(new PunishmentTypeBuilder()
-      .setId(0)
       .setCanLift(false)
       .setIsApplicable(false)
       .setNotificationPermission(BanPermissions.NOTIFY_WARN)),
@@ -49,7 +46,6 @@ public enum PunishmentType {
    * This means the player cannot communicate with other players.
    */
   MUTE(new PunishmentTypeBuilder()
-      .setId(1)
       .setCanLift(true)
       .setIsApplicable(false)
       .setNotificationPermission(BanPermissions.NOTIFY_MUTE)
@@ -61,7 +57,6 @@ public enum PunishmentType {
    * This means the player was forcefully disconnected once.
    */
   KICK(new PunishmentTypeBuilder()
-      .setId(2)
       .setCanLift(false)
       .setIsApplicable(true)
       .setNotificationPermission(BanPermissions.NOTIFY_KICK)
@@ -73,7 +68,6 @@ public enum PunishmentType {
    * This means the player was forcefully removed from the server for a period of time.
    */
   BAN(new PunishmentTypeBuilder()
-      .setId(3)
       .setCanLift(true)
       .setIsApplicable(true)
       .setNotificationPermission(BanPermissions.NOTIFY_BAN)
@@ -85,26 +79,9 @@ public enum PunishmentType {
    * This is not visible to the player in any way and is only used for the history.
    */
   NOTE(new PunishmentTypeBuilder()
-      .setId(4)
       .setCanLift(false)
       .setIsApplicable(false)),
   ;
-
-  /**
-   * All {@link PunishmentType}s by their IDs.
-   */
-  private static final @NonNull Map<@NonNull Byte, @NonNull PunishmentType> PUNISHMENT_TYPES_BY_ID = new HashMap<>();
-
-  static {
-    for (final PunishmentType type : values()) {
-      PUNISHMENT_TYPES_BY_ID.put(type.getId(), type);
-    }
-  }
-
-  /**
-   * The ID of this {@link PunishmentType} in the database.
-   */
-  private final byte id;
 
   /**
    * Whether this {@link PunishmentType} can be lifted.
@@ -127,26 +104,10 @@ public enum PunishmentType {
   private final @Nullable String bypassPermission;
 
   PunishmentType(final @NonNull PunishmentTypeBuilder builder) {
-    this.id = builder.id;
     this.canLift = builder.canLift;
     this.isApplicable = builder.isApplicable;
     this.notificationPermission = builder.notificationPermission;
     this.bypassPermission = builder.bypassPermission;
-  }
-
-  /**
-   * @param id The ID of the punishment type.
-   * @return An {@link Optional} possibly containing a {@link PunishmentType}.
-   */
-  public static @NonNull Optional<@NonNull PunishmentType> getById(final byte id) {
-    return Optional.ofNullable(PUNISHMENT_TYPES_BY_ID.get(id));
-  }
-
-  /**
-   * @return The ID of this {@link PunishmentType} in the database.
-   */
-  public byte getId() {
-    return this.id;
   }
 
   /**
@@ -180,17 +141,10 @@ public enum PunishmentType {
   }
 
   private static class PunishmentTypeBuilder {
-    private byte id;
     private boolean canLift;
     private boolean isApplicable;
     private @Nullable String notificationPermission;
     private @Nullable String bypassPermission;
-
-    @Pure
-    public @This PunishmentTypeBuilder setId(final int id) {
-      this.id = (byte) id;
-      return this;
-    }
 
     @Pure
     public @This PunishmentTypeBuilder setCanLift(final boolean canLift) {

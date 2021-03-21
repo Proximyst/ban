@@ -48,8 +48,8 @@ public final class BanIdentityJdbiRowMapper implements RowMapper<BanIdentity> {
   @Override
   public @NonNull BanIdentity map(final @NonNull ResultSet rs, final @NonNull StatementContext ctx)
       throws SQLException {
-    final IdentityType type = IdentityType.fromType(rs.getByte("type"))
-        .orElseThrow(() -> new IllegalArgumentException("unknown IdentityType"));
+    final IdentityType type = ctx.findColumnMapperFor(IdentityType.class).orElseThrow()
+        .map(rs, "type", ctx);
 
     if (type == IdentityType.CONSOLE) {
       return this.consoleIdentity;

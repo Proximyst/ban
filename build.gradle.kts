@@ -35,6 +35,12 @@ subprojects {
 
     repositories {
         maven {
+            // This also acts as a mirror, so as to not spam other repos with requests.
+            name = "proxi-nexus"
+            url = uri("https://nexus.proximyst.com/repository/maven-any/")
+        }
+
+        maven {
             name = "sonatype"
             url = uri("https://oss.sonatype.org/content/repositories/snapshots")
 
@@ -58,15 +64,6 @@ subprojects {
 
             content {
                 includeGroup("com.mojang")
-            }
-        }
-
-        maven {
-            name = "proxi-nexus"
-            url = uri("https://nexus.proximyst.com/repository/maven-any/")
-
-            content {
-                includeGroup("com.proximyst.moonshine")
             }
         }
 

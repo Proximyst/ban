@@ -39,6 +39,9 @@ import java.net.InetAddress;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.sql.Types;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -123,13 +126,13 @@ public final class ImplGenericSqlDataService implements IDataService {
   public @NonNull Punishment savePunishment(final @NonNull PunishmentBuilder punishment) {
     return this.jdbi.inTransaction(handle -> {
       final long id = handle.createUpdate(this.queryCreatePunishment.getQuery())
-          .bind("type", punishment.getType().getId())
+          .bind("type", punishment.getType())
           .bind("target", punishment.getTarget().getId())
           .bind("punisher", punishment.getPunisher().getId())
           .bind("reason", punishment.getReason())
           .bind("lifted", punishment.isLifted())
           .bind("lifted_by", punishment.getLiftedBy())
-          .bind("time", punishment.getTime())
+          .bind("time", ZonedDateTime.ofInstant(Instant.ofEpochMilli(punishment.getTime()), ZoneId.systemDefault()))
           .bind("duration", punishment.getDuration())
           .executeAndReturnGeneratedKeys("id")
           .map((RowView row) -> row.getColumn("id", Long.class))
@@ -235,13 +238,17 @@ public final class ImplGenericSqlDataService implements IDataService {
   @Override
   public @NonNull UuidIdentity createIdentity(final @NonNull UUID uuid, final @NonNull String username) {
     return this.jdbi.inTransaction(handle -> {
-      final long id = handle.createUpdate(this.querySaveIdentity.getQuery())
-          .bind("type", IdentityType.UUID.type())
+      final long id = handle.createQuery(this.querySaveIdentity.getQuery())
+          .bind("type", IdentityType.UUID)
           .bind("uuid", uuid)
           .bindNull("address", Types.BINARY)
-          .executeAndReturnGeneratedKeys("id")
           .map(row -> row.getColumn("id", Long.class))
           .one();
+      handle.createUpdate(this.querySaveUser.getQuery())
+          .bind("uuid", uuid)
+          .bind("username", username)
+          .bind("identity", id)
+          .execute();
 
       return this.identityFactory.uuid(id, uuid, username);
     });
@@ -255,8 +262,8 @@ public final class ImplGenericSqlDataService implements IDataService {
 
     return this.jdbi.inTransaction(handle -> {
       final long id = handle.createUpdate(this.querySaveIdentity.getQuery())
-          .bind("type", type.type())
-          .bindNull("uuid", Types.CHAR)
+          .bind("type", type)
+          .bindNull("uuid", Types.OTHER)
           .bind("address", bytes)
           .executeAndReturnGeneratedKeys("id")
           .map(row -> row.getColumn("id", Long.class))
@@ -266,7 +273,7 @@ public final class ImplGenericSqlDataService implements IDataService {
 
       for (final UuidIdentity uuidIdentity : identities) {
         handle.createUpdate(this.querySaveIpAddress.getQuery())
-            .bind("type", type.type())
+            .bind("type", type)
             .bind("address", bytes)
             .bind("uuid", uuidIdentity.uuid());
       }

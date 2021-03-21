@@ -19,17 +19,14 @@
 package com.proximyst.ban.message;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.proximyst.ban.model.BanIdentity;
 import com.proximyst.ban.model.BanIdentity.IpIdentity;
-import com.proximyst.ban.platform.IBanAudience;
+import com.proximyst.ban.model.BanIdentity.UuidIdentity;
 import com.proximyst.moonshine.component.placeholder.IPlaceholderResolver;
 import com.proximyst.moonshine.component.placeholder.PlaceholderContext;
 import com.proximyst.moonshine.component.placeholder.ResolveResult;
-import java.util.Arrays;
 import java.util.Map;
-import java.util.stream.Collectors;
 import javax.inject.Singleton;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -38,8 +35,6 @@ public final class BanIdentityPlaceholderResolver<R> implements IPlaceholderReso
   @Override
   public ResolveResult resolve(final String placeholderName, final BanIdentity value,
       final PlaceholderContext<R> ctx, final Multimap<String, @Nullable Object> flags) {
-    final IBanAudience[] audiences = Iterables.toArray(value.audiences().join(), IBanAudience.class);
-
     final String name;
     final String uuid;
 
@@ -48,8 +43,9 @@ public final class BanIdentityPlaceholderResolver<R> implements IPlaceholderReso
       name = ipIdentity.address().getHostAddress();
       uuid = "";
     } else {
-      name = Arrays.stream(audiences).map(IBanAudience::username).collect(Collectors.joining(", "));
-      uuid = Arrays.stream(audiences).map(a -> a.uuid().toString()).collect(Collectors.joining(", "));
+      final UuidIdentity uuidIdentity = (UuidIdentity) value;
+      name = uuidIdentity.username();
+      uuid = uuidIdentity.uuid().toString();
     }
 
     final Map<String, Object> extra = value.asIpIdentity()

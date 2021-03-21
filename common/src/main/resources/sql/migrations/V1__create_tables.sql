@@ -1,6 +1,6 @@
 CREATE SCHEMA IF NOT EXISTS ban;
 
-CREATE TYPE ban.identity_type AS ENUM ('uuid', 'ipv4', 'ipv6', 'console');
+CREATE TYPE ban.identity_type AS ENUM ('UUID', 'IPV4', 'IPV6', 'CONSOLE');
 CREATE TABLE ban.identities
 (
     id      SERIAL PRIMARY KEY,
@@ -14,9 +14,9 @@ CREATE UNIQUE INDEX identities_uuid_index ON ban.identities (uuid);
 CREATE UNIQUE INDEX identities_address_index ON ban.identities (address);
 -- Insert console into row 1.
 INSERT INTO ban.identities (type, uuid, address)
-VALUES ('console', '00000000-0000-0000-0000-000000000000', NULL);
+VALUES ('CONSOLE', '00000000-0000-0000-0000-000000000000', NULL);
 
-CREATE TYPE ban.ip_address_type AS ENUM ('ipv4', 'ipv6');
+CREATE TYPE ban.ip_address_type AS ENUM ('IPV4', 'IPV6');
 CREATE TABLE ban.ip_addresses
 (
     type    ban.ip_address_type NOT NULL,
@@ -38,7 +38,7 @@ CREATE TABLE ban.users
 );
 CREATE INDEX users_username ON ban.users (username);
 
-CREATE TYPE ban.punishment_type AS ENUM ('ban', 'kick', 'mute', 'warn', 'note');
+CREATE TYPE ban.punishment_type AS ENUM ('BAN', 'KICK', 'MUTE', 'WARNING', 'NOTE');
 CREATE TABLE ban.punishments
 (
     id        SERIAL PRIMARY KEY,
