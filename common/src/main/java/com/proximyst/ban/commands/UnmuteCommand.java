@@ -74,8 +74,8 @@ public final class UnmuteCommand extends BaseCommand {
             return;
           }
 
-          this.punishmentService.liftPunishment(punishment)
-              .thenRun(() -> this.punishmentService.announcePunishment(punishment))
+          this.punishmentService.liftPunishment(punishment, ctx.getSender().uuid())
+              .thenAccept(this.punishmentService::announcePunishment)
               .exceptionally(this.banExceptionalFutureLogger.cast());
         })
         .exceptionally(this.banExceptionalFutureLogger.cast());

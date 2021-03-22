@@ -91,7 +91,7 @@ public final class BanCommand extends BaseCommand {
           final Optional<Punishment> optExisting = pair.getFirst();
           final UuidIdentity senderIdentity = pair.getSecond().orElseThrow(IdentityMustExistException::new);
 
-          optExisting.ifPresent(this.punishmentService::liftPunishment);
+          optExisting.ifPresent(punishment -> this.punishmentService.liftPunishment(punishment, ctx.getSender().uuid()));
 
           final PunishmentBuilder builder = new PunishmentBuilder()
               .type(PunishmentType.BAN)

@@ -73,34 +73,18 @@ public final class ImplPunishmentService implements IPunishmentService {
     return punishment.getTarget().audiences()
         .thenAccept(target -> {
           switch (punishment.getPunishmentType()) {
+            case KICK:
             case BAN: {
-              final Component reason = punishment.getReason().isPresent()
-                  ? this.messageService.applicationsReasonedBan(punishment)
-                  : this.messageService.applicationsReasonlessBan(punishment);
+              final Component reason = punishment.applicationMessage(this.messageService);
               target.forEach(audience -> audience.disconnect(reason));
               break;
             }
-            case KICK: {
-              final Component reason = punishment.getReason().isPresent()
-                  ? this.messageService.applicationsReasonedKick(punishment)
-                  : this.messageService.applicationsReasonlessKick(punishment);
-              target.forEach(audience -> audience.disconnect(reason));
-              break;
-            }
-            case WARNING:
-              if (punishment.getReason().isPresent()) {
-                target.forEach(audience -> this.messageService.applicationsReasonedWarn(audience, punishment));
-              } else {
-                target.forEach(audience -> this.messageService.applicationsReasonlessWarn(audience, punishment));
-              }
-              break;
             case MUTE:
-              if (punishment.getReason().isPresent()) {
-                target.forEach(audience -> this.messageService.applicationsReasonedMute(audience, punishment));
-              } else {
-                target.forEach(audience -> this.messageService.applicationsReasonlessMute(audience, punishment));
-              }
+            case WARNING: {
+              final Component reason = punishment.applicationMessage(this.messageService);
+              target.forEach(audience -> audience.sendMessage(reason));
               break;
+            }
 
             case NOTE:
               // Fall-through
@@ -110,21 +94,18 @@ public final class ImplPunishmentService implements IPunishmentService {
   }
 
   @Override
-  public @NonNull CompletableFuture<@Nullable Void> liftPunishment(final @NonNull Punishment punishment,
+  public @NonNull CompletableFuture<@NonNull Punishment> liftPunishment(final @NonNull Punishment punishment,
       final @Nullable UUID liftedBy) {
-    return CompletableFuture.supplyAsync(() -> {
-      this.dataService.liftPunishment(punishment, liftedBy);
-      return null;
-    }, this.executor);
+    return CompletableFuture.supplyAsync(() -> this.dataService.liftPunishment(punishment, liftedBy), this.executor);
   }
 
   @Override
   public void announcePunishment(final @NonNull Punishment punishment) {
     switch (punishment.getPunishmentType()) {
       case BAN:
-        if (!punishment.isLifted() && punishment.getReason().isPresent()) {
+        if (punishment.currentlyApplies() && punishment.getReason().isPresent()) {
           this.messageService.broadcastsReasonedBan(punishment);
-        } else if (!punishment.isLifted()) {
+        } else if (punishment.currentlyApplies()) {
           this.messageService.broadcastsReasonlessBan(punishment);
         } else {
           this.messageService.broadcastsUnban(punishment);
@@ -138,9 +119,9 @@ public final class ImplPunishmentService implements IPunishmentService {
         }
         break;
       case MUTE:
-        if (!punishment.isLifted() && punishment.getReason().isPresent()) {
+        if (punishment.currentlyApplies() && punishment.getReason().isPresent()) {
           this.messageService.broadcastsReasonedMute(punishment);
-        } else if (!punishment.isLifted()) {
+        } else if (punishment.currentlyApplies()) {
           this.messageService.broadcastsReasonlessMute(punishment);
         } else {
           this.messageService.broadcastsUnmute(punishment);

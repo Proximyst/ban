@@ -10,4 +10,4 @@ SELECT a.id
 FROM ban.punishments a
          LEFT JOIN ban.identities lifted_by
                    ON a.lifted_by = lifted_by.id
-WHERE a.target = :target;
+WHERE a.id = :id;

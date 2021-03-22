@@ -65,8 +65,9 @@ public interface IDataService {
    *
    * @param punishment The punishment to lift.
    * @param liftedBy The entity who lifted the punishment.
+   * @return The lifted {@link Punishment}.
    */
-  void liftPunishment(final @NonNull Punishment punishment, final @Nullable UUID liftedBy);
+  @NonNull Punishment liftPunishment(final @NonNull Punishment punishment, final @Nullable UUID liftedBy);
 
   /**
    * Get a {@link BanIdentity} from the database.

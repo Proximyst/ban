@@ -72,6 +72,7 @@ public final class ImplGenericSqlDataService implements IDataService {
   private final @NonNull Query querySelectIdentityByIp;
   private final @NonNull Query querySelectIdentityByUsername;
   private final @NonNull Query querySelectIdentityByUuid;
+  private final @NonNull Query querySelectPunishmentById;
   private final @NonNull Query querySelectPunishmentsByTarget;
   private final @NonNull Query querySelectUserByUsername;
   private final @NonNull Query querySelectUserByUuid;
@@ -98,6 +99,7 @@ public final class ImplGenericSqlDataService implements IDataService {
     this.querySelectIdentityByIp = new Query("select-identity-by-ip.sql", this.path);
     this.querySelectIdentityByUsername = new Query("select-identity-by-username.sql", this.path);
     this.querySelectIdentityByUuid = new Query("select-identity-by-uuid.sql", this.path);
+    this.querySelectPunishmentById = new Query("select-punishment-by-id.sql", this.path);
     this.querySelectPunishmentsByTarget = new Query("select-punishments-by-target.sql", this.path);
     this.querySelectUserByUsername = new Query("select-user-by-username.sql", this.path);
     this.querySelectUserByUuid = new Query("select-user-by-uuid.sql", this.path);
@@ -151,13 +153,19 @@ public final class ImplGenericSqlDataService implements IDataService {
   }
 
   @Override
-  public void liftPunishment(final @NonNull Punishment punishment, final @Nullable UUID liftedBy) {
-    this.jdbi.useTransaction(handle ->
-        handle.createUpdate(this.queryLiftPunishment.getQuery())
-            .bind("lifted", true)
-            .bind("lifted_by", liftedBy)
-            .bind("id", punishment.getId())
-            .execute());
+  public @NonNull Punishment liftPunishment(final @NonNull Punishment punishment, final @Nullable UUID liftedBy) {
+    return this.jdbi.inTransaction(handle -> {
+      handle.createUpdate(this.queryLiftPunishment.getQuery())
+          .bind("lifted", true)
+          .bind("lifted_by", liftedBy)
+          .bind("id", punishment.getId())
+          .execute();
+
+      return handle.createQuery(this.querySelectPunishmentById.getQuery())
+          .bind("id", punishment.getId())
+          .mapTo(Punishment.class)
+          .one();
+    });
   }
 
   @Override

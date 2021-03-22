@@ -23,6 +23,7 @@ import cloud.commandframework.arguments.CommandArgument;
 import cloud.commandframework.arguments.standard.StringArgument;
 import cloud.commandframework.arguments.standard.StringArgument.StringMode;
 import cloud.commandframework.context.CommandContext;
+import cloud.commandframework.types.tuples.Pair;
 import com.proximyst.ban.BanPermissions;
 import com.proximyst.ban.IdentityMustExistException;
 import com.proximyst.ban.commands.cloud.BanIdentityArgument;
@@ -31,6 +32,7 @@ import com.proximyst.ban.factory.IBanExceptionalFutureLoggerFactory;
 import com.proximyst.ban.factory.ICloudArgumentFactory;
 import com.proximyst.ban.model.BanIdentity;
 import com.proximyst.ban.model.BanIdentity.UuidIdentity;
+import com.proximyst.ban.model.Punishment;
 import com.proximyst.ban.model.PunishmentBuilder;
 import com.proximyst.ban.model.PunishmentType;
 import com.proximyst.ban.platform.IBanAudience;
@@ -38,6 +40,7 @@ import com.proximyst.ban.service.IMessageService;
 import com.proximyst.ban.service.IPunishmentService;
 import com.proximyst.ban.service.IUserService;
 import com.proximyst.ban.utils.BanExceptionalFutureLogger;
+import java.util.Optional;
 import javax.inject.Inject;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -81,9 +84,15 @@ public final class MuteCommand extends BaseCommand {
 
     this.messageService.feedbackMute(ctx.getSender(), target);
 
-    this.userService.getUser(ctx.getSender().uuid())
-        .thenAccept(optIdentity -> {
-          final UuidIdentity identity = optIdentity.orElseThrow(IdentityMustExistException::new);
+    // We have to lift their previous punishment.
+    this.punishmentService.getActiveMute(target)
+        .thenCombine(this.userService.getUser(ctx.getSender().uuid()), Pair::of)
+        .thenAccept(pair -> {
+          final Optional<Punishment> optExisting = pair.getFirst();
+          final UuidIdentity identity = pair.getSecond().orElseThrow(IdentityMustExistException::new);
+
+          optExisting
+              .ifPresent(punishment -> this.punishmentService.liftPunishment(punishment, ctx.getSender().uuid()));
 
           final PunishmentBuilder builder =
               new PunishmentBuilder()

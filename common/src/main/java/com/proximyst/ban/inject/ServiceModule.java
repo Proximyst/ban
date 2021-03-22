@@ -27,6 +27,7 @@ import com.proximyst.ban.message.BanMessageSource;
 import com.proximyst.ban.message.CompletableFuturePlaceholderResolver;
 import com.proximyst.ban.message.ComponentPlaceholderResolver;
 import com.proximyst.ban.message.DatePlaceholderResolver;
+import com.proximyst.ban.message.OptionalPlaceholderResolver;
 import com.proximyst.ban.message.PunishmentPlaceholderResolver;
 import com.proximyst.ban.message.ServerReceiverResolver;
 import com.proximyst.ban.model.BanIdentity;
@@ -42,6 +43,7 @@ import com.proximyst.ban.service.impl.ImplPunishmentService;
 import com.proximyst.ban.service.impl.ImplUserService;
 import com.proximyst.moonshine.Moonshine;
 import java.util.Date;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import javax.inject.Singleton;
 import net.kyori.adventure.audience.Audience;
@@ -83,6 +85,7 @@ public final class ServiceModule extends AbstractModule {
       final @NonNull BanIdentityPlaceholderResolver<Audience> banIdentityPlaceholderResolver,
       final @NonNull DatePlaceholderResolver<Audience> datePlaceholderResolver,
       final @NonNull PunishmentPlaceholderResolver<Audience> punishmentPlaceholderResolver,
+      final @NonNull OptionalPlaceholderResolver<Audience> optionalPlaceholderResolver,
       final @NonNull BanMessageSource banMessageSource,
       final @NonNull BanMessageParser banMessageParser,
       final @NonNull BanMessageSender banMessageSender) {
@@ -93,6 +96,7 @@ public final class ServiceModule extends AbstractModule {
         .placeholder(BanIdentity.class, banIdentityPlaceholderResolver)
         .placeholder(Date.class, datePlaceholderResolver)
         .placeholder(Punishment.class, punishmentPlaceholderResolver)
+        .placeholder(Optional.class, optionalPlaceholderResolver)
         .source(banMessageSource)
         .parser(banMessageParser)
         .sender(banMessageSender)

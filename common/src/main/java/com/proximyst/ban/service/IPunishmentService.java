@@ -62,17 +62,9 @@ public interface IPunishmentService {
    *
    * @param punishment The punishment to lift.
    * @param liftedBy The entity who lifted the punishment.
+   * @return The lifted {@link Punishment}.
    */
-  @NonNull CompletableFuture<@Nullable Void> liftPunishment(final @NonNull Punishment punishment, final @Nullable UUID liftedBy);
-
-  /**
-   * Lift a punishment if possible.
-   *
-   * @param punishment The punishment to lift.
-   */
-  default @NonNull CompletableFuture<@Nullable Void> liftPunishment(final @NonNull Punishment punishment) {
-    return this.liftPunishment(punishment, null);
-  }
+  @NonNull CompletableFuture<@NonNull Punishment> liftPunishment(final @NonNull Punishment punishment, final @Nullable UUID liftedBy);
 
   /**
    * Announce a punishment application.

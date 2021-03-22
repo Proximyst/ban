@@ -116,29 +116,25 @@ public interface IMessageService {
   @NonNull Component applicationsReasonlessBan(@Placeholder final Punishment punishment);
 
   @Message("applications.reasonless.mute")
-  void applicationsReasonlessMute(@Receiver final IBanAudience audience,
-      @Placeholder final Punishment punishment);
+  @NonNull Component applicationsReasonlessMute(@Placeholder final Punishment punishment);
 
   @Message("applications.reasonless.kick")
   @NonNull Component applicationsReasonlessKick(@Placeholder final Punishment punishment);
 
   @Message("applications.reasonless.warn")
-  void applicationsReasonlessWarn(@Receiver final IBanAudience audience,
-      @Placeholder final Punishment punishment);
+  @NonNull Component applicationsReasonlessWarn(@Placeholder final Punishment punishment);
 
   @Message("applications.reasoned.ban")
   @NonNull Component applicationsReasonedBan(@Placeholder final Punishment punishment);
 
   @Message("applications.reasoned.mute")
-  void applicationsReasonedMute(@Receiver final @NonNull IBanAudience audience,
-      @Placeholder final Punishment punishment);
+  @NonNull Component applicationsReasonedMute(@Placeholder final Punishment punishment);
 
   @Message("applications.reasoned.kick")
   @NonNull Component applicationsReasonedKick(@Placeholder final Punishment punishment);
 
   @Message("applications.reasoned.warn")
-  void applicationsReasonedWarn(@Receiver final IBanAudience audience,
-      @Placeholder final Punishment punishment);
+  @NonNull Component applicationsReasonedWarn(@Placeholder final Punishment punishment);
 
   @Message("formatting.permanently")
   @NonNull Component formattingPermanently();

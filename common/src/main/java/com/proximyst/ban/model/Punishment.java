@@ -18,9 +18,11 @@
 
 package com.proximyst.ban.model;
 
+import com.proximyst.ban.service.IMessageService;
 import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
+import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.index.qual.NonNegative;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -229,5 +231,35 @@ public final class Punishment {
 
     // Expiration is in the future and not lifted, we'll have to wait.
     return this.getExpiration() > System.currentTimeMillis();
+  }
+
+  /**
+   * @param messageService The messaging service to get the messages from.
+   * @return The applicable message for application of this punishment.
+   */
+  public @NonNull Component applicationMessage(final @NonNull IMessageService messageService) {
+    switch (this.getPunishmentType()) {
+      case BAN:
+        return this.getReason().isPresent()
+            ? messageService.applicationsReasonedBan(this)
+            : messageService.applicationsReasonlessBan(this);
+      case KICK:
+        return this.getReason().isPresent()
+            ? messageService.applicationsReasonedKick(this)
+            : messageService.applicationsReasonlessKick(this);
+      case WARNING:
+        return this.getReason().isPresent()
+            ? messageService.applicationsReasonedWarn(this)
+            : messageService.applicationsReasonlessWarn(this);
+      case MUTE:
+        return this.getReason().isPresent()
+            ? messageService.applicationsReasonedMute(this)
+            : messageService.applicationsReasonlessMute(this);
+
+      case NOTE:
+        // Fall-through
+      default:
+        throw new IllegalStateException(this.getPunishmentType() + " does not have an application message");
+    }
   }
 }

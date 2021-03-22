@@ -4,10 +4,10 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
 import com.proximyst.ban.model.Punishment;
 import com.proximyst.ban.service.IMessageService;
+import com.proximyst.ban.service.IUserService;
 import com.proximyst.moonshine.component.placeholder.IPlaceholderResolver;
 import com.proximyst.moonshine.component.placeholder.PlaceholderContext;
 import com.proximyst.moonshine.component.placeholder.ResolveResult;
-import java.util.UUID;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import org.apache.commons.lang3.time.DurationFormatUtils;
@@ -16,10 +16,13 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class PunishmentPlaceholderResolver<R> implements IPlaceholderResolver<R, Punishment> {
   private final @NonNull Provider<@NonNull IMessageService> messageServiceProvider;
+  private final @NonNull Provider<@NonNull IUserService> userServiceProvider;
 
   @Inject
-  PunishmentPlaceholderResolver(final @NonNull Provider<@NonNull IMessageService> messageServiceProvider) {
+  PunishmentPlaceholderResolver(final @NonNull Provider<@NonNull IMessageService> messageServiceProvider,
+      final @NonNull Provider<@NonNull IUserService> userServiceProvider) {
     this.messageServiceProvider = messageServiceProvider;
+    this.userServiceProvider = userServiceProvider;
   }
 
   @Override
@@ -38,7 +41,7 @@ public final class PunishmentPlaceholderResolver<R> implements IPlaceholderResol
         .put(placeholderName + "Punisher", value.getPunisher())
         .put(placeholderName + "Target", value.getTarget())
         .put(placeholderName + "Lifted", value.isLifted())
-        .put(placeholderName + "LiftedBy", value.getLiftedBy().map(UUID::toString).orElse(""))
+        .put(placeholderName + "LiftedBy", value.getLiftedBy().map(this.userServiceProvider.get()::getUser))
         .put(placeholderName + "Applies", value.currentlyApplies())
         .build());
   }

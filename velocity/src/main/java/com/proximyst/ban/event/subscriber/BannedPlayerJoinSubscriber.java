@@ -55,11 +55,6 @@ public class BannedPlayerJoinSubscriber {
         .orElseThrow(() -> new IllegalStateException("online players must have identities"));
     this.punishmentService.getActiveBan(identity)
         .join() // This *should* be fast, and only on one player's connection thread
-        .ifPresent(ban ->
-            event.setResult(ComponentResult.denied(
-                ban.getReason().isPresent()
-                    ? this.messageService.applicationsReasonedBan(ban)
-                    : this.messageService.applicationsReasonlessBan(ban)
-            )));
+        .ifPresent(ban -> event.setResult(ComponentResult.denied(ban.applicationMessage(this.messageService))));
   }
 }

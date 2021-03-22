@@ -61,9 +61,7 @@ public class MutedPlayerChatSubscriber {
         .ifPresent(mute -> {
           event.setResult(ChatResult.denied());
 
-          if (mute.getReason().isPresent()) {
-            this.messageService.applicationsReasonedMute(audience, mute);
-          }
+          audience.sendMessage(mute.applicationMessage(this.messageService));
         });
   }
 }
