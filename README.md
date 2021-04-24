@@ -22,4 +22,4 @@ usage.
 ## Licence
 
 This plugin is licensed under the
-[GNU Affero Public Licence v3.0](./LICENCE).
+[GNU Affero General Public Licence v3.0](./LICENCE).
